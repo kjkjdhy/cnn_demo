@@ -48,7 +48,7 @@
 
     .canvas-cell { flex: none; }
     .canvas-cell canvas {
-      display: block; background: #111; width: 240px;
+      display: block; background: #111; width: 280px;
       border-radius: 8px; border: 2px solid #e5e7eb;
       image-rendering: pixelated;
     }
@@ -114,6 +114,7 @@
           <option value="1">1 Layer</option>
           <option value="2" selected>2 Layers</option>
           <option value="3">3 Layers</option>
+          <option value="4">4 Layers</option>
         </select>
       </div>
 
@@ -151,8 +152,12 @@
         <label>Pooling</label>
         <select id="poolMode">
           <option value="none">None</option>
-          <option value="max" selected>MaxPool 2×2</option>
-          <option value="avg">AvgPool 2×2</option>
+          <option value="max2" selected>MaxPool 2×2</option>
+          <option value="max3">MaxPool 3×3</option>
+          <option value="max4">MaxPool 4×4</option>
+          <option value="avg2">AvgPool 2×2</option>
+          <option value="avg3">AvgPool 3×3</option>
+          <option value="avg4">AvgPool 4×4</option>
         </select>
       </div>
 
@@ -368,25 +373,27 @@
 
     function applyPool(imageData, mode) {
       if (mode === 'none') return imageData;
+      const isMax = mode.startsWith('max');
+      const s = parseInt(mode.slice(3));
       const W = imageData.width, H = imageData.height;
-      const outW = Math.max(1, Math.floor(W / 2));
-      const outH = Math.max(1, Math.floor(H / 2));
+      const outW = Math.max(1, Math.floor(W / s));
+      const outH = Math.max(1, Math.floor(H / s));
       const output = new Uint8ClampedArray(outW * outH * 4);
       for (let oy = 0; oy < outH; oy++)
         for (let ox = 0; ox < outW; ox++) {
           const base = (oy * outW + ox) * 4;
           for (let c = 0; c < 3; c++) {
-            let acc = mode === 'max' ? 0 : 0, cnt = 0;
-            for (let py = 0; py < 2; py++)
-              for (let px = 0; px < 2; px++) {
-                const ix = ox * 2 + px, iy = oy * 2 + py;
+            let acc = 0, cnt = 0;
+            for (let py = 0; py < s; py++)
+              for (let px = 0; px < s; px++) {
+                const ix = ox * s + px, iy = oy * s + py;
                 if (ix < W && iy < H) {
                   const v = imageData.data[(iy * W + ix) * 4 + c];
-                  acc = mode === 'max' ? Math.max(acc, v) : acc + v;
+                  acc = isMax ? Math.max(acc, v) : acc + v;
                   cnt++;
                 }
               }
-            output[base + c] = mode === 'max' ? acc : Math.round(acc / cnt);
+            output[base + c] = isMax ? acc : Math.round(acc / cnt);
           }
           output[base + 3] = 255;
         }
@@ -464,7 +471,7 @@
       const lines = [
         `filter: ${CHANNEL_LABELS[ch]}  |  kernel: ${k}×${k}  |  stride: ${stride}  |  padding: ${paddingMode} [p=${padding}]`,
         `α = ${alpha.toFixed(2)}  |  threshold = ${threshold}` + (ch === 'color_contrast' ? `  |  contrast scale = ${contrastScale}` : ''),
-        poolMode !== 'none' ? `${poolMode === 'max' ? 'MaxPool' : 'AvgPool'} 2×2 → spatial ÷ 2` : '',
+        poolMode !== 'none' ? `${poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${poolMode.slice(3)}×${poolMode.slice(3)} → spatial ÷ ${poolMode.slice(3)}` : '',
         'overlay = (1 − α) × original + α × feature_map  (only where feature ≥ threshold)',
         ch === 'color_contrast' ? 'color contrast: red = positive Laplacian, green = negative' : '',
         ch === 'grad_mag'       ? 'gradient mag: bright = √(Gx² + Gy²), normalized per layer' : '',
