@@ -82,12 +82,12 @@
       </div>
 
       <div class="control-group">
-        <label>Preset Images</label>
+        <label>Example Images</label>
         <div class="preset-buttons">
-          <button onclick="loadPreset('checker')">Checker</button>
-          <button onclick="loadPreset('circle')">Circle</button>
-          <button onclick="loadPreset('stripes')">Stripes</button>
-          <button onclick="loadPreset('gradient')">Gradient</button>
+          <button onclick="loadPreset('woman')">Portrait</button>
+          <button onclick="loadPreset('tower')">Building</button>
+          <button onclick="loadPreset('city')">Street</button>
+          <button onclick="loadPreset('forest')">Nature</button>
         </div>
       </div>
 
@@ -143,13 +143,12 @@
       </div>
 
       <div class="control-group">
-        <label for="channelView">Channel View</label>
+        <label for="channelView">Filter</label>
         <select id="channelView">
-          <option value="all">All Channels</option>
-          <option value="h_edge">Horizontal Edge only</option>
-          <option value="v_edge">Vertical Edge only</option>
-          <option value="blur">Blur only</option>
-          <option value="sharpen">Sharpen only</option>
+          <option value="h_edge">Horizontal Edge</option>
+          <option value="v_edge">Vertical Edge</option>
+          <option value="blur">Blur</option>
+          <option value="sharpen">Sharpen</option>
         </select>
       </div>
     </div>
@@ -239,8 +238,8 @@
       }
 
       if (type === 'sharpen') {
-        kernel[center][center] = 2;
-        const v = -1 / (size * size - 1);
+        kernel[center][center] = size * size;
+        const v = -1;
         for (let y = 0; y < size; y++)
           for (let x = 0; x < size; x++)
             if (x !== center || y !== center) kernel[y][x] = v;
@@ -419,50 +418,12 @@
       runPipeline();
     }
 
-    function loadPreset(type) {
-      const temp = document.createElement('canvas');
-      temp.width = MAX_SIZE; temp.height = MAX_SIZE;
-      const ctx = temp.getContext('2d');
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
-
-      if (type === 'checker') {
-        const block = 32;
-        for (let y = 0; y < MAX_SIZE; y += block)
-          for (let x = 0; x < MAX_SIZE; x += block) {
-            ctx.fillStyle = ((x / block + y / block) % 2 === 0) ? '#111' : '#eee';
-            ctx.fillRect(x, y, block, block);
-          }
-      }
-
-      if (type === 'circle') {
-        const grad = ctx.createRadialGradient(160, 160, 20, 160, 160, 150);
-        grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#202020');
-        ctx.fillStyle = grad; ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
-        ctx.fillStyle = '#f2f2f2'; ctx.beginPath(); ctx.arc(160, 160, 90, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#111'; ctx.lineWidth = 8; ctx.stroke();
-      }
-
-      if (type === 'stripes') {
-        for (let x = 0; x < MAX_SIZE; x += 20) {
-          ctx.fillStyle = x % 40 === 0 ? '#111' : '#ddd';
-          ctx.fillRect(x, 0, 20, MAX_SIZE);
-        }
-        ctx.fillStyle = 'rgba(255,255,255,0.45)';
-        ctx.beginPath(); ctx.arc(170, 160, 85, 0, Math.PI * 2); ctx.fill();
-      }
-
-      if (type === 'gradient') {
-        const grad = ctx.createLinearGradient(0, 0, MAX_SIZE, MAX_SIZE);
-        grad.addColorStop(0, '#111'); grad.addColorStop(0.5, '#ddd'); grad.addColorStop(1, '#444');
-        ctx.fillStyle = grad; ctx.fillRect(0, 0, MAX_SIZE, MAX_SIZE);
-        ctx.fillStyle = '#222'; ctx.fillRect(60, 90, 200, 40);
-        ctx.fillStyle = '#eee'; ctx.fillRect(90, 170, 150, 60);
-      }
-
+    function loadPreset(seed) {
       const img = new Image();
+      img.crossOrigin = 'anonymous';
       img.onload = () => loadImageFromImg(img);
-      img.src = temp.toDataURL();
+      img.onerror = () => alert('图片加载失败，请检查网络连接');
+      img.src = `https://picsum.photos/seed/${seed}/${MAX_SIZE}/${MAX_SIZE}`;
     }
 
     // ── Event listeners ───────────────────────────────────────────────────────
@@ -485,7 +446,7 @@
       document.getElementById(id).addEventListener('change', runPipeline);
     });
 
-    loadPreset('checker');
+    loadPreset('woman');
   </script>
 </body>
 </html>
