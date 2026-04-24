@@ -93,10 +93,10 @@
       <div class="control-group">
         <label>Example Images</label>
         <div class="preset-buttons">
-          <button onclick="loadPreset('woman')">Portrait</button>
-          <button onclick="loadPreset('tower')">Building</button>
-          <button onclick="loadPreset('city')">Street</button>
-          <button onclick="loadPreset('forest')">Nature</button>
+          <button onclick="loadPreset('portrait')">Portrait</button>
+          <button onclick="loadPreset('building')">Building</button>
+          <button onclick="loadPreset('street')">Street</button>
+          <button onclick="loadPreset('nature')">Nature</button>
         </div>
       </div>
 
@@ -516,14 +516,14 @@
       runPipeline();
     }
 
-    const PRESET_IDS = { portrait: 64, building: 318, street: 355, nature: 15 };
+    const PRESET_SEEDS = { portrait: 'people', building: 'building', street: 'street', nature: 'forest' };
 
     function loadPreset(name) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => loadImageFromImg(img);
       img.onerror = () => alert('Image load failed — check network connection');
-      img.src = `https://picsum.photos/id/${PRESET_IDS[name]}/${MAX_SIZE}/${MAX_SIZE}`;
+      img.src = `https://picsum.photos/seed/${PRESET_SEEDS[name]}/${MAX_SIZE}/${MAX_SIZE}`;
     }
 
     // ── Event listeners ───────────────────────────────────────────────────────
@@ -566,7 +566,7 @@
     document.getElementById('kernelSize').addEventListener('change', updateSamePaddingLabel);
 
     updateSamePaddingLabel();
-    loadPreset('woman');
+    loadPreset('portrait');
   </script>
 </body>
 </html>
