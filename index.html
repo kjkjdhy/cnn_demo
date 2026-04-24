@@ -8,57 +8,61 @@
     * { box-sizing: border-box; font-family: Arial, sans-serif; }
 
     body { margin: 0; padding: 24px; background: #f5f6f8; color: #222; }
-    h1 { margin-top: 0; font-size: 28px; }
-    .subtitle { color: #555; margin-bottom: 24px; line-height: 1.5; }
+    h1 { margin-top: 0; font-size: 28px; text-align: center; }
+    .subtitle { color: #555; margin-bottom: 24px; line-height: 1.5; text-align: center; }
 
     .container { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
     .panel { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
     .controls { position: sticky; top: 20px; }
 
-    .control-group { margin-bottom: 16px; }
-    label { display: block; font-weight: 700; margin-bottom: 6px; }
+    .control-group { margin-bottom: 14px; }
+    label { display: block; font-weight: 700; margin-bottom: 5px; font-size: 13px; }
     select, input[type="file"], button { width: 100%; }
-    select, button { padding: 9px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 14px; }
+    select, button { padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 13px; }
     button { cursor: pointer; background: #222; color: white; border: none; font-weight: 700; }
     button:hover { opacity: 0.9; }
     .preset-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .preset-buttons button { background: #3b4252; font-size: 13px; }
+    .preset-buttons button { background: #3b4252; font-size: 12px; }
 
     .toggle-row { display: flex; gap: 16px; }
-    .toggle-item { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 14px; cursor: pointer; }
-    .toggle-item input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+    .toggle-item { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; cursor: pointer; }
+    .toggle-item input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+
+    .slider-row { display: flex; align-items: center; gap: 8px; }
+    .slider-row input[type="range"] { flex: 1; }
+    .slider-val { font-size: 12px; color: #444; min-width: 32px; text-align: right; }
 
     /* Grid */
-    .layer-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: stretch; }
+    .layer-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
     .row-label {
       width: 58px; flex-shrink: 0; font-size: 11px; font-weight: 700; color: #666;
       display: flex; align-items: center; justify-content: flex-end; padding-right: 6px;
     }
     .col-label {
-      flex: 1; text-align: center; font-size: 11px; font-weight: 700;
+      width: 180px; flex-shrink: 0; text-align: center; font-size: 11px; font-weight: 700;
       padding: 4px 0; border-radius: 6px; margin-bottom: 2px;
     }
-    .ch-h_edge  { background: #dbeafe; color: #1d4ed8; }
-    .ch-v_edge  { background: #dcfce7; color: #15803d; }
-    .ch-blur    { background: #fef9c3; color: #854d0e; }
-    .ch-sharpen { background: #fce7f3; color: #9d174d; }
-    .ch-input   { background: #f3f4f6; color: #374151; }
+    .ch-h_edge       { background: #dbeafe; color: #1d4ed8; }
+    .ch-v_edge       { background: #dcfce7; color: #15803d; }
+    .ch-grad_mag     { background: #f3e8ff; color: #7e22ce; }
+    .ch-color_contrast { background: #fee2e2; color: #991b1b; }
+    .ch-input        { background: #f3f4f6; color: #374151; }
 
-    .canvas-cell { flex: 1; }
+    .canvas-cell { flex: none; }
     .canvas-cell canvas {
-      width: 100%; display: block; background: #111;
+      display: block; background: #111; width: 180px;
       border-radius: 8px; border: 2px solid #e5e7eb;
       image-rendering: pixelated;
     }
-    .canvas-cell.ch-h_edge  canvas { border-color: #93c5fd; }
-    .canvas-cell.ch-v_edge  canvas { border-color: #86efac; }
-    .canvas-cell.ch-blur    canvas { border-color: #fde68a; }
-    .canvas-cell.ch-sharpen canvas { border-color: #f9a8d4; }
+    .canvas-cell.ch-h_edge        canvas { border-color: #93c5fd; }
+    .canvas-cell.ch-v_edge        canvas { border-color: #86efac; }
+    .canvas-cell.ch-grad_mag      canvas { border-color: #d8b4fe; }
+    .canvas-cell.ch-color_contrast canvas { border-color: #fca5a5; }
 
     .formula {
       margin-top: 16px; background: #101418; color: #e8edf2;
       padding: 14px; border-radius: 10px; font-family: Consolas, monospace;
-      line-height: 1.9; font-size: 13px;
+      line-height: 1.9; font-size: 12px;
     }
 
     @media (max-width: 900px) {
@@ -70,12 +74,12 @@
 <body>
   <h1>CNN Convolution Demo</h1>
   <p class="subtitle">
-    Each layer runs Conv → ReLU → MaxPool on the merged output of the previous layer's channels.
-    Watch how features evolve from raw edges to higher-level patterns across layers.
+    Each layer runs Conv → Threshold → MaxPool. Feature maps are overlaid on the original image — use α to blend.
   </p>
 
   <div class="container">
     <div class="panel controls">
+
       <div class="control-group">
         <label for="imageUpload">Upload Image</label>
         <input id="imageUpload" type="file" accept="image/*" />
@@ -89,6 +93,16 @@
           <button onclick="loadPreset('city')">Street</button>
           <button onclick="loadPreset('forest')">Nature</button>
         </div>
+      </div>
+
+      <div class="control-group">
+        <label for="filterType">Filter</label>
+        <select id="filterType">
+          <option value="h_edge">Horizontal Edge</option>
+          <option value="v_edge">Vertical Edge</option>
+          <option value="grad_mag">Gradient Magnitude</option>
+          <option value="color_contrast">Color Contrast</option>
+        </select>
       </div>
 
       <div class="control-group">
@@ -121,7 +135,7 @@
       <div class="control-group">
         <label for="paddingMode">Padding</label>
         <select id="paddingMode">
-          <option value="same" selected>same: auto p</option>
+          <option value="same" selected>auto: p = 1</option>
           <option value="valid">valid: p = 0</option>
           <option value="custom1">custom: p = 1</option>
           <option value="custom2">custom: p = 2</option>
@@ -131,26 +145,38 @@
       </div>
 
       <div class="control-group">
-        <label>Operations per Layer</label>
+        <label>Strength α — <span id="alphaVal">0.70</span></label>
+        <div class="slider-row">
+          <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.7" />
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">0 = 原图，1 = 纯 feature map</div>
+      </div>
+
+      <div class="control-group">
+        <label>Threshold — <span id="thresholdVal">15</span></label>
+        <div class="slider-row">
+          <input type="range" id="threshold" min="0" max="120" step="1" value="15" />
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">过滤弱响应</div>
+      </div>
+
+      <div class="control-group">
+        <label>Contrast Scale — <span id="contrastScaleVal">3.0</span></label>
+        <div class="slider-row">
+          <input type="range" id="contrastScale" min="1" max="10" step="0.5" value="3" />
+        </div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">放大 Color Contrast 响应</div>
+      </div>
+
+      <div class="control-group">
+        <label>MaxPool 2×2</label>
         <div class="toggle-row">
           <label class="toggle-item">
-            <input type="checkbox" id="useRelu" checked /> ReLU
-          </label>
-          <label class="toggle-item">
-            <input type="checkbox" id="usePool" checked /> MaxPool 2×2
+            <input type="checkbox" id="usePool" checked /> 启用
           </label>
         </div>
       </div>
 
-      <div class="control-group">
-        <label for="channelView">Filter</label>
-        <select id="channelView">
-          <option value="h_edge">Horizontal Edge</option>
-          <option value="v_edge">Vertical Edge</option>
-          <option value="blur">Blur</option>
-          <option value="sharpen">Sharpen</option>
-        </select>
-      </div>
     </div>
 
     <div class="panel">
@@ -161,8 +187,11 @@
 
   <script>
     const MAX_SIZE = 320;
-    const CHANNELS = ['h_edge', 'v_edge', 'blur', 'sharpen'];
-    const CHANNEL_LABELS = { h_edge: 'H-Edge', v_edge: 'V-Edge', blur: 'Blur', sharpen: 'Sharpen' };
+    const CHANNELS = ['h_edge', 'v_edge', 'grad_mag', 'color_contrast'];
+    const CHANNEL_LABELS = {
+      h_edge: 'H-Edge', v_edge: 'V-Edge',
+      grad_mag: 'Grad Mag', color_contrast: 'Color Contrast'
+    };
 
     let originalImageData = null;
 
@@ -170,22 +199,11 @@
 
     function clamp(x) { return Math.max(0, Math.min(255, x)); }
 
-    function getPixel(data, width, height, x, y, c) {
-      if (x < 0 || x >= width || y < 0 || y >= height) return 0;
-      return data[(y * width + x) * 4 + c];
+    function getPixel(data, W, H, x, y, c) {
+      if (x < 0 || x >= W || y < 0 || y >= H) return 0;
+      return data[(y * W + x) * 4 + c];
     }
 
-    function toGrayscale(imageData) {
-      const result = new ImageData(imageData.width, imageData.height);
-      for (let i = 0; i < imageData.data.length; i += 4) {
-        const g = Math.round(0.299 * imageData.data[i] + 0.587 * imageData.data[i+1] + 0.114 * imageData.data[i+2]);
-        result.data[i] = result.data[i+1] = result.data[i+2] = g;
-        result.data[i+3] = 255;
-      }
-      return result;
-    }
-
-    // Pixel-wise average of multiple same-size ImageDatas.
     function avgChannels(maps) {
       const w = maps[0].width, h = maps[0].height;
       const result = new ImageData(w, h);
@@ -200,6 +218,18 @@
       return result;
     }
 
+    // Scale imageData to targetW × targetH using a canvas intermediate.
+    function scaleImageTo(imageData, targetW, targetH) {
+      if (imageData.width === targetW && imageData.height === targetH) return imageData;
+      const src = document.createElement('canvas');
+      src.width = imageData.width; src.height = imageData.height;
+      src.getContext('2d').putImageData(imageData, 0, 0);
+      const dst = document.createElement('canvas');
+      dst.width = targetW; dst.height = targetH;
+      dst.getContext('2d').drawImage(src, 0, 0, targetW, targetH);
+      return dst.getContext('2d').getImageData(0, 0, targetW, targetH);
+    }
+
     // ── Kernel building ───────────────────────────────────────────────────────
 
     function getPadding(mode, k) {
@@ -209,89 +239,141 @@
       return 0;
     }
 
-    // Pascal's triangle row of length n, used as the smoothing weights in Sobel-style kernels.
     function binomialRow(n) {
       const row = [1];
-      for (let i = 1; i < n; i++) row[i] = row[i-1] * (n - i) / i;
+      for (let i = 1; i < n; i++) row[i] = row[i - 1] * (n - i) / i;
       return row;
     }
 
     function buildKernel(type, size) {
       const kernel = Array.from({ length: size }, () => Array(size).fill(0));
       const center = Math.floor(size / 2);
-
-      if (type === 'blur') {
-        const v = 1 / (size * size);
-        for (let y = 0; y < size; y++)
-          for (let x = 0; x < size; x++)
-            kernel[y][x] = v;
-      }
-
       if (type === 'h_edge' || type === 'v_edge') {
-        // Sobel-style: outer product of a binomial smooth vector and a central-difference derivative vector.
-        // h_edge differentiates in y (responds to horizontal edges), v_edge differentiates in x.
         const binom = binomialRow(size);
         const deriv = Array.from({ length: size }, (_, i) => i - center);
         for (let y = 0; y < size; y++)
           for (let x = 0; x < size; x++)
             kernel[y][x] = type === 'h_edge' ? deriv[y] * binom[x] : deriv[x] * binom[y];
       }
-
-      if (type === 'sharpen') {
-        kernel[center][center] = size * size;
-        const v = -1;
-        for (let y = 0; y < size; y++)
-          for (let x = 0; x < size; x++)
-            if (x !== center || y !== center) kernel[y][x] = v;
-      }
-
       return kernel;
     }
 
-    // ── Convolution + layer ops ───────────────────────────────────────────────
+    // ── Feature computations ──────────────────────────────────────────────────
 
-    function convolveImageData(imageData, kernel, useAbs = false, stride = 1, padding = 0) {
+    // Standard directional Sobel — abs, grayscale output kept per-channel.
+    function convolveAbs(imageData, kernel, stride, padding) {
       const W = imageData.width, H = imageData.height;
-      const input = imageData.data;
       const k = kernel.length;
       const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
       const outH = Math.max(1, Math.floor((H + 2 * padding - k) / stride + 1));
       const output = new Uint8ClampedArray(outW * outH * 4);
-
-      for (let oy = 0; oy < outH; oy++) {
+      for (let oy = 0; oy < outH; oy++)
         for (let ox = 0; ox < outW; ox++) {
           const base = (oy * outW + ox) * 4;
           for (let c = 0; c < 3; c++) {
             let sum = 0;
             for (let ky = 0; ky < k; ky++)
               for (let kx = 0; kx < k; kx++)
-                sum += getPixel(input, W, H, ox * stride + kx - padding, oy * stride + ky - padding, c) * kernel[ky][kx];
-            output[base + c] = clamp(useAbs ? Math.abs(sum) : sum);
+                sum += getPixel(imageData.data, W, H, ox * stride + kx - padding, oy * stride + ky - padding, c) * kernel[ky][kx];
+            output[base + c] = clamp(Math.abs(sum));
           }
           output[base + 3] = 255;
         }
+      return new ImageData(output, outW, outH);
+    }
+
+    // Gradient magnitude = sqrt(Gx²+Gy²) averaged over channels, normalized, grayscale.
+    function computeGradientMagnitude(imageData, k, stride, padding) {
+      const W = imageData.width, H = imageData.height;
+      const kX = buildKernel('v_edge', k);
+      const kY = buildKernel('h_edge', k);
+      const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
+      const outH = Math.max(1, Math.floor((H + 2 * padding - k) / stride + 1));
+      const mags = new Float32Array(outW * outH);
+      let maxMag = 0;
+
+      for (let oy = 0; oy < outH; oy++)
+        for (let ox = 0; ox < outW; ox++) {
+          let magSum = 0;
+          for (let c = 0; c < 3; c++) {
+            let gx = 0, gy = 0;
+            for (let ky = 0; ky < k; ky++)
+              for (let kx = 0; kx < k; kx++) {
+                const px = getPixel(imageData.data, W, H, ox * stride + kx - padding, oy * stride + ky - padding, c);
+                gx += px * kX[ky][kx];
+                gy += px * kY[ky][kx];
+              }
+            magSum += Math.sqrt(gx * gx + gy * gy);
+          }
+          const mag = magSum / 3;
+          mags[oy * outW + ox] = mag;
+          if (mag > maxMag) maxMag = mag;
+        }
+
+      const output = new Uint8ClampedArray(outW * outH * 4);
+      const scale = maxMag > 0 ? 255 / maxMag : 1;
+      for (let i = 0; i < outW * outH; i++) {
+        const v = clamp(mags[i] * scale);
+        output[i * 4] = output[i * 4 + 1] = output[i * 4 + 2] = v;
+        output[i * 4 + 3] = 255;
       }
       return new ImageData(output, outW, outH);
     }
 
-    // Suppress activations below 30 to create sparsity, mirroring ReLU's effect on signed feature maps.
-    function applyReLU(imageData) {
-      const result = new ImageData(imageData.width, imageData.height);
-      for (let i = 0; i < imageData.data.length; i += 4) {
-        for (let c = 0; c < 3; c++)
-          result.data[i + c] = imageData.data[i + c] < 30 ? 0 : imageData.data[i + c];
-        result.data[i + 3] = 255;
+    // Color contrast via Laplacian (signed): positive → red, negative → green.
+    function computeColorContrast(imageData, k, stride, padding, contrastScale) {
+      const W = imageData.width, H = imageData.height;
+      const center = Math.floor(k / 2);
+      const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
+      const outH = Math.max(1, Math.floor((H + 2 * padding - k) / stride + 1));
+      const signed = new Float32Array(outW * outH);
+      let maxAbs = 0;
+
+      for (let oy = 0; oy < outH; oy++)
+        for (let ox = 0; ox < outW; ox++) {
+          let sum = 0;
+          for (let ky = 0; ky < k; ky++)
+            for (let kx = 0; kx < k; kx++) {
+              const ix = ox * stride + kx - padding;
+              const iy = oy * stride + ky - padding;
+              const r = getPixel(imageData.data, W, H, ix, iy, 0);
+              const g = getPixel(imageData.data, W, H, ix, iy, 1);
+              const b = getPixel(imageData.data, W, H, ix, iy, 2);
+              const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+              const isCenter = (kx === center && ky === center);
+              sum += luma * (isCenter ? (k * k - 1) : -1);
+            }
+          signed[oy * outW + ox] = sum;
+          if (Math.abs(sum) > maxAbs) maxAbs = Math.abs(sum);
+        }
+
+      const output = new Uint8ClampedArray(outW * outH * 4);
+      const scale = maxAbs > 0 ? (255 * contrastScale) / maxAbs : 1;
+      for (let i = 0; i < outW * outH; i++) {
+        const v = signed[i] * scale;
+        output[i * 4]     = v > 0 ? clamp(v)  : 0;   // R — positive
+        output[i * 4 + 1] = v < 0 ? clamp(-v) : 0;   // G — negative
+        output[i * 4 + 2] = 0;
+        output[i * 4 + 3] = 255;
       }
-      return result;
+      return new ImageData(output, outW, outH);
     }
+
+    function computeFeature(imageData, ch, k, stride, padding, contrastScale) {
+      if (ch === 'h_edge') return convolveAbs(imageData, buildKernel('h_edge', k), stride, padding);
+      if (ch === 'v_edge') return convolveAbs(imageData, buildKernel('v_edge', k), stride, padding);
+      if (ch === 'grad_mag') return computeGradientMagnitude(imageData, k, stride, padding);
+      return computeColorContrast(imageData, k, stride, padding, contrastScale);
+    }
+
+    // ── MaxPool ────────────────────────────────────────────────────────────────
 
     function applyMaxPool(imageData) {
       const W = imageData.width, H = imageData.height;
       const outW = Math.max(1, Math.floor(W / 2));
       const outH = Math.max(1, Math.floor(H / 2));
       const output = new Uint8ClampedArray(outW * outH * 4);
-
-      for (let oy = 0; oy < outH; oy++) {
+      for (let oy = 0; oy < outH; oy++)
         for (let ox = 0; ox < outW; ox++) {
           const base = (oy * outW + ox) * 4;
           for (let c = 0; c < 3; c++) {
@@ -306,8 +388,25 @@
           }
           output[base + 3] = 255;
         }
-      }
       return new ImageData(output, outW, outH);
+    }
+
+    // ── Overlay ───────────────────────────────────────────────────────────────
+
+    // Blend feature map on top of the original image (scaled to feature resolution).
+    // Pixels below threshold show only the original.
+    function overlayFeature(originalRGB, featureMap, alpha, threshold) {
+      const W = featureMap.width, H = featureMap.height;
+      const scaledOrig = scaleImageTo(originalRGB, W, H);
+      const result = new ImageData(W, H);
+      for (let i = 0; i < result.data.length; i += 4) {
+        const brightness = Math.max(featureMap.data[i], featureMap.data[i + 1], featureMap.data[i + 2]);
+        const a = brightness >= threshold ? alpha : 0;
+        for (let c = 0; c < 3; c++)
+          result.data[i + c] = clamp((1 - a) * scaledOrig.data[i + c] + a * featureMap.data[i + c]);
+        result.data[i + 3] = 255;
+      }
+      return result;
     }
 
     // ── Pipeline ──────────────────────────────────────────────────────────────
@@ -315,87 +414,82 @@
     function runPipeline() {
       if (!originalImageData) return;
 
-      const numLayers  = Number(document.getElementById('numLayers').value);
-      const k          = Number(document.getElementById('kernelSize').value);
-      const stride     = Number(document.getElementById('stride').value);
-      const paddingMode = document.getElementById('paddingMode').value;
-      const padding    = getPadding(paddingMode, k);
-      const useRelu    = document.getElementById('useRelu').checked;
-      const usePool    = document.getElementById('usePool').checked;
+      const ch           = document.getElementById('filterType').value;
+      const numLayers    = Number(document.getElementById('numLayers').value);
+      const k            = Number(document.getElementById('kernelSize').value);
+      const stride       = Number(document.getElementById('stride').value);
+      const paddingMode  = document.getElementById('paddingMode').value;
+      const padding      = getPadding(paddingMode, k);
+      const usePool      = document.getElementById('usePool').checked;
+      const alpha        = Number(document.getElementById('alpha').value);
+      const threshold    = Number(document.getElementById('threshold').value);
+      const contrastScale = Number(document.getElementById('contrastScale').value);
 
-      const gray = toGrayscale(originalImageData);
-
-      // layers[i] maps channel name → ImageData
-      // layers[0] is the input layer — same grayscale image for all channel slots
-      const layers = [Object.fromEntries(CHANNELS.map(ch => [ch, gray]))];
+      // Layer 0: original color image for all channel slots
+      const layers = [Object.fromEntries(CHANNELS.map(c => [c, originalImageData]))];
 
       for (let l = 1; l <= numLayers; l++) {
-        // Each layer's input is the pixel-wise average of all previous layer's channels,
-        // simulating how CNN neurons aggregate across all input channels.
-        const layerInput = avgChannels(CHANNELS.map(ch => layers[l - 1][ch]));
-
+        const layerInput = avgChannels(CHANNELS.map(c => layers[l - 1][c]));
         const layerOutput = {};
-        for (const ch of CHANNELS) {
-          const useAbs = ch === 'h_edge' || ch === 'v_edge';
-          let fm = convolveImageData(layerInput, buildKernel(ch, k), useAbs, stride, padding);
-          if (useRelu) fm = applyReLU(fm);
+        for (const c of CHANNELS) {
+          let fm = computeFeature(layerInput, c, k, stride, padding, contrastScale);
           if (usePool) fm = applyMaxPool(fm);
-          layerOutput[ch] = fm;
+          layerOutput[c] = fm;
         }
         layers.push(layerOutput);
       }
 
-      renderGrid(layers, k, stride, padding, paddingMode, useRelu, usePool);
+      renderGrid(layers, ch, alpha, threshold, k, stride, padding, paddingMode, usePool, contrastScale);
     }
 
     // ── Rendering ─────────────────────────────────────────────────────────────
 
-    function renderGrid(layers, k, stride, padding, paddingMode, useRelu, usePool) {
-      const channelView = document.getElementById('channelView').value;
-      const visChannels = channelView === 'all' ? CHANNELS : [channelView];
+    function renderGrid(layers, ch, alpha, threshold, k, stride, padding, paddingMode, usePool, contrastScale) {
       const grid = document.getElementById('layerGrid');
       grid.innerHTML = '';
 
-      // Column header row
-      const headerRow = document.createElement('div');
-      headerRow.className = 'layer-row';
-      headerRow.appendChild(makeEl('div', 'row-label'));
-      visChannels.forEach(ch => {
-        headerRow.appendChild(makeEl('div', `col-label ch-${ch}`, CHANNEL_LABELS[ch]));
-      });
-      grid.appendChild(headerRow);
+      // Header
+      const header = document.createElement('div');
+      header.className = 'layer-row';
+      header.appendChild(makeEl('div', 'row-label'));
+      header.appendChild(makeEl('div', `col-label ch-${ch}`, CHANNEL_LABELS[ch]));
+      grid.appendChild(header);
 
-      // Input + layer rows
-      const rowLabels = ['Input', ...Array.from({ length: layers.length - 1 }, (_, i) => `Layer ${i + 1}`)];
-      layers.forEach((layerMaps, i) => {
-        const row = document.createElement('div');
-        row.className = 'layer-row';
-        row.appendChild(makeEl('div', 'row-label', rowLabels[i]));
+      // Input row — show original color image
+      addRow(grid, 'Input', originalImageData, ch, true);
 
-        visChannels.forEach(ch => {
-          const cell = document.createElement('div');
-          cell.className = `canvas-cell ${i === 0 ? 'ch-input' : 'ch-' + ch}`;
-          const canvas = document.createElement('canvas');
-          const img = layerMaps[ch];
-          canvas.width = img.width;
-          canvas.height = img.height;
-          canvas.getContext('2d').putImageData(img, 0, 0);
-          cell.appendChild(canvas);
-          row.appendChild(cell);
-        });
-
-        grid.appendChild(row);
-      });
+      // Feature rows
+      for (let l = 1; l < layers.length; l++) {
+        const fm = layers[l][ch];
+        const overlaid = overlayFeature(originalImageData, fm, alpha, threshold);
+        addRow(grid, `Layer ${l}`, overlaid, ch, false);
+      }
 
       // Formula
-      const steps = [
-        `<b>Per layer</b> (kernel ${k}×${k}, stride=${stride}, padding=${paddingMode} [p=${padding}]):`,
-        `  feature_map[ch] = Conv(avg(prev_channels), kernel[ch])`,
-      ];
-      if (useRelu) steps.push('  → ReLU : x = 0  if  x &lt; 30');
-      if (usePool) steps.push('  → MaxPool 2×2  →  spatial size ÷ 2');
-      if (layers.length > 2) steps.push('<br><b>Between layers:</b> layer_input = avg(all ch feature maps)');
-      document.getElementById('formulaBox').innerHTML = steps.join('<br>');
+      const lines = [
+        `filter: ${CHANNEL_LABELS[ch]}  |  kernel: ${k}×${k}  |  stride: ${stride}  |  padding: ${paddingMode} [p=${padding}]`,
+        `α = ${alpha.toFixed(2)}  |  threshold = ${threshold}` + (ch === 'color_contrast' ? `  |  contrast scale = ${contrastScale}` : ''),
+        usePool ? 'MaxPool 2×2 → spatial ÷ 2' : '',
+        'overlay = (1 − α) × original + α × feature_map  (only where feature ≥ threshold)',
+        ch === 'color_contrast' ? 'color contrast: red = positive Laplacian, green = negative' : '',
+        ch === 'grad_mag'       ? 'gradient mag: bright = √(Gx² + Gy²), normalized per layer' : '',
+      ].filter(Boolean);
+      document.getElementById('formulaBox').innerHTML = lines.join('<br>');
+    }
+
+    function addRow(grid, label, imageData, ch, isInput) {
+      const row = document.createElement('div');
+      row.className = 'layer-row';
+      row.appendChild(makeEl('div', 'row-label', label));
+      const cell = document.createElement('div');
+      cell.className = `canvas-cell ${isInput ? 'ch-input' : 'ch-' + ch}`;
+      const canvas = document.createElement('canvas');
+      canvas.width = imageData.width;
+      canvas.height = imageData.height;
+      canvas.getContext('2d').putImageData(imageData, 0, 0);
+      cell.appendChild(canvas);
+      row.appendChild(cell);
+      grid.appendChild(row);
     }
 
     function makeEl(tag, cls, text) {
@@ -442,10 +536,30 @@
       reader.readAsDataURL(file);
     });
 
-    ['numLayers', 'kernelSize', 'stride', 'paddingMode', 'useRelu', 'usePool', 'channelView'].forEach(id => {
-      document.getElementById(id).addEventListener('change', runPipeline);
+    ['filterType', 'numLayers', 'kernelSize', 'stride', 'paddingMode', 'usePool'].forEach(id =>
+      document.getElementById(id).addEventListener('change', runPipeline)
+    );
+
+    // Sliders: update label + re-render
+    [['alpha', 'alphaVal', v => Number(v).toFixed(2)],
+     ['threshold', 'thresholdVal', v => v],
+     ['contrastScale', 'contrastScaleVal', v => Number(v).toFixed(1)]
+    ].forEach(([id, labelId, fmt]) => {
+      const el = document.getElementById(id);
+      el.addEventListener('input', () => {
+        document.getElementById(labelId).textContent = fmt(el.value);
+        runPipeline();
+      });
     });
 
+    function updateSamePaddingLabel() {
+      const k = Number(document.getElementById('kernelSize').value);
+      const p = Math.floor((k - 1) / 2);
+      document.querySelector('#paddingMode option[value="same"]').textContent = `auto: p = ${p}`;
+    }
+    document.getElementById('kernelSize').addEventListener('change', updateSamePaddingLabel);
+
+    updateSamePaddingLabel();
     loadPreset('woman');
   </script>
 </body>
