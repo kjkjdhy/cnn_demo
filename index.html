@@ -11,11 +11,11 @@
     h1 { margin-top: 0; font-size: 28px; text-align: center; }
     .subtitle { color: #555; margin-bottom: 24px; line-height: 1.5; text-align: center; }
 
-    .container { display: grid; grid-template-columns: 280px 1fr; gap: 24px; align-items: start; }
+    .container { display: flex; flex-direction: column; gap: 16px; }
     .panel { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
-    .controls { position: sticky; top: 20px; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-start; }
 
-    .control-group { margin-bottom: 14px; }
+    .control-group { margin-bottom: 0; flex: 0 0 auto; min-width: 120px; max-width: 210px; }
     label { display: block; font-weight: 700; margin-bottom: 5px; font-size: 13px; }
     select, input[type="file"], button { width: 100%; }
     select, button { padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 13px; }
@@ -65,9 +65,9 @@
       line-height: 1.9; font-size: 12px;
     }
 
-    @media (max-width: 900px) {
-      .container { grid-template-columns: 1fr; }
-      .controls { position: static; }
+    @media (max-width: 600px) {
+      .controls { gap: 8px 12px; }
+      .control-group { min-width: 100px; }
     }
   </style>
 </head>
@@ -78,6 +78,11 @@
   </p>
 
   <div class="container">
+    <div class="panel">
+      <div id="layerGrid"></div>
+      <div class="formula" id="formulaBox"></div>
+    </div>
+
     <div class="panel controls">
 
       <div class="control-group">
@@ -106,7 +111,7 @@
       </div>
 
       <div class="control-group">
-        <label for="numLayers">Number of Layers</label>
+        <label for="numLayers">Layers</label>
         <select id="numLayers">
           <option value="1">1 Layer</option>
           <option value="2" selected>2 Layers</option>
@@ -145,11 +150,20 @@
       </div>
 
       <div class="control-group">
+        <label>Pooling</label>
+        <select id="poolMode">
+          <option value="none">None</option>
+          <option value="max" selected>MaxPool 2×2</option>
+          <option value="avg">AvgPool 2×2</option>
+        </select>
+      </div>
+
+      <div class="control-group">
         <label>Strength α — <span id="alphaVal">0.70</span></label>
         <div class="slider-row">
           <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.7" />
         </div>
-        <div style="font-size:11px;color:#888;margin-top:3px;">0 = 原图，1 = 纯 feature map</div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">0 = original, 1 = feature map</div>
       </div>
 
       <div class="control-group">
@@ -157,7 +171,7 @@
         <div class="slider-row">
           <input type="range" id="threshold" min="0" max="120" step="1" value="15" />
         </div>
-        <div style="font-size:11px;color:#888;margin-top:3px;">过滤弱响应</div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">filter weak responses</div>
       </div>
 
       <div class="control-group">
@@ -165,23 +179,9 @@
         <div class="slider-row">
           <input type="range" id="contrastScale" min="1" max="10" step="0.5" value="3" />
         </div>
-        <div style="font-size:11px;color:#888;margin-top:3px;">放大 Color Contrast 响应</div>
+        <div style="font-size:11px;color:#888;margin-top:3px;">amplify Color Contrast response</div>
       </div>
 
-      <div class="control-group">
-        <label>MaxPool 2×2</label>
-        <div class="toggle-row">
-          <label class="toggle-item">
-            <input type="checkbox" id="usePool" checked /> 启用
-          </label>
-        </div>
-      </div>
-
-    </div>
-
-    <div class="panel">
-      <div id="layerGrid"></div>
-      <div class="formula" id="formulaBox"></div>
     </div>
   </div>
 
@@ -366,9 +366,10 @@
       return computeColorContrast(imageData, k, stride, padding, contrastScale);
     }
 
-    // ── MaxPool ────────────────────────────────────────────────────────────────
+    // ── Pooling ───────────────────────────────────────────────────────────────
 
-    function applyMaxPool(imageData) {
+    function applyPool(imageData, mode) {
+      if (mode === 'none') return imageData;
       const W = imageData.width, H = imageData.height;
       const outW = Math.max(1, Math.floor(W / 2));
       const outH = Math.max(1, Math.floor(H / 2));
@@ -377,14 +378,17 @@
         for (let ox = 0; ox < outW; ox++) {
           const base = (oy * outW + ox) * 4;
           for (let c = 0; c < 3; c++) {
-            let maxVal = 0;
+            let acc = mode === 'max' ? 0 : 0, cnt = 0;
             for (let py = 0; py < 2; py++)
               for (let px = 0; px < 2; px++) {
                 const ix = ox * 2 + px, iy = oy * 2 + py;
-                if (ix < W && iy < H)
-                  maxVal = Math.max(maxVal, imageData.data[(iy * W + ix) * 4 + c]);
+                if (ix < W && iy < H) {
+                  const v = imageData.data[(iy * W + ix) * 4 + c];
+                  acc = mode === 'max' ? Math.max(acc, v) : acc + v;
+                  cnt++;
+                }
               }
-            output[base + c] = maxVal;
+            output[base + c] = mode === 'max' ? acc : Math.round(acc / cnt);
           }
           output[base + 3] = 255;
         }
@@ -420,7 +424,7 @@
       const stride       = Number(document.getElementById('stride').value);
       const paddingMode  = document.getElementById('paddingMode').value;
       const padding      = getPadding(paddingMode, k);
-      const usePool      = document.getElementById('usePool').checked;
+      const poolMode     = document.getElementById('poolMode').value;
       const alpha        = Number(document.getElementById('alpha').value);
       const threshold    = Number(document.getElementById('threshold').value);
       const contrastScale = Number(document.getElementById('contrastScale').value);
@@ -433,18 +437,18 @@
         const layerOutput = {};
         for (const c of CHANNELS) {
           let fm = computeFeature(layerInput, c, k, stride, padding, contrastScale);
-          if (usePool) fm = applyMaxPool(fm);
+          fm = applyPool(fm, poolMode);
           layerOutput[c] = fm;
         }
         layers.push(layerOutput);
       }
 
-      renderGrid(layers, ch, alpha, threshold, k, stride, padding, paddingMode, usePool, contrastScale);
+      renderGrid(layers, ch, alpha, threshold, k, stride, padding, paddingMode, poolMode, contrastScale);
     }
 
     // ── Rendering ─────────────────────────────────────────────────────────────
 
-    function renderGrid(layers, ch, alpha, threshold, k, stride, padding, paddingMode, usePool, contrastScale) {
+    function renderGrid(layers, ch, alpha, threshold, k, stride, padding, paddingMode, poolMode, contrastScale) {
       const grid = document.getElementById('layerGrid');
       grid.innerHTML = '';
 
@@ -469,7 +473,7 @@
       const lines = [
         `filter: ${CHANNEL_LABELS[ch]}  |  kernel: ${k}×${k}  |  stride: ${stride}  |  padding: ${paddingMode} [p=${padding}]`,
         `α = ${alpha.toFixed(2)}  |  threshold = ${threshold}` + (ch === 'color_contrast' ? `  |  contrast scale = ${contrastScale}` : ''),
-        usePool ? 'MaxPool 2×2 → spatial ÷ 2' : '',
+        poolMode !== 'none' ? `${poolMode === 'max' ? 'MaxPool' : 'AvgPool'} 2×2 → spatial ÷ 2` : '',
         'overlay = (1 − α) × original + α × feature_map  (only where feature ≥ threshold)',
         ch === 'color_contrast' ? 'color contrast: red = positive Laplacian, green = negative' : '',
         ch === 'grad_mag'       ? 'gradient mag: bright = √(Gx² + Gy²), normalized per layer' : '',
@@ -512,12 +516,14 @@
       runPipeline();
     }
 
-    function loadPreset(seed) {
+    const PRESET_IDS = { portrait: 64, building: 318, street: 355, nature: 15 };
+
+    function loadPreset(name) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => loadImageFromImg(img);
-      img.onerror = () => alert('图片加载失败，请检查网络连接');
-      img.src = `https://picsum.photos/seed/${seed}/${MAX_SIZE}/${MAX_SIZE}`;
+      img.onerror = () => alert('Image load failed — check network connection');
+      img.src = `https://picsum.photos/id/${PRESET_IDS[name]}/${MAX_SIZE}/${MAX_SIZE}`;
     }
 
     // ── Event listeners ───────────────────────────────────────────────────────
@@ -529,14 +535,14 @@
       reader.onload = e => {
         const img = new Image();
         img.onload = () => loadImageFromImg(img);
-        img.onerror = () => alert('图片加载失败，请检查文件格式');
+        img.onerror = () => alert('Image load failed — check file format');
         img.src = e.target.result;
       };
-      reader.onerror = () => alert('文件读取失败');
+      reader.onerror = () => alert('File read failed');
       reader.readAsDataURL(file);
     });
 
-    ['filterType', 'numLayers', 'kernelSize', 'stride', 'paddingMode', 'usePool'].forEach(id =>
+    ['filterType', 'numLayers', 'kernelSize', 'stride', 'paddingMode', 'poolMode'].forEach(id =>
       document.getElementById(id).addEventListener('change', runPipeline)
     );
 
