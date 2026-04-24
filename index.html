@@ -33,14 +33,12 @@
     .slider-val { font-size: 12px; color: #444; min-width: 32px; text-align: right; }
 
     /* Grid */
-    .layer-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-    .row-label {
-      width: 58px; flex-shrink: 0; font-size: 11px; font-weight: 700; color: #666;
-      display: flex; align-items: center; justify-content: flex-end; padding-right: 6px;
-    }
+    #layerGrid { display: flex; gap: 16px; align-items: flex-start; overflow-x: auto; padding-bottom: 6px; }
+    .layer-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .col-row-label { font-size: 11px; font-weight: 700; color: #555; text-align: center; }
     .col-label {
-      width: 180px; flex-shrink: 0; text-align: center; font-size: 11px; font-weight: 700;
-      padding: 4px 0; border-radius: 6px; margin-bottom: 2px;
+      font-size: 11px; font-weight: 700; padding: 3px 10px;
+      border-radius: 6px; white-space: nowrap;
     }
     .ch-h_edge       { background: #dbeafe; color: #1d4ed8; }
     .ch-v_edge       { background: #dcfce7; color: #15803d; }
@@ -50,7 +48,7 @@
 
     .canvas-cell { flex: none; }
     .canvas-cell canvas {
-      display: block; background: #111; width: 180px;
+      display: block; background: #111; width: 240px;
       border-radius: 8px; border: 2px solid #e5e7eb;
       image-rendering: pixelated;
     }
@@ -452,21 +450,14 @@
       const grid = document.getElementById('layerGrid');
       grid.innerHTML = '';
 
-      // Header
-      const header = document.createElement('div');
-      header.className = 'layer-row';
-      header.appendChild(makeEl('div', 'row-label'));
-      header.appendChild(makeEl('div', `col-label ch-${ch}`, CHANNEL_LABELS[ch]));
-      grid.appendChild(header);
+      // Input column
+      addCol(grid, 'Input', originalImageData, 'ch-input');
 
-      // Input row — show original color image
-      addRow(grid, 'Input', originalImageData, ch, true);
-
-      // Feature rows
+      // Layer columns
       for (let l = 1; l < layers.length; l++) {
         const fm = layers[l][ch];
         const overlaid = overlayFeature(originalImageData, fm, alpha, threshold);
-        addRow(grid, `Layer ${l}`, overlaid, ch, false);
+        addCol(grid, `Layer ${l}`, overlaid, 'ch-' + ch);
       }
 
       // Formula
@@ -481,19 +472,19 @@
       document.getElementById('formulaBox').innerHTML = lines.join('<br>');
     }
 
-    function addRow(grid, label, imageData, ch, isInput) {
-      const row = document.createElement('div');
-      row.className = 'layer-row';
-      row.appendChild(makeEl('div', 'row-label', label));
+    function addCol(grid, label, imageData, chClass) {
+      const col = document.createElement('div');
+      col.className = 'layer-col';
+      col.appendChild(makeEl('div', `col-label ${chClass}`, label));
       const cell = document.createElement('div');
-      cell.className = `canvas-cell ${isInput ? 'ch-input' : 'ch-' + ch}`;
+      cell.className = `canvas-cell ${chClass}`;
       const canvas = document.createElement('canvas');
       canvas.width = imageData.width;
       canvas.height = imageData.height;
       canvas.getContext('2d').putImageData(imageData, 0, 0);
       cell.appendChild(canvas);
-      row.appendChild(cell);
-      grid.appendChild(row);
+      col.appendChild(cell);
+      grid.appendChild(col);
     }
 
     function makeEl(tag, cls, text) {
@@ -516,14 +507,14 @@
       runPipeline();
     }
 
-    const PRESET_SEEDS = { portrait: 'people', building: 'building', street: 'street', nature: 'forest' };
+    const PRESET_IDS = { portrait: 338, building: 283, street: 320, nature: 260 };
 
     function loadPreset(name) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => loadImageFromImg(img);
       img.onerror = () => alert('Image load failed — check network connection');
-      img.src = `https://picsum.photos/seed/${PRESET_SEEDS[name]}/${MAX_SIZE}/${MAX_SIZE}`;
+      img.src = `https://picsum.photos/id/${PRESET_IDS[name]}/${MAX_SIZE}/${MAX_SIZE}`;
     }
 
     // ── Event listeners ───────────────────────────────────────────────────────
@@ -566,7 +557,7 @@
     document.getElementById('kernelSize').addEventListener('change', updateSamePaddingLabel);
 
     updateSamePaddingLabel();
-    loadPreset('portrait');
+    loadPreset('street');
   </script>
 </body>
 </html>
