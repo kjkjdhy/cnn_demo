@@ -13,9 +13,12 @@
 
     .container { display: flex; flex-direction: column; gap: 16px; }
     .panel { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
-    .controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-start; }
+    .controls { display: flex; gap: 20px; align-items: flex-start; align-self: flex-start; }
+    .controls-left { display: flex; flex-direction: column; gap: 10px; width: 180px; }
+    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+    .contrast-span { grid-column: 1 / -1; }
 
-    .control-group { margin-bottom: 0; flex: 0 0 auto; min-width: 120px; max-width: 210px; }
+    .control-group { min-width: 140px; max-width: 170px; margin-bottom: 0; }
     label { display: block; font-weight: 700; margin-bottom: 5px; font-size: 13px; }
     select, input[type="file"], button { width: 100%; }
     select, button { padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 13px; }
@@ -83,106 +86,98 @@
 
     <div class="panel controls">
 
-      <div class="control-group">
-        <label for="imageUpload">Upload Image</label>
-        <input id="imageUpload" type="file" accept="image/*" />
-      </div>
-
-      <div class="control-group">
-        <label>Example Images</label>
-        <div class="preset-buttons">
-          <button onclick="loadPreset('portrait')">Portrait</button>
-          <button onclick="loadPreset('building')">Building</button>
-          <button onclick="loadPreset('street')">Street</button>
-          <button onclick="loadPreset('nature')">Nature</button>
+      <div class="controls-left">
+        <div class="control-group">
+          <label for="imageUpload">Upload Image</label>
+          <input id="imageUpload" type="file" accept="image/*" />
+        </div>
+        <div class="control-group">
+          <label>Example Images</label>
+          <div class="preset-buttons">
+            <button onclick="loadPreset('portrait')">Portrait</button>
+            <button onclick="loadPreset('building')">Building</button>
+            <button onclick="loadPreset('street')">Street</button>
+            <button onclick="loadPreset('nature')">Nature</button>
+          </div>
         </div>
       </div>
 
-      <div class="control-group">
-        <label for="filterType">Filter</label>
-        <select id="filterType">
-          <option value="h_edge">Horizontal Edge</option>
-          <option value="v_edge">Vertical Edge</option>
-          <option value="grad_mag">Gradient Magnitude</option>
-          <option value="color_contrast">Color Contrast</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        <label for="numLayers">Layers</label>
-        <select id="numLayers">
-          <option value="1">1 Layer</option>
-          <option value="2" selected>2 Layers</option>
-          <option value="3">3 Layers</option>
-          <option value="4">4 Layers</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        <label for="kernelSize">Kernel Size</label>
-        <select id="kernelSize">
-          <option value="3" selected>3 × 3</option>
-          <option value="5">5 × 5</option>
-          <option value="7">7 × 7</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        <label for="stride">Stride</label>
-        <select id="stride">
-          <option value="1" selected>1</option>
-          <option value="2">2</option>
-          <option value="4">4</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        <label for="paddingMode">Padding</label>
-        <select id="paddingMode">
-          <option value="same" selected>auto: p = 1</option>
-          <option value="valid">valid: p = 0</option>
-          <option value="custom1">custom: p = 1</option>
-          <option value="custom2">custom: p = 2</option>
-          <option value="custom3">custom: p = 3</option>
-          <option value="custom5">custom: p = 5</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        <label>Pooling</label>
-        <select id="poolMode">
-          <option value="none">None</option>
-          <option value="max2" selected>MaxPool 2×2</option>
-          <option value="max3">MaxPool 3×3</option>
-          <option value="max4">MaxPool 4×4</option>
-          <option value="avg2">AvgPool 2×2</option>
-          <option value="avg3">AvgPool 3×3</option>
-          <option value="avg4">AvgPool 4×4</option>
-        </select>
-      </div>
-
-      <div class="control-group">
-        <label>Strength α — <span id="alphaVal">0.70</span></label>
-        <div class="slider-row">
-          <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.7" />
+      <div class="controls-grid">
+        <div class="control-group">
+          <label for="filterType">Filter</label>
+          <select id="filterType">
+            <option value="h_edge">Horizontal Edge</option>
+            <option value="v_edge">Vertical Edge</option>
+            <option value="grad_mag">Gradient Magnitude</option>
+            <option value="color_contrast">Color Contrast</option>
+          </select>
         </div>
-        <div style="font-size:11px;color:#888;margin-top:3px;">0 = original, 1 = feature map</div>
-      </div>
-
-      <div class="control-group">
-        <label>Threshold — <span id="thresholdVal">15</span></label>
-        <div class="slider-row">
-          <input type="range" id="threshold" min="0" max="120" step="1" value="15" />
+        <div class="control-group">
+          <label for="numLayers">Layers</label>
+          <select id="numLayers">
+            <option value="1">1 Layer</option>
+            <option value="2" selected>2 Layers</option>
+            <option value="3">3 Layers</option>
+            <option value="4">4 Layers</option>
+          </select>
         </div>
-        <div style="font-size:11px;color:#888;margin-top:3px;">filter weak responses</div>
-      </div>
-
-      <div class="control-group">
-        <label>Contrast Scale — <span id="contrastScaleVal">3.0</span></label>
-        <div class="slider-row">
-          <input type="range" id="contrastScale" min="1" max="10" step="0.5" value="3" />
+        <div class="control-group">
+          <label for="kernelSize">Kernel Size</label>
+          <select id="kernelSize">
+            <option value="3" selected>3 × 3</option>
+            <option value="5">5 × 5</option>
+            <option value="7">7 × 7</option>
+          </select>
         </div>
-        <div style="font-size:11px;color:#888;margin-top:3px;">amplify Color Contrast response</div>
+        <div class="control-group">
+          <label for="stride">Stride</label>
+          <select id="stride">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="paddingMode">Padding</label>
+          <select id="paddingMode">
+            <option value="same" selected>auto: p = 1</option>
+            <option value="valid">valid: p = 0</option>
+            <option value="custom1">custom: p = 1</option>
+            <option value="custom2">custom: p = 2</option>
+            <option value="custom3">custom: p = 3</option>
+            <option value="custom5">custom: p = 5</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Pooling</label>
+          <select id="poolMode">
+            <option value="none">None</option>
+            <option value="max2" selected>MaxPool 2×2</option>
+            <option value="max3">MaxPool 3×3</option>
+            <option value="max4">MaxPool 4×4</option>
+            <option value="avg2">AvgPool 2×2</option>
+            <option value="avg3">AvgPool 3×3</option>
+            <option value="avg4">AvgPool 4×4</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Strength α — <span id="alphaVal">0.70</span></label>
+          <div class="slider-row">
+            <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.7" />
+          </div>
+        </div>
+        <div class="control-group">
+          <label>Threshold — <span id="thresholdVal">15</span></label>
+          <div class="slider-row">
+            <input type="range" id="threshold" min="0" max="120" step="1" value="15" />
+          </div>
+        </div>
+        <div class="control-group contrast-span">
+          <label>Contrast Scale — <span id="contrastScaleVal">3.0</span></label>
+          <div class="slider-row">
+            <input type="range" id="contrastScale" min="1" max="10" step="0.5" value="3" />
+          </div>
+        </div>
       </div>
 
     </div>
