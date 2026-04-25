@@ -73,10 +73,24 @@
     .kernel-box-subtitle { font-size: 11px; font-weight: 700; color: #888; margin-bottom: 6px; }
     .kernel-pair { display: flex; gap: 20px; justify-content: center; }
     .kernel-table { border-collapse: collapse; margin: 0 auto; }
-    .kernel-table td { width: 38px; height: 38px; text-align: center; font-family: Consolas, monospace; font-size: 12px; font-weight: 700; border: 1px solid #e5e7eb; border-radius: 4px; }
+    .kernel-table td { width: 42px; height: 42px; text-align: center; border: 1px solid #e5e7eb; padding: 0; }
+    .kernel-table input {
+      width: 42px; height: 42px; border: none; background: transparent;
+      text-align: center; font-family: Consolas, monospace; font-size: 13px; font-weight: 700;
+      outline: none; cursor: text; -moz-appearance: textfield;
+    }
+    .kernel-table input::-webkit-outer-spin-button,
+    .kernel-table input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .kernel-table input:focus { box-shadow: inset 0 0 0 2px #3b82f6; border-radius: 2px; }
     .kv-pos  { background: #dbeafe; color: #1d4ed8; }
     .kv-neg  { background: #fee2e2; color: #991b1b; }
     .kv-zero { background: #f3f4f6; color: #9ca3af; }
+    .kernel-refresh-btn {
+      margin-top: 12px; width: 100%; padding: 7px; border-radius: 8px;
+      background: #1d4ed8; color: white; border: none; font-weight: 700;
+      font-size: 13px; cursor: pointer;
+    }
+    .kernel-refresh-btn:hover { background: #1e40af; }
 
     @media (max-width: 600px) {
       .controls { gap: 8px 12px; }
@@ -196,7 +210,9 @@
     </div>
 
     <div class="kernel-display-area">
-      <div class="kernel-box" id="kernelBox"></div>
+      <div class="kernel-box" id="kernelBox">
+        <button class="kernel-refresh-btn" onclick="applyCustomKernel()">↻ Refresh</button>
+      </div>
     </div>
     </div><!-- .bottom-row -->
   </div>
@@ -210,6 +226,7 @@
     };
 
     let originalImageData = null;
+    let customKernel = null, customKernelGx = null, customKernelGy = null;
 
     // ── Utilities ─────────────────────────────────────────────────────────────
 
@@ -299,10 +316,10 @@
     }
 
     // Gradient magnitude = sqrt(Gx²+Gy²) averaged over channels, normalized, grayscale.
-    function computeGradientMagnitude(imageData, k, stride, padding) {
+    function computeGradientMagnitude(imageData, k, stride, padding, customGx = null, customGy = null) {
       const W = imageData.width, H = imageData.height;
-      const kX = buildKernel('v_edge', k);
-      const kY = buildKernel('h_edge', k);
+      const kX = customGx || buildKernel('v_edge', k);
+      const kY = customGy || buildKernel('h_edge', k);
       const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
       const outH = Math.max(1, Math.floor((H + 2 * padding - k) / stride + 1));
       const mags = new Float32Array(outW * outH);
@@ -337,9 +354,9 @@
     }
 
     // Color contrast via Laplacian (signed): positive → red, negative → green.
-    function computeColorContrast(imageData, k, stride, padding, contrastScale) {
+    function computeColorContrast(imageData, k, stride, padding, contrastScale, customKern = null) {
       const W = imageData.width, H = imageData.height;
-      const center = Math.floor(k / 2);
+      const kern = customKern || buildLaplacian(k);
       const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
       const outH = Math.max(1, Math.floor((H + 2 * padding - k) / stride + 1));
       const signed = new Float32Array(outW * outH);
@@ -356,8 +373,7 @@
               const g = getPixel(imageData.data, W, H, ix, iy, 1);
               const b = getPixel(imageData.data, W, H, ix, iy, 2);
               const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-              const isCenter = (kx === center && ky === center);
-              sum += luma * (isCenter ? (k * k - 1) : -1);
+              sum += luma * kern[ky][kx];
             }
           signed[oy * outW + ox] = sum;
           if (Math.abs(sum) > maxAbs) maxAbs = Math.abs(sum);
@@ -376,10 +392,10 @@
     }
 
     function computeFeature(imageData, ch, k, stride, padding, contrastScale) {
-      if (ch === 'h_edge') return convolveAbs(imageData, buildKernel('h_edge', k), stride, padding);
-      if (ch === 'v_edge') return convolveAbs(imageData, buildKernel('v_edge', k), stride, padding);
-      if (ch === 'grad_mag') return computeGradientMagnitude(imageData, k, stride, padding);
-      return computeColorContrast(imageData, k, stride, padding, contrastScale);
+      if (ch === 'h_edge') return convolveAbs(imageData, customKernel || buildKernel('h_edge', k), stride, padding);
+      if (ch === 'v_edge') return convolveAbs(imageData, customKernel || buildKernel('v_edge', k), stride, padding);
+      if (ch === 'grad_mag') return computeGradientMagnitude(imageData, k, stride, padding, customKernelGx, customKernelGy);
+      return computeColorContrast(imageData, k, stride, padding, contrastScale, customKernel);
     }
 
     // ── Pooling ───────────────────────────────────────────────────────────────
@@ -576,23 +592,7 @@
     }
     document.getElementById('kernelSize').addEventListener('change', updateSamePaddingLabel);
 
-    // ── Kernel display ────────────────────────────────────────────────────────
-
-    function kernelTableHTML(kernel) {
-      const k = kernel.length;
-      let html = '<table class="kernel-table">';
-      for (let y = 0; y < k; y++) {
-        html += '<tr>';
-        for (let x = 0; x < k; x++) {
-          const v = kernel[y][x];
-          const cls = v > 0 ? 'kv-pos' : v < 0 ? 'kv-neg' : 'kv-zero';
-          const label = Number.isInteger(v) ? v : v.toFixed(1);
-          html += `<td class="${cls}">${label}</td>`;
-        }
-        html += '</tr>';
-      }
-      return html + '</table>';
-    }
+    // ── Kernel display (interactive) ─────────────────────────────────────────
 
     function buildLaplacian(k) {
       const c = Math.floor(k / 2);
@@ -601,30 +601,75 @@
       );
     }
 
+    function kernelTableHTML(kernel, tableId) {
+      const k = kernel.length;
+      let html = `<table class="kernel-table" id="${tableId}"><tbody>`;
+      for (let y = 0; y < k; y++) {
+        html += '<tr>';
+        for (let x = 0; x < k; x++) {
+          const v = kernel[y][x];
+          const cls = v > 0 ? 'kv-pos' : v < 0 ? 'kv-neg' : 'kv-zero';
+          html += `<td class="${cls}"><input type="number" value="${v}" step="1" min="-9999" max="9999" oninput="syncCellColor(this)" /></td>`;
+        }
+        html += '</tr>';
+      }
+      return html + '</tbody></table>';
+    }
+
+    function syncCellColor(inp) {
+      const v = Number(inp.value);
+      inp.parentElement.className = v > 0 ? 'kv-pos' : v < 0 ? 'kv-neg' : 'kv-zero';
+    }
+
+    function readTable(tableId) {
+      const tbl = document.getElementById(tableId);
+      const rows = tbl.querySelectorAll('tr');
+      return Array.from(rows, row =>
+        Array.from(row.querySelectorAll('input'), inp => Number(inp.value))
+      );
+    }
+
+    function applyCustomKernel() {
+      const ch = document.getElementById('filterType').value;
+      if (ch === 'grad_mag') {
+        customKernelGx = readTable('kernelTblGx');
+        customKernelGy = readTable('kernelTblGy');
+      } else {
+        customKernel = readTable('kernelTblMain');
+      }
+      runPipeline();
+    }
+
+    function resetCustomKernels() {
+      customKernel = customKernelGx = customKernelGy = null;
+    }
+
     function renderKernelBox() {
       const ch = document.getElementById('filterType').value;
       const k  = Number(document.getElementById('kernelSize').value);
       const box = document.getElementById('kernelBox');
       const titles = { h_edge: 'H-Edge', v_edge: 'V-Edge', grad_mag: 'Gradient Magnitude', color_contrast: 'Color Contrast' };
 
-      let html = `<div class="kernel-box-title">${titles[ch]} — ${k}×${k} kernel</div>`;
-
+      let html = `<div class="kernel-box-title">${titles[ch]} — ${k}×${k}</div>`;
       if (ch === 'grad_mag') {
         html += '<div class="kernel-pair">';
-        html += `<div><div class="kernel-box-subtitle">Gx</div>${kernelTableHTML(buildKernel('v_edge', k))}</div>`;
-        html += `<div><div class="kernel-box-subtitle">Gy</div>${kernelTableHTML(buildKernel('h_edge', k))}</div>`;
+        html += `<div><div class="kernel-box-subtitle">Gx</div>${kernelTableHTML(buildKernel('v_edge', k), 'kernelTblGx')}</div>`;
+        html += `<div><div class="kernel-box-subtitle">Gy</div>${kernelTableHTML(buildKernel('h_edge', k), 'kernelTblGy')}</div>`;
         html += '</div>';
       } else if (ch === 'color_contrast') {
-        html += kernelTableHTML(buildLaplacian(k));
+        html += kernelTableHTML(buildLaplacian(k), 'kernelTblMain');
       } else {
-        html += kernelTableHTML(buildKernel(ch, k));
+        html += kernelTableHTML(buildKernel(ch, k), 'kernelTblMain');
       }
 
+      // preserve the refresh button (append before it)
+      const btn = box.querySelector('.kernel-refresh-btn');
       box.innerHTML = html;
+      box.appendChild(btn);
     }
 
-    document.getElementById('filterType').addEventListener('change', renderKernelBox);
-    document.getElementById('kernelSize').addEventListener('change', renderKernelBox);
+    document.getElementById('filterType').addEventListener('change', () => { resetCustomKernels(); renderKernelBox(); });
+    document.getElementById('kernelSize').addEventListener('change', () => { resetCustomKernels(); renderKernelBox(); });
 
     updateSamePaddingLabel();
     renderKernelBox();
