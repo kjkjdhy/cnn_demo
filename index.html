@@ -13,16 +13,18 @@
 
     .container { display: flex; flex-direction: column; gap: 16px; }
     .panel { background: white; border-radius: 14px; padding: 14px 18px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
-    .controls { display: flex; flex-wrap: nowrap; gap: 8px 12px; align-items: flex-start; }
+    .bottom-row { display: flex; gap: 16px; align-items: flex-start; }
+    .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-start; flex: 1 1 0; min-width: 0; }
+    .info-panel { flex: 0 0 280px; }
 
-    .control-group { margin-bottom: 0; flex: 1 1 0; min-width: 0; }
-    label { display: block; font-weight: 700; margin-bottom: 4px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .control-group { margin-bottom: 0; flex: 1 1 110px; max-width: 190px; }
+    label { display: block; font-weight: 700; margin-bottom: 4px; font-size: 12px; }
     select, input[type="file"], button { width: 100%; }
-    select, button { padding: 6px 4px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 12px; }
+    select, button { padding: 6px 8px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 12px; }
     button { cursor: pointer; background: #222; color: white; border: none; font-weight: 700; }
     button:hover { opacity: 0.9; }
-    .preset-buttons { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; }
-    .preset-buttons button { background: #3b4252; font-size: 11px; padding: 5px 2px; }
+    .preset-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .preset-buttons button { background: #3b4252; font-size: 12px; }
 
     .toggle-row { display: flex; gap: 16px; }
     .toggle-item { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; cursor: pointer; }
@@ -58,9 +60,9 @@
     .canvas-cell.ch-color_contrast canvas { border-color: #fca5a5; }
 
     .formula {
-      margin-top: 16px; background: #101418; color: #e8edf2;
-      padding: 14px; border-radius: 10px; font-family: Consolas, monospace;
-      line-height: 1.9; font-size: 12px;
+      background: #101418; color: #e8edf2;
+      padding: 12px 14px; border-radius: 10px; font-family: Consolas, monospace;
+      line-height: 1.8; font-size: 11px; word-break: break-word;
     }
 
     @media (max-width: 600px) {
@@ -78,9 +80,9 @@
   <div class="container">
     <div class="panel">
       <div id="layerGrid"></div>
-      <div class="formula" id="formulaBox"></div>
     </div>
 
+    <div class="bottom-row">
     <div class="panel controls">
 
       <div class="control-group">
@@ -183,6 +185,11 @@
       </div>
 
     </div>
+
+    <div class="panel info-panel">
+      <div class="formula" id="formulaBox"></div>
+    </div>
+    </div><!-- .bottom-row -->
   </div>
 
   <script>
