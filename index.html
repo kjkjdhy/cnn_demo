@@ -265,9 +265,18 @@
 
     // ── Kernel builders ────────────────────────────────────────────────────────
 
-    function getPadding(mode, k) {
-      if (mode.startsWith('custom')) return Number(mode.replace('custom', ''));
-      return Math.floor((k - 1) / 2); // 'same': p keeps size unchanged for stride=1
+    // p such that floor((dim + 2p - k) / stride + 1) == dim  →  p = ceil(((stride-1)*dim + k - stride) / 2)
+    function computeAutoPadding(dim, k, stride) {
+      return Math.max(0, Math.ceil(((stride - 1) * dim + k - stride) / 2));
+    }
+
+    // inputW/inputH only needed for 'same' mode
+    function getPadding(mode, k, stride, inputW, inputH) {
+      if (mode === 'same') {
+        const dim = Math.max(inputW || MAX_SIZE, inputH || MAX_SIZE);
+        return computeAutoPadding(dim, k, stride);
+      }
+      return Number(mode.replace('custom', ''));
     }
 
     function binomialRow(n) {
@@ -434,9 +443,9 @@
       for (let l = 0; l < numLayers; l++) {
         const cfg = layerConfigs[l];
         const stride  = cfg.stride;
-        const padding = getPadding(cfg.paddingMode, k);
         const prevMaps = layers[l];
         const inputImg = prevMaps.length === 1 ? prevMaps[0] : avgMaps(prevMaps);
+        const padding = getPadding(cfg.paddingMode, k, stride, inputImg.width, inputImg.height);
         const outputMaps = [];
         for (let c = 0; c < cfg.outChannels; c++) {
           const chCfg = cfg.channels[c];
@@ -513,7 +522,7 @@
       // Formula
       const layerLines = Array.from({length: numLayers}, (_, i) => {
         const cfg = layerConfigs[i];
-        const p = getPadding(cfg.paddingMode, k);
+        const p = getPadding(cfg.paddingMode, k, cfg.stride, MAX_SIZE, MAX_SIZE);
         const poolStr = cfg.poolMode === 'none' ? 'no pool'
           : `${cfg.poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${cfg.poolMode.slice(3)}×${cfg.poolMode.slice(3)}`;
         return `L${i+1}: ${cfg.outChannels}ch  stride=${cfg.stride}  p=${p}  ${poolStr}`;
@@ -558,7 +567,7 @@
       const k = Number(document.getElementById('kernelSize').value);
       const l = selectedEditLayer;
       const cfg = layerConfigs[l - 1];
-      const p = getPadding(cfg.paddingMode, k);
+      const p = getPadding(cfg.paddingMode, k, cfg.stride, MAX_SIZE, MAX_SIZE);
       const poolStr = cfg.poolMode === 'none' ? 'no pool'
         : `${cfg.poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${cfg.poolMode.slice(3)}×${cfg.poolMode.slice(3)}`;
       const box = document.getElementById('kernelBox');
@@ -689,7 +698,8 @@
 
     function updateSamePaddingLabel() {
       const k = Number(document.getElementById('kernelSize').value);
-      const p = Math.floor((k - 1) / 2);
+      const stride = layerConfigs[selectedEditLayer - 1].stride;
+      const p = computeAutoPadding(MAX_SIZE, k, stride);
       document.querySelector('#paddingMode option[value="same"]').textContent = `auto: p = ${p}`;
     }
 
