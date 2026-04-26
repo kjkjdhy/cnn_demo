@@ -57,12 +57,6 @@
     .canvas-cell.ch-diag_edge canvas      { border-color: #fcd34d; }
     .canvas-cell.ch-color_contrast canvas { border-color: #fca5a5; }
 
-    .formula {
-      margin-top: 16px; background: #101418; color: #e8edf2;
-      padding: 14px; border-radius: 10px; font-family: Consolas, monospace;
-      line-height: 1.9; font-size: 12px;
-    }
-
     /* Bottom row */
     .bottom-row { display: flex; gap: 16px; align-items: stretch; }
     .kernel-display-area { flex: 1; display: flex; align-items: flex-start; justify-content: center; }
@@ -101,15 +95,10 @@
 </head>
 <body>
   <h1>CNN Convolution Demo</h1>
-  <p class="subtitle">
-    Each layer runs Conv → Pool across multiple channels. Stride, padding and pooling are per-layer.
-    Click a layer button to edit its settings and kernels, then press Refresh.
-  </p>
 
   <div class="container">
     <div class="panel">
       <div id="layerGrid"></div>
-      <div class="formula" id="formulaBox"></div>
     </div>
 
     <div class="bottom-row">
@@ -277,6 +266,24 @@
         return computeAutoPadding(dim, k, stride);
       }
       return Number(mode.replace('custom', ''));
+    }
+
+    // Simulate image size after layers 0..(layerIdx-1) to get accurate input size for layer layerIdx
+    function computeExpectedInputSize(layerIdx) {
+      const k = Number(document.getElementById('kernelSize').value);
+      let size = originalImageData
+        ? Math.max(originalImageData.width, originalImageData.height)
+        : MAX_SIZE;
+      for (let l = 0; l < layerIdx; l++) {
+        const cfg = layerConfigs[l];
+        const p = getPadding(cfg.paddingMode, k, cfg.stride, size, size);
+        size = Math.max(1, Math.floor((size + 2 * p - k) / cfg.stride + 1));
+        if (cfg.poolMode !== 'none') {
+          const s = parseInt(cfg.poolMode.slice(3));
+          size = Math.max(1, Math.floor(size / s));
+        }
+      }
+      return size;
     }
 
     function binomialRow(n) {
@@ -518,21 +525,6 @@
 
         grid.appendChild(col);
       }
-
-      // Formula
-      const layerLines = Array.from({length: numLayers}, (_, i) => {
-        const cfg = layerConfigs[i];
-        const p = getPadding(cfg.paddingMode, k, cfg.stride, MAX_SIZE, MAX_SIZE);
-        const poolStr = cfg.poolMode === 'none' ? 'no pool'
-          : `${cfg.poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${cfg.poolMode.slice(3)}×${cfg.poolMode.slice(3)}`;
-        return `L${i+1}: ${cfg.outChannels}ch  stride=${cfg.stride}  p=${p}  ${poolStr}`;
-      });
-      const lines = [
-        `kernel: ${k}×${k}  ·  overlay: α=${ALPHA.toFixed(2)}  threshold=${THRESHOLD}  contrast×${CONTRAST_SCALE}`,
-        layerLines.join('   |   '),
-        'each layer input = mean(prev channels)  →  per-channel conv  →  pool  →  overlay',
-      ];
-      document.getElementById('formulaBox').innerHTML = lines.join('<br>');
     }
 
     // ── Kernel editor ──────────────────────────────────────────────────────────
@@ -567,7 +559,8 @@
       const k = Number(document.getElementById('kernelSize').value);
       const l = selectedEditLayer;
       const cfg = layerConfigs[l - 1];
-      const p = getPadding(cfg.paddingMode, k, cfg.stride, MAX_SIZE, MAX_SIZE);
+      const expectedSize = computeExpectedInputSize(l - 1);
+      const p = getPadding(cfg.paddingMode, k, cfg.stride, expectedSize, expectedSize);
       const poolStr = cfg.poolMode === 'none' ? 'no pool'
         : `${cfg.poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${cfg.poolMode.slice(3)}×${cfg.poolMode.slice(3)}`;
       const box = document.getElementById('kernelBox');
@@ -697,9 +690,11 @@
     });
 
     function updateSamePaddingLabel() {
+      const l = selectedEditLayer;
+      const cfg = layerConfigs[l - 1];
       const k = Number(document.getElementById('kernelSize').value);
-      const stride = layerConfigs[selectedEditLayer - 1].stride;
-      const p = computeAutoPadding(MAX_SIZE, k, stride);
+      const expectedSize = computeExpectedInputSize(l - 1);
+      const p = computeAutoPadding(expectedSize, k, cfg.stride);
       document.querySelector('#paddingMode option[value="same"]').textContent = `auto: p = ${p}`;
     }
 
