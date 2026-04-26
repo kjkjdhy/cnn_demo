@@ -23,8 +23,6 @@
     button:hover { opacity: 0.9; }
     .preset-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .preset-buttons button { background: #3b4252; font-size: 12px; width: 100%; }
-    .slider-row { display: flex; align-items: center; gap: 8px; }
-    .slider-row input[type="range"] { flex: 1; }
 
     /* Layer selector buttons */
     .layer-btn-row { display: flex; gap: 5px; }
@@ -85,7 +83,7 @@
     .kernel-table input {
       width: 30px; height: 30px; border: none; background: transparent;
       text-align: center; font-family: Consolas, monospace; font-size: 11px; font-weight: 700;
-      outline: none; cursor: text; -moz-appearance: textfield;
+      outline: none; cursor: text; -moz-appearance: textfield; appearance: textfield;
     }
     .kernel-table input::-webkit-outer-spin-button,
     .kernel-table input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -104,7 +102,8 @@
 <body>
   <h1>CNN Convolution Demo</h1>
   <p class="subtitle">
-    Each layer runs Conv → Threshold → Pool across multiple channels. Click a layer label or button to edit its kernels, then press Refresh.
+    Each layer runs Conv → Pool across multiple channels. Stride, padding and pooling are per-layer.
+    Click a layer button to edit its settings and kernels, then press Refresh.
   </p>
 
   <div class="container">
@@ -154,8 +153,8 @@
               <option value="4">4 Layers</option>
             </select>
           </div>
-          <div class="control-group">
-            <label for="kernelSize">Kernel Size</label>
+          <div class="control-group full-span">
+            <label for="kernelSize">Kernel Size (global)</label>
             <select id="kernelSize">
               <option value="3" selected>3 × 3</option>
               <option value="5">5 × 5</option>
@@ -163,7 +162,7 @@
             </select>
           </div>
           <div class="control-group">
-            <label for="stride">Stride</label>
+            <label for="stride">Stride (this layer)</label>
             <select id="stride">
               <option value="1" selected>1</option>
               <option value="2">2</option>
@@ -171,18 +170,18 @@
             </select>
           </div>
           <div class="control-group">
-            <label for="paddingMode">Padding</label>
+            <label for="paddingMode">Padding (this layer)</label>
             <select id="paddingMode">
               <option value="same" selected>auto: p = 1</option>
-              <option value="valid">valid: p = 0</option>
+              <option value="custom0">custom: p = 0</option>
               <option value="custom1">custom: p = 1</option>
               <option value="custom2">custom: p = 2</option>
               <option value="custom3">custom: p = 3</option>
               <option value="custom5">custom: p = 5</option>
             </select>
           </div>
-          <div class="control-group">
-            <label>Pooling</label>
+          <div class="control-group full-span">
+            <label>Pooling (this layer)</label>
             <select id="poolMode">
               <option value="none">None</option>
               <option value="max2" selected>MaxPool 2×2</option>
@@ -192,24 +191,6 @@
               <option value="avg3">AvgPool 3×3</option>
               <option value="avg4">AvgPool 4×4</option>
             </select>
-          </div>
-          <div class="control-group">
-            <label>Strength α — <span id="alphaVal">0.70</span></label>
-            <div class="slider-row">
-              <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.7" />
-            </div>
-          </div>
-          <div class="control-group">
-            <label>Threshold — <span id="thresholdVal">15</span></label>
-            <div class="slider-row">
-              <input type="range" id="threshold" min="0" max="120" step="1" value="15" />
-            </div>
-          </div>
-          <div class="control-group full-span">
-            <label>Contrast Scale — <span id="contrastScaleVal">3.0</span></label>
-            <div class="slider-row">
-              <input type="range" id="contrastScale" min="1" max="10" step="0.5" value="3" />
-            </div>
           </div>
         </div>
       </div>
@@ -224,6 +205,10 @@
 
   <script>
     const MAX_SIZE = 320;
+    const ALPHA = 0.7;
+    const THRESHOLD = 15;
+    const CONTRAST_SCALE = 3.0;
+
     const FILTER_TYPES = ['h_edge', 'v_edge', 'diag_edge', 'color_contrast'];
     const FILTER_LABELS = {
       h_edge: 'H-Edge', v_edge: 'V-Edge',
@@ -233,9 +218,12 @@
     let originalImageData = null;
     let selectedEditLayer = 1;
 
-    // layerConfigs[0] = config for Layer 1, etc.
+    // layerConfigs[0] = Layer 1, etc.  stride/paddingMode/poolMode are per-layer.
     let layerConfigs = Array.from({length: 4}, () => ({
       outChannels: 1,
+      stride: 1,
+      paddingMode: 'same',
+      poolMode: 'max2',
       channels: Array.from({length: 4}, (_, c) => ({
         filterType: FILTER_TYPES[c % FILTER_TYPES.length],
         customKernel: null
@@ -278,9 +266,8 @@
     // ── Kernel builders ────────────────────────────────────────────────────────
 
     function getPadding(mode, k) {
-      if (mode === 'valid') return 0;
       if (mode.startsWith('custom')) return Number(mode.replace('custom', ''));
-      return Math.floor((k - 1) / 2); // 'same'
+      return Math.floor((k - 1) / 2); // 'same': p keeps size unchanged for stride=1
     }
 
     function binomialRow(n) {
@@ -301,7 +288,7 @@
     }
 
     function buildDiagEdge(size) {
-      // kernel[y][x] = y - x; main diagonal (y==x) = 0
+      // k[y][x] = y - x; main diagonal (y==x) = 0, sensitive to \ edges
       return Array.from({length: size}, (_, y) =>
         Array.from({length: size}, (_, x) => y - x)
       );
@@ -344,7 +331,7 @@
       return new ImageData(output, outW, outH);
     }
 
-    function computeColorContrast(imageData, stride, padding, contrastScale, kern) {
+    function computeColorContrast(imageData, stride, padding, kern) {
       const W = imageData.width, H = imageData.height;
       const k = kern.length;
       const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
@@ -366,7 +353,7 @@
           if (Math.abs(sum) > maxAbs) maxAbs = Math.abs(sum);
         }
       const output = new Uint8ClampedArray(outW * outH * 4);
-      const scale = maxAbs > 0 ? (255 * contrastScale) / maxAbs : 1;
+      const scale = maxAbs > 0 ? (255 * CONTRAST_SCALE) / maxAbs : 1;
       for (let i = 0; i < outW * outH; i++) {
         const v = signed[i] * scale;
         output[i * 4]     = v > 0 ? clamp(v) : 0;
@@ -377,10 +364,10 @@
       return new ImageData(output, outW, outH);
     }
 
-    function applyFilter(imageData, filterType, k, stride, padding, contrastScale, customKernel) {
+    function applyFilter(imageData, filterType, k, stride, padding, customKernel) {
       if (filterType === 'color_contrast') {
         const kern = customKernel || buildLaplacian(k);
-        return computeColorContrast(imageData, stride, padding, contrastScale, kern);
+        return computeColorContrast(imageData, stride, padding, kern);
       }
       const kern = customKernel || getDefaultKernel(filterType, k);
       return convolveAbs(imageData, kern, stride, padding);
@@ -419,13 +406,13 @@
 
     // ── Overlay ────────────────────────────────────────────────────────────────
 
-    function overlayFeature(originalRGB, featureMap, alpha, threshold) {
+    function overlayFeature(originalRGB, featureMap) {
       const W = featureMap.width, H = featureMap.height;
       const scaledOrig = scaleImageTo(originalRGB, W, H);
       const result = new ImageData(W, H);
       for (let i = 0; i < result.data.length; i += 4) {
         const brightness = Math.max(featureMap.data[i], featureMap.data[i + 1], featureMap.data[i + 2]);
-        const a = brightness >= threshold ? alpha : 0;
+        const a = brightness >= THRESHOLD ? ALPHA : 0;
         for (let c = 0; c < 3; c++)
           result.data[i + c] = clamp((1 - a) * scaledOrig.data[i + c] + a * featureMap.data[i + c]);
         result.data[i + 3] = 255;
@@ -438,39 +425,34 @@
     function runPipeline() {
       if (!originalImageData) return;
 
-      const numLayers    = Number(document.getElementById('numLayers').value);
-      const k            = Number(document.getElementById('kernelSize').value);
-      const stride       = Number(document.getElementById('stride').value);
-      const paddingMode  = document.getElementById('paddingMode').value;
-      const padding      = getPadding(paddingMode, k);
-      const poolMode     = document.getElementById('poolMode').value;
-      const alpha        = Number(document.getElementById('alpha').value);
-      const threshold    = Number(document.getElementById('threshold').value);
-      const contrastScale = Number(document.getElementById('contrastScale').value);
+      const numLayers = Number(document.getElementById('numLayers').value);
+      const k         = Number(document.getElementById('kernelSize').value);
 
       // layers[0] = [originalImageData]; layers[l] = [fm_c0, fm_c1, ...]
       const layers = [[originalImageData]];
 
       for (let l = 0; l < numLayers; l++) {
         const cfg = layerConfigs[l];
+        const stride  = cfg.stride;
+        const padding = getPadding(cfg.paddingMode, k);
         const prevMaps = layers[l];
         const inputImg = prevMaps.length === 1 ? prevMaps[0] : avgMaps(prevMaps);
         const outputMaps = [];
         for (let c = 0; c < cfg.outChannels; c++) {
           const chCfg = cfg.channels[c];
-          let fm = applyFilter(inputImg, chCfg.filterType, k, stride, padding, contrastScale, chCfg.customKernel);
-          fm = applyPool(fm, poolMode);
+          let fm = applyFilter(inputImg, chCfg.filterType, k, stride, padding, chCfg.customKernel);
+          fm = applyPool(fm, cfg.poolMode);
           outputMaps.push(fm);
         }
         layers.push(outputMaps);
       }
 
-      renderGrid(layers, alpha, threshold, k, stride, padding, paddingMode, poolMode, contrastScale);
+      renderGrid(layers, k);
     }
 
     // ── Rendering ──────────────────────────────────────────────────────────────
 
-    function renderGrid(layers, alpha, threshold, k, stride, padding, paddingMode, poolMode, contrastScale) {
+    function renderGrid(layers, k) {
       const grid = document.getElementById('layerGrid');
       grid.innerHTML = '';
 
@@ -502,14 +484,13 @@
         const layerLabel = document.createElement('div');
         layerLabel.className = 'col-label ch-input' + (selectedEditLayer === l ? ' editing' : '');
         layerLabel.textContent = `Layer ${l}`;
-        layerLabel.title = 'Click to edit kernels';
+        layerLabel.title = 'Click to edit';
         layerLabel.onclick = () => selectEditLayer(l);
         col.appendChild(layerLabel);
 
         for (let c = 0; c < maps.length; c++) {
           const chCfg = cfg.channels[c];
-          const ftClass = 'ch-' + chCfg.filterType;
-          const overlaid = overlayFeature(originalImageData, maps[c], alpha, threshold);
+          const overlaid = overlayFeature(originalImageData, maps[c]);
 
           const rowLabel = document.createElement('div');
           rowLabel.className = 'col-row-label';
@@ -517,7 +498,7 @@
           col.appendChild(rowLabel);
 
           const cell = document.createElement('div');
-          cell.className = `canvas-cell ${ftClass}`;
+          cell.className = `canvas-cell ch-${chCfg.filterType}`;
           const canvas = document.createElement('canvas');
           canvas.width = overlaid.width;
           canvas.height = overlaid.height;
@@ -530,13 +511,17 @@
       }
 
       // Formula
-      const chCounts = Array.from({length: numLayers}, (_, l) => layerConfigs[l].outChannels);
+      const layerLines = Array.from({length: numLayers}, (_, i) => {
+        const cfg = layerConfigs[i];
+        const p = getPadding(cfg.paddingMode, k);
+        const poolStr = cfg.poolMode === 'none' ? 'no pool'
+          : `${cfg.poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${cfg.poolMode.slice(3)}×${cfg.poolMode.slice(3)}`;
+        return `L${i+1}: ${cfg.outChannels}ch  stride=${cfg.stride}  p=${p}  ${poolStr}`;
+      });
       const lines = [
-        `layers: ${numLayers}  |  channels per layer: [${chCounts.join(', ')}]  |  kernel: ${k}×${k}  |  stride: ${stride}  |  padding: ${paddingMode} [p=${padding}]`,
-        `α = ${alpha.toFixed(2)}  |  threshold = ${threshold}  |  contrast scale = ${contrastScale.toFixed(1)}` +
-          (poolMode !== 'none' ? `  |  ${poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${poolMode.slice(3)}×${poolMode.slice(3)}` : ''),
-        'overlay = (1 − α) × original + α × feature_map  (only where feature ≥ threshold)',
-        'layer input = average of previous layer channels; each channel applies its own kernel',
+        `kernel: ${k}×${k}  ·  overlay: α=${ALPHA.toFixed(2)}  threshold=${THRESHOLD}  contrast×${CONTRAST_SCALE}`,
+        layerLines.join('   |   '),
+        'each layer input = mean(prev channels)  →  per-channel conv  →  pool  →  overlay',
       ];
       document.getElementById('formulaBox').innerHTML = lines.join('<br>');
     }
@@ -573,9 +558,14 @@
       const k = Number(document.getElementById('kernelSize').value);
       const l = selectedEditLayer;
       const cfg = layerConfigs[l - 1];
+      const p = getPadding(cfg.paddingMode, k);
+      const poolStr = cfg.poolMode === 'none' ? 'no pool'
+        : `${cfg.poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${cfg.poolMode.slice(3)}×${cfg.poolMode.slice(3)}`;
       const box = document.getElementById('kernelBox');
 
-      let html = `<div class="kernel-box-title">Layer ${l} — ${k}×${k}  ·  ${cfg.outChannels} output channel${cfg.outChannels > 1 ? 's' : ''}</div>`;
+      let html = `<div class="kernel-box-title">`;
+      html += `Layer ${l}  ·  ${cfg.outChannels} ch  ·  ${k}×${k}  ·  stride=${cfg.stride}  p=${p}  ${poolStr}`;
+      html += `</div>`;
       html += `<div class="kernel-channels-row">`;
 
       for (let c = 0; c < cfg.outChannels; c++) {
@@ -626,8 +616,13 @@
 
     function selectEditLayer(l) {
       selectedEditLayer = l;
-      document.getElementById('layerChannels').value = layerConfigs[l - 1].outChannels;
+      const cfg = layerConfigs[l - 1];
+      document.getElementById('layerChannels').value = cfg.outChannels;
+      document.getElementById('stride').value = cfg.stride;
+      document.getElementById('paddingMode').value = cfg.paddingMode;
+      document.getElementById('poolMode').value = cfg.poolMode;
       updateLayerBtns();
+      updateSamePaddingLabel();
       renderKernelBox();
     }
 
@@ -662,38 +657,40 @@
 
     document.getElementById('numLayers').addEventListener('change', () => {
       updateLayerBtns();
-      document.getElementById('layerChannels').value = layerConfigs[selectedEditLayer - 1].outChannels;
-      renderKernelBox();
-      // No auto-run — user presses Refresh
+      selectEditLayer(selectedEditLayer); // sync dropdowns to (possibly clamped) layer
     });
 
     document.getElementById('layerChannels').addEventListener('change', () => {
       layerConfigs[selectedEditLayer - 1].outChannels = Number(document.getElementById('layerChannels').value);
       renderKernelBox();
-      // No auto-run — user presses Refresh
     });
 
     document.getElementById('kernelSize').addEventListener('change', () => {
       resetAllCustomKernels();
       updateSamePaddingLabel();
       renderKernelBox();
-      // No auto-run — user presses Refresh
     });
 
-    // α, threshold, contrastScale: live preview (display-only parameters)
-    [['alpha', 'alphaVal', v => Number(v).toFixed(2)],
-     ['threshold', 'thresholdVal', v => v],
-     ['contrastScale', 'contrastScaleVal', v => Number(v).toFixed(1)]
-    ].forEach(([id, labelId, fmt]) => {
-      document.getElementById(id).addEventListener('input', () => {
-        document.getElementById(labelId).textContent = fmt(document.getElementById(id).value);
-        runPipeline();
-      });
+    document.getElementById('stride').addEventListener('change', () => {
+      layerConfigs[selectedEditLayer - 1].stride = Number(document.getElementById('stride').value);
+      updateSamePaddingLabel();
+      renderKernelBox();
+    });
+
+    document.getElementById('paddingMode').addEventListener('change', () => {
+      layerConfigs[selectedEditLayer - 1].paddingMode = document.getElementById('paddingMode').value;
+      renderKernelBox();
+    });
+
+    document.getElementById('poolMode').addEventListener('change', () => {
+      layerConfigs[selectedEditLayer - 1].poolMode = document.getElementById('poolMode').value;
+      renderKernelBox();
     });
 
     function updateSamePaddingLabel() {
       const k = Number(document.getElementById('kernelSize').value);
-      document.querySelector('#paddingMode option[value="same"]').textContent = `auto: p = ${Math.floor((k-1)/2)}`;
+      const p = Math.floor((k - 1) / 2);
+      document.querySelector('#paddingMode option[value="same"]').textContent = `auto: p = ${p}`;
     }
 
     // ── Image loading ──────────────────────────────────────────────────────────
