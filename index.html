@@ -6,58 +6,57 @@
   <title>CNN Convolution Demo</title>
   <style>
     * { box-sizing: border-box; font-family: Arial, sans-serif; }
-
     body { margin: 0; padding: 24px; background: #f5f6f8; color: #222; }
     h1 { margin-top: 0; font-size: 28px; text-align: center; }
     .subtitle { color: #555; margin-bottom: 24px; line-height: 1.5; text-align: center; }
-
     .container { display: flex; flex-direction: column; gap: 16px; }
     .panel { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
     .controls { display: flex; gap: 20px; align-items: flex-start; align-self: flex-start; }
     .controls-left { display: flex; flex-direction: column; gap: 10px; width: 180px; }
     .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
-    .contrast-span { grid-column: 1 / -1; }
-
+    .full-span { grid-column: 1 / -1; }
     .control-group { min-width: 140px; max-width: 170px; margin-bottom: 0; }
     label { display: block; font-weight: 700; margin-bottom: 5px; font-size: 13px; }
-    select, input[type="file"], button { width: 100%; }
-    select, button { padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 13px; }
-    button { cursor: pointer; background: #222; color: white; border: none; font-weight: 700; }
+    select, input[type="file"] { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 13px; }
+    button { cursor: pointer; background: #222; color: white; border: none; font-weight: 700;
+             padding: 8px; border-radius: 8px; font-size: 13px; }
     button:hover { opacity: 0.9; }
     .preset-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .preset-buttons button { background: #3b4252; font-size: 12px; }
-
-    .toggle-row { display: flex; gap: 16px; }
-    .toggle-item { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13px; cursor: pointer; }
-    .toggle-item input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
-
+    .preset-buttons button { background: #3b4252; font-size: 12px; width: 100%; }
     .slider-row { display: flex; align-items: center; gap: 8px; }
     .slider-row input[type="range"] { flex: 1; }
-    .slider-val { font-size: 12px; color: #444; min-width: 32px; text-align: right; }
 
-    /* Grid */
+    /* Layer selector buttons */
+    .layer-btn-row { display: flex; gap: 5px; }
+    .layer-btn {
+      flex: 1; padding: 7px 4px; border-radius: 6px; border: 1px solid #ccc;
+      background: white; font-weight: 700; font-size: 12px; cursor: pointer; color: #555;
+    }
+    .layer-btn.active { background: #1d4ed8; color: white; border-color: #1d4ed8; }
+    .layer-btn:hover:not(.active) { background: #f3f4f6; }
+
+    /* Image grid */
     #layerGrid { display: flex; gap: 16px; align-items: flex-start; overflow-x: auto; padding-bottom: 6px; }
-    .layer-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-    .col-row-label { font-size: 11px; font-weight: 700; color: #555; text-align: center; }
+    .layer-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .col-label {
       font-size: 11px; font-weight: 700; padding: 3px 10px;
-      border-radius: 6px; white-space: nowrap;
+      border-radius: 6px; white-space: nowrap; cursor: pointer; user-select: none;
     }
-    .ch-h_edge       { background: #dbeafe; color: #1d4ed8; }
-    .ch-v_edge       { background: #dcfce7; color: #15803d; }
-    .ch-grad_mag     { background: #f3e8ff; color: #7e22ce; }
+    .col-label.editing { outline: 2px solid #1d4ed8; outline-offset: 1px; }
+    .col-row-label { font-size: 10px; font-weight: 700; color: #777; margin-top: 3px; text-align: center; }
+    .ch-h_edge         { background: #dbeafe; color: #1d4ed8; }
+    .ch-v_edge         { background: #dcfce7; color: #15803d; }
+    .ch-diag_edge      { background: #fef3c7; color: #92400e; }
     .ch-color_contrast { background: #fee2e2; color: #991b1b; }
-    .ch-input        { background: #f3f4f6; color: #374151; }
-
+    .ch-input          { background: #f3f4f6; color: #374151; }
     .canvas-cell { flex: none; }
     .canvas-cell canvas {
       display: block; background: #111; width: 280px;
-      border-radius: 8px; border: 2px solid #e5e7eb;
-      image-rendering: pixelated;
+      border-radius: 8px; border: 2px solid #e5e7eb; image-rendering: pixelated;
     }
-    .canvas-cell.ch-h_edge        canvas { border-color: #93c5fd; }
-    .canvas-cell.ch-v_edge        canvas { border-color: #86efac; }
-    .canvas-cell.ch-grad_mag      canvas { border-color: #d8b4fe; }
+    .canvas-cell.ch-h_edge canvas         { border-color: #93c5fd; }
+    .canvas-cell.ch-v_edge canvas         { border-color: #86efac; }
+    .canvas-cell.ch-diag_edge canvas      { border-color: #fcd34d; }
     .canvas-cell.ch-color_contrast canvas { border-color: #fca5a5; }
 
     .formula {
@@ -66,17 +65,26 @@
       line-height: 1.9; font-size: 12px;
     }
 
+    /* Bottom row */
     .bottom-row { display: flex; gap: 16px; align-items: stretch; }
-    .kernel-display-area { flex: 1; display: flex; align-items: center; justify-content: center; }
-    .kernel-box { background: white; border-radius: 14px; padding: 18px 22px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); text-align: center; }
-    .kernel-box-title { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 10px; }
-    .kernel-box-subtitle { font-size: 11px; font-weight: 700; color: #888; margin-bottom: 6px; }
-    .kernel-pair { display: flex; gap: 20px; justify-content: center; }
+    .kernel-display-area { flex: 1; display: flex; align-items: flex-start; justify-content: center; }
+    .kernel-box {
+      background: white; border-radius: 14px; padding: 16px 20px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.08); text-align: center; width: 100%;
+    }
+    .kernel-box-title { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 12px; }
+    .kernel-channels-row { display: flex; gap: 10px; align-items: flex-start; overflow-x: auto; padding: 2px 0; }
+    .kernel-ch-block { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
+    .kernel-ch-label { font-size: 11px; font-weight: 700; color: #555; }
+    .kernel-filter-select {
+      padding: 3px 4px; border-radius: 5px; border: 1px solid #ccc;
+      font-size: 11px; background: white; cursor: pointer;
+    }
     .kernel-table { border-collapse: collapse; margin: 0 auto; }
-    .kernel-table td { width: 42px; height: 42px; text-align: center; border: 1px solid #e5e7eb; padding: 0; }
+    .kernel-table td { width: 30px; height: 30px; text-align: center; border: 1px solid #e5e7eb; padding: 0; }
     .kernel-table input {
-      width: 42px; height: 42px; border: none; background: transparent;
-      text-align: center; font-family: Consolas, monospace; font-size: 13px; font-weight: 700;
+      width: 30px; height: 30px; border: none; background: transparent;
+      text-align: center; font-family: Consolas, monospace; font-size: 11px; font-weight: 700;
       outline: none; cursor: text; -moz-appearance: textfield;
     }
     .kernel-table input::-webkit-outer-spin-button,
@@ -86,22 +94,17 @@
     .kv-neg  { background: #fee2e2; color: #991b1b; }
     .kv-zero { background: #f3f4f6; color: #9ca3af; }
     .kernel-refresh-btn {
-      margin-top: 12px; width: 100%; padding: 7px; border-radius: 8px;
+      margin-top: 14px; padding: 8px 32px; border-radius: 8px;
       background: #1d4ed8; color: white; border: none; font-weight: 700;
-      font-size: 13px; cursor: pointer;
+      font-size: 13px; cursor: pointer; display: block; margin-left: auto; margin-right: auto;
     }
     .kernel-refresh-btn:hover { background: #1e40af; }
-
-    @media (max-width: 600px) {
-      .controls { gap: 8px 12px; }
-      .control-group { min-width: 100px; }
-    }
   </style>
 </head>
 <body>
   <h1>CNN Convolution Demo</h1>
   <p class="subtitle">
-    Each layer runs Conv → Threshold → MaxPool. Feature maps are overlaid on the original image — use α to blend.
+    Each layer runs Conv → Threshold → Pool across multiple channels. Click a layer label or button to edit its kernels, then press Refresh.
   </p>
 
   <div class="container">
@@ -111,124 +114,135 @@
     </div>
 
     <div class="bottom-row">
-    <div class="panel controls">
-
-      <div class="controls-left">
-        <div class="control-group">
-          <label for="imageUpload">Upload Image</label>
-          <input id="imageUpload" type="file" accept="image/*" />
+      <div class="panel controls">
+        <div class="controls-left">
+          <div class="control-group">
+            <label for="imageUpload">Upload Image</label>
+            <input id="imageUpload" type="file" accept="image/*" />
+          </div>
+          <div class="control-group">
+            <label>Example Images</label>
+            <div class="preset-buttons">
+              <button onclick="loadPreset('portrait')">Portrait</button>
+              <button onclick="loadPreset('building')">Building</button>
+              <button onclick="loadPreset('street')">Street</button>
+              <button onclick="loadPreset('nature')">Nature</button>
+            </div>
+          </div>
         </div>
-        <div class="control-group">
-          <label>Example Images</label>
-          <div class="preset-buttons">
-            <button onclick="loadPreset('portrait')">Portrait</button>
-            <button onclick="loadPreset('building')">Building</button>
-            <button onclick="loadPreset('street')">Street</button>
-            <button onclick="loadPreset('nature')">Nature</button>
+
+        <div class="controls-grid">
+          <div class="control-group full-span">
+            <label>Edit Layer</label>
+            <div class="layer-btn-row" id="layerBtns"></div>
+          </div>
+          <div class="control-group">
+            <label>Channels (this layer)</label>
+            <select id="layerChannels">
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="numLayers">Layers</label>
+            <select id="numLayers">
+              <option value="1">1 Layer</option>
+              <option value="2" selected>2 Layers</option>
+              <option value="3">3 Layers</option>
+              <option value="4">4 Layers</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="kernelSize">Kernel Size</label>
+            <select id="kernelSize">
+              <option value="3" selected>3 × 3</option>
+              <option value="5">5 × 5</option>
+              <option value="7">7 × 7</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="stride">Stride</label>
+            <select id="stride">
+              <option value="1" selected>1</option>
+              <option value="2">2</option>
+              <option value="4">4</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="paddingMode">Padding</label>
+            <select id="paddingMode">
+              <option value="same" selected>auto: p = 1</option>
+              <option value="valid">valid: p = 0</option>
+              <option value="custom1">custom: p = 1</option>
+              <option value="custom2">custom: p = 2</option>
+              <option value="custom3">custom: p = 3</option>
+              <option value="custom5">custom: p = 5</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label>Pooling</label>
+            <select id="poolMode">
+              <option value="none">None</option>
+              <option value="max2" selected>MaxPool 2×2</option>
+              <option value="max3">MaxPool 3×3</option>
+              <option value="max4">MaxPool 4×4</option>
+              <option value="avg2">AvgPool 2×2</option>
+              <option value="avg3">AvgPool 3×3</option>
+              <option value="avg4">AvgPool 4×4</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label>Strength α — <span id="alphaVal">0.70</span></label>
+            <div class="slider-row">
+              <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.7" />
+            </div>
+          </div>
+          <div class="control-group">
+            <label>Threshold — <span id="thresholdVal">15</span></label>
+            <div class="slider-row">
+              <input type="range" id="threshold" min="0" max="120" step="1" value="15" />
+            </div>
+          </div>
+          <div class="control-group full-span">
+            <label>Contrast Scale — <span id="contrastScaleVal">3.0</span></label>
+            <div class="slider-row">
+              <input type="range" id="contrastScale" min="1" max="10" step="0.5" value="3" />
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="controls-grid">
-        <div class="control-group">
-          <label for="filterType">Filter</label>
-          <select id="filterType">
-            <option value="h_edge">Horizontal Edge</option>
-            <option value="v_edge">Vertical Edge</option>
-            <option value="grad_mag">Gradient Magnitude</option>
-            <option value="color_contrast">Color Contrast</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label for="numLayers">Layers</label>
-          <select id="numLayers">
-            <option value="1">1 Layer</option>
-            <option value="2" selected>2 Layers</option>
-            <option value="3">3 Layers</option>
-            <option value="4">4 Layers</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label for="kernelSize">Kernel Size</label>
-          <select id="kernelSize">
-            <option value="3" selected>3 × 3</option>
-            <option value="5">5 × 5</option>
-            <option value="7">7 × 7</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label for="stride">Stride</label>
-          <select id="stride">
-            <option value="1" selected>1</option>
-            <option value="2">2</option>
-            <option value="4">4</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label for="paddingMode">Padding</label>
-          <select id="paddingMode">
-            <option value="same" selected>auto: p = 1</option>
-            <option value="valid">valid: p = 0</option>
-            <option value="custom1">custom: p = 1</option>
-            <option value="custom2">custom: p = 2</option>
-            <option value="custom3">custom: p = 3</option>
-            <option value="custom5">custom: p = 5</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label>Pooling</label>
-          <select id="poolMode">
-            <option value="none">None</option>
-            <option value="max2" selected>MaxPool 2×2</option>
-            <option value="max3">MaxPool 3×3</option>
-            <option value="max4">MaxPool 4×4</option>
-            <option value="avg2">AvgPool 2×2</option>
-            <option value="avg3">AvgPool 3×3</option>
-            <option value="avg4">AvgPool 4×4</option>
-          </select>
-        </div>
-        <div class="control-group">
-          <label>Strength α — <span id="alphaVal">0.70</span></label>
-          <div class="slider-row">
-            <input type="range" id="alpha" min="0" max="1" step="0.01" value="0.7" />
-          </div>
-        </div>
-        <div class="control-group">
-          <label>Threshold — <span id="thresholdVal">15</span></label>
-          <div class="slider-row">
-            <input type="range" id="threshold" min="0" max="120" step="1" value="15" />
-          </div>
-        </div>
-        <div class="control-group contrast-span">
-          <label>Contrast Scale — <span id="contrastScaleVal">3.0</span></label>
-          <div class="slider-row">
-            <input type="range" id="contrastScale" min="1" max="10" step="0.5" value="3" />
-          </div>
+      <div class="kernel-display-area">
+        <div class="kernel-box" id="kernelBox">
+          <button class="kernel-refresh-btn" onclick="applyAndRefresh()">↻ Refresh</button>
         </div>
       </div>
-
     </div>
-
-    <div class="kernel-display-area">
-      <div class="kernel-box" id="kernelBox">
-        <button class="kernel-refresh-btn" onclick="applyCustomKernel()">↻ Refresh</button>
-      </div>
-    </div>
-    </div><!-- .bottom-row -->
   </div>
 
   <script>
     const MAX_SIZE = 320;
-    const CHANNELS = ['h_edge', 'v_edge', 'grad_mag', 'color_contrast'];
-    const CHANNEL_LABELS = {
+    const FILTER_TYPES = ['h_edge', 'v_edge', 'diag_edge', 'color_contrast'];
+    const FILTER_LABELS = {
       h_edge: 'H-Edge', v_edge: 'V-Edge',
-      grad_mag: 'Grad Mag', color_contrast: 'Color Contrast'
+      diag_edge: 'Diag Edge', color_contrast: 'Color Contrast'
     };
 
     let originalImageData = null;
-    let customKernel = null, customKernelGx = null, customKernelGy = null;
+    let selectedEditLayer = 1;
 
-    // ── Utilities ─────────────────────────────────────────────────────────────
+    // layerConfigs[0] = config for Layer 1, etc.
+    let layerConfigs = Array.from({length: 4}, () => ({
+      outChannels: 1,
+      channels: Array.from({length: 4}, (_, c) => ({
+        filterType: FILTER_TYPES[c % FILTER_TYPES.length],
+        customKernel: null
+      }))
+    }));
+
+    // ── Utilities ──────────────────────────────────────────────────────────────
 
     function clamp(x) { return Math.max(0, Math.min(255, x)); }
 
@@ -237,21 +251,19 @@
       return data[(y * W + x) * 4 + c];
     }
 
-    function avgChannels(maps) {
+    function avgMaps(maps) {
       const w = maps[0].width, h = maps[0].height;
-      const result = new ImageData(w, h);
-      for (let i = 0; i < result.data.length; i += 4) {
+      const out = new ImageData(w, h);
+      for (let i = 0; i < out.data.length; i += 4) {
         for (let c = 0; c < 3; c++) {
-          let sum = 0;
-          for (const m of maps) sum += m.data[i + c];
-          result.data[i + c] = clamp(sum / maps.length);
+          let s = 0; for (const m of maps) s += m.data[i + c];
+          out.data[i + c] = clamp(s / maps.length);
         }
-        result.data[i + 3] = 255;
+        out.data[i + 3] = 255;
       }
-      return result;
+      return out;
     }
 
-    // Scale imageData to targetW × targetH using a canvas intermediate.
     function scaleImageTo(imageData, targetW, targetH) {
       if (imageData.width === targetW && imageData.height === targetH) return imageData;
       const src = document.createElement('canvas');
@@ -263,13 +275,12 @@
       return dst.getContext('2d').getImageData(0, 0, targetW, targetH);
     }
 
-    // ── Kernel building ───────────────────────────────────────────────────────
+    // ── Kernel builders ────────────────────────────────────────────────────────
 
     function getPadding(mode, k) {
       if (mode === 'valid') return 0;
       if (mode.startsWith('custom')) return Number(mode.replace('custom', ''));
-      if (mode === 'same') return Math.floor((k - 1) / 2);
-      return 0;
+      return Math.floor((k - 1) / 2); // 'same'
     }
 
     function binomialRow(n) {
@@ -278,22 +289,40 @@
       return row;
     }
 
-    function buildKernel(type, size) {
-      const kernel = Array.from({ length: size }, () => Array(size).fill(0));
-      const center = Math.floor(size / 2);
-      if (type === 'h_edge' || type === 'v_edge') {
-        const binom = binomialRow(size);
-        const deriv = Array.from({ length: size }, (_, i) => i - center);
-        for (let y = 0; y < size; y++)
-          for (let x = 0; x < size; x++)
-            kernel[y][x] = type === 'h_edge' ? deriv[y] * binom[x] : deriv[x] * binom[y];
-      }
-      return kernel;
+    function buildEdgeKernel(type, size) {
+      const k = Array.from({length: size}, () => Array(size).fill(0));
+      const c = Math.floor(size / 2);
+      const binom = binomialRow(size);
+      const deriv = Array.from({length: size}, (_, i) => i - c);
+      for (let y = 0; y < size; y++)
+        for (let x = 0; x < size; x++)
+          k[y][x] = type === 'h_edge' ? deriv[y] * binom[x] : deriv[x] * binom[y];
+      return k;
     }
 
-    // ── Feature computations ──────────────────────────────────────────────────
+    function buildDiagEdge(size) {
+      // kernel[y][x] = y - x; main diagonal (y==x) = 0
+      return Array.from({length: size}, (_, y) =>
+        Array.from({length: size}, (_, x) => y - x)
+      );
+    }
 
-    // Standard directional Sobel — abs, grayscale output kept per-channel.
+    function buildLaplacian(size) {
+      const c = Math.floor(size / 2);
+      return Array.from({length: size}, (_, y) =>
+        Array.from({length: size}, (_, x) => (x === c && y === c) ? size * size - 1 : -1)
+      );
+    }
+
+    function getDefaultKernel(filterType, size) {
+      if (filterType === 'h_edge') return buildEdgeKernel('h_edge', size);
+      if (filterType === 'v_edge') return buildEdgeKernel('v_edge', size);
+      if (filterType === 'diag_edge') return buildDiagEdge(size);
+      return buildLaplacian(size);
+    }
+
+    // ── Convolutions ───────────────────────────────────────────────────────────
+
     function convolveAbs(imageData, kernel, stride, padding) {
       const W = imageData.width, H = imageData.height;
       const k = kernel.length;
@@ -315,90 +344,49 @@
       return new ImageData(output, outW, outH);
     }
 
-    // Gradient magnitude = sqrt(Gx²+Gy²) averaged over channels, normalized, grayscale.
-    function computeGradientMagnitude(imageData, k, stride, padding, customGx = null, customGy = null) {
+    function computeColorContrast(imageData, stride, padding, contrastScale, kern) {
       const W = imageData.width, H = imageData.height;
-      const kX = customGx || buildKernel('v_edge', k);
-      const kY = customGy || buildKernel('h_edge', k);
-      const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
-      const outH = Math.max(1, Math.floor((H + 2 * padding - k) / stride + 1));
-      const mags = new Float32Array(outW * outH);
-      let maxMag = 0;
-
-      for (let oy = 0; oy < outH; oy++)
-        for (let ox = 0; ox < outW; ox++) {
-          let magSum = 0;
-          for (let c = 0; c < 3; c++) {
-            let gx = 0, gy = 0;
-            for (let ky = 0; ky < k; ky++)
-              for (let kx = 0; kx < k; kx++) {
-                const px = getPixel(imageData.data, W, H, ox * stride + kx - padding, oy * stride + ky - padding, c);
-                gx += px * kX[ky][kx];
-                gy += px * kY[ky][kx];
-              }
-            magSum += Math.sqrt(gx * gx + gy * gy);
-          }
-          const mag = magSum / 3;
-          mags[oy * outW + ox] = mag;
-          if (mag > maxMag) maxMag = mag;
-        }
-
-      const output = new Uint8ClampedArray(outW * outH * 4);
-      const scale = maxMag > 0 ? 255 / maxMag : 1;
-      for (let i = 0; i < outW * outH; i++) {
-        const v = clamp(mags[i] * scale);
-        output[i * 4] = output[i * 4 + 1] = output[i * 4 + 2] = v;
-        output[i * 4 + 3] = 255;
-      }
-      return new ImageData(output, outW, outH);
-    }
-
-    // Color contrast via Laplacian (signed): positive → red, negative → green.
-    function computeColorContrast(imageData, k, stride, padding, contrastScale, customKern = null) {
-      const W = imageData.width, H = imageData.height;
-      const kern = customKern || buildLaplacian(k);
+      const k = kern.length;
       const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
       const outH = Math.max(1, Math.floor((H + 2 * padding - k) / stride + 1));
       const signed = new Float32Array(outW * outH);
       let maxAbs = 0;
-
       for (let oy = 0; oy < outH; oy++)
         for (let ox = 0; ox < outW; ox++) {
           let sum = 0;
           for (let ky = 0; ky < k; ky++)
             for (let kx = 0; kx < k; kx++) {
-              const ix = ox * stride + kx - padding;
-              const iy = oy * stride + ky - padding;
+              const ix = ox * stride + kx - padding, iy = oy * stride + ky - padding;
               const r = getPixel(imageData.data, W, H, ix, iy, 0);
               const g = getPixel(imageData.data, W, H, ix, iy, 1);
               const b = getPixel(imageData.data, W, H, ix, iy, 2);
-              const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-              sum += luma * kern[ky][kx];
+              sum += (0.299 * r + 0.587 * g + 0.114 * b) * kern[ky][kx];
             }
           signed[oy * outW + ox] = sum;
           if (Math.abs(sum) > maxAbs) maxAbs = Math.abs(sum);
         }
-
       const output = new Uint8ClampedArray(outW * outH * 4);
       const scale = maxAbs > 0 ? (255 * contrastScale) / maxAbs : 1;
       for (let i = 0; i < outW * outH; i++) {
         const v = signed[i] * scale;
-        output[i * 4]     = v > 0 ? clamp(v)  : 0;   // R — positive
-        output[i * 4 + 1] = v < 0 ? clamp(-v) : 0;   // G — negative
+        output[i * 4]     = v > 0 ? clamp(v) : 0;
+        output[i * 4 + 1] = v < 0 ? clamp(-v) : 0;
         output[i * 4 + 2] = 0;
         output[i * 4 + 3] = 255;
       }
       return new ImageData(output, outW, outH);
     }
 
-    function computeFeature(imageData, ch, k, stride, padding, contrastScale) {
-      if (ch === 'h_edge') return convolveAbs(imageData, customKernel || buildKernel('h_edge', k), stride, padding);
-      if (ch === 'v_edge') return convolveAbs(imageData, customKernel || buildKernel('v_edge', k), stride, padding);
-      if (ch === 'grad_mag') return computeGradientMagnitude(imageData, k, stride, padding, customKernelGx, customKernelGy);
-      return computeColorContrast(imageData, k, stride, padding, contrastScale, customKernel);
+    function applyFilter(imageData, filterType, k, stride, padding, contrastScale, customKernel) {
+      if (filterType === 'color_contrast') {
+        const kern = customKernel || buildLaplacian(k);
+        return computeColorContrast(imageData, stride, padding, contrastScale, kern);
+      }
+      const kern = customKernel || getDefaultKernel(filterType, k);
+      return convolveAbs(imageData, kern, stride, padding);
     }
 
-    // ── Pooling ───────────────────────────────────────────────────────────────
+    // ── Pooling ────────────────────────────────────────────────────────────────
 
     function applyPool(imageData, mode) {
       if (mode === 'none') return imageData;
@@ -429,10 +417,8 @@
       return new ImageData(output, outW, outH);
     }
 
-    // ── Overlay ───────────────────────────────────────────────────────────────
+    // ── Overlay ────────────────────────────────────────────────────────────────
 
-    // Blend feature map on top of the original image (scaled to feature resolution).
-    // Pixels below threshold show only the original.
     function overlayFeature(originalRGB, featureMap, alpha, threshold) {
       const W = featureMap.width, H = featureMap.height;
       const scaledOrig = scaleImageTo(originalRGB, W, H);
@@ -447,12 +433,11 @@
       return result;
     }
 
-    // ── Pipeline ──────────────────────────────────────────────────────────────
+    // ── Pipeline ───────────────────────────────────────────────────────────────
 
     function runPipeline() {
       if (!originalImageData) return;
 
-      const ch           = document.getElementById('filterType').value;
       const numLayers    = Number(document.getElementById('numLayers').value);
       const k            = Number(document.getElementById('kernelSize').value);
       const stride       = Number(document.getElementById('stride').value);
@@ -463,74 +448,255 @@
       const threshold    = Number(document.getElementById('threshold').value);
       const contrastScale = Number(document.getElementById('contrastScale').value);
 
-      // Layer 0: original color image for all channel slots
-      const layers = [Object.fromEntries(CHANNELS.map(c => [c, originalImageData]))];
+      // layers[0] = [originalImageData]; layers[l] = [fm_c0, fm_c1, ...]
+      const layers = [[originalImageData]];
 
-      for (let l = 1; l <= numLayers; l++) {
-        const layerInput = avgChannels(CHANNELS.map(c => layers[l - 1][c]));
-        const layerOutput = {};
-        for (const c of CHANNELS) {
-          let fm = computeFeature(layerInput, c, k, stride, padding, contrastScale);
+      for (let l = 0; l < numLayers; l++) {
+        const cfg = layerConfigs[l];
+        const prevMaps = layers[l];
+        const inputImg = prevMaps.length === 1 ? prevMaps[0] : avgMaps(prevMaps);
+        const outputMaps = [];
+        for (let c = 0; c < cfg.outChannels; c++) {
+          const chCfg = cfg.channels[c];
+          let fm = applyFilter(inputImg, chCfg.filterType, k, stride, padding, contrastScale, chCfg.customKernel);
           fm = applyPool(fm, poolMode);
-          layerOutput[c] = fm;
+          outputMaps.push(fm);
         }
-        layers.push(layerOutput);
+        layers.push(outputMaps);
       }
 
-      renderGrid(layers, ch, alpha, threshold, k, stride, padding, paddingMode, poolMode, contrastScale);
+      renderGrid(layers, alpha, threshold, k, stride, padding, paddingMode, poolMode, contrastScale);
     }
 
-    // ── Rendering ─────────────────────────────────────────────────────────────
+    // ── Rendering ──────────────────────────────────────────────────────────────
 
-    function renderGrid(layers, ch, alpha, threshold, k, stride, padding, paddingMode, poolMode, contrastScale) {
+    function renderGrid(layers, alpha, threshold, k, stride, padding, paddingMode, poolMode, contrastScale) {
       const grid = document.getElementById('layerGrid');
       grid.innerHTML = '';
 
       // Input column
-      addCol(grid, 'Input', originalImageData, 'ch-input');
+      const inputCol = document.createElement('div');
+      inputCol.className = 'layer-col';
+      const inputLabel = document.createElement('div');
+      inputLabel.className = 'col-label ch-input';
+      inputLabel.textContent = 'Input';
+      inputCol.appendChild(inputLabel);
+      const inputCell = document.createElement('div');
+      inputCell.className = 'canvas-cell';
+      const inputCanvas = document.createElement('canvas');
+      inputCanvas.width = originalImageData.width;
+      inputCanvas.height = originalImageData.height;
+      inputCanvas.getContext('2d').putImageData(originalImageData, 0, 0);
+      inputCell.appendChild(inputCanvas);
+      inputCol.appendChild(inputCell);
+      grid.appendChild(inputCol);
 
       // Layer columns
-      for (let l = 1; l < layers.length; l++) {
-        const fm = layers[l][ch];
-        const overlaid = overlayFeature(originalImageData, fm, alpha, threshold);
-        addCol(grid, `Layer ${l}`, overlaid, 'ch-' + ch);
+      const numLayers = layers.length - 1;
+      for (let l = 1; l <= numLayers; l++) {
+        const cfg = layerConfigs[l - 1];
+        const maps = layers[l];
+        const col = document.createElement('div');
+        col.className = 'layer-col';
+
+        const layerLabel = document.createElement('div');
+        layerLabel.className = 'col-label ch-input' + (selectedEditLayer === l ? ' editing' : '');
+        layerLabel.textContent = `Layer ${l}`;
+        layerLabel.title = 'Click to edit kernels';
+        layerLabel.onclick = () => selectEditLayer(l);
+        col.appendChild(layerLabel);
+
+        for (let c = 0; c < maps.length; c++) {
+          const chCfg = cfg.channels[c];
+          const ftClass = 'ch-' + chCfg.filterType;
+          const overlaid = overlayFeature(originalImageData, maps[c], alpha, threshold);
+
+          const rowLabel = document.createElement('div');
+          rowLabel.className = 'col-row-label';
+          rowLabel.textContent = `Ch${c + 1}: ${FILTER_LABELS[chCfg.filterType]}`;
+          col.appendChild(rowLabel);
+
+          const cell = document.createElement('div');
+          cell.className = `canvas-cell ${ftClass}`;
+          const canvas = document.createElement('canvas');
+          canvas.width = overlaid.width;
+          canvas.height = overlaid.height;
+          canvas.getContext('2d').putImageData(overlaid, 0, 0);
+          cell.appendChild(canvas);
+          col.appendChild(cell);
+        }
+
+        grid.appendChild(col);
       }
 
       // Formula
+      const chCounts = Array.from({length: numLayers}, (_, l) => layerConfigs[l].outChannels);
       const lines = [
-        `filter: ${CHANNEL_LABELS[ch]}  |  kernel: ${k}×${k}  |  stride: ${stride}  |  padding: ${paddingMode} [p=${padding}]`,
-        `α = ${alpha.toFixed(2)}  |  threshold = ${threshold}` + (ch === 'color_contrast' ? `  |  contrast scale = ${contrastScale}` : ''),
-        poolMode !== 'none' ? `${poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${poolMode.slice(3)}×${poolMode.slice(3)} → spatial ÷ ${poolMode.slice(3)}` : '',
+        `layers: ${numLayers}  |  channels per layer: [${chCounts.join(', ')}]  |  kernel: ${k}×${k}  |  stride: ${stride}  |  padding: ${paddingMode} [p=${padding}]`,
+        `α = ${alpha.toFixed(2)}  |  threshold = ${threshold}  |  contrast scale = ${contrastScale.toFixed(1)}` +
+          (poolMode !== 'none' ? `  |  ${poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${poolMode.slice(3)}×${poolMode.slice(3)}` : ''),
         'overlay = (1 − α) × original + α × feature_map  (only where feature ≥ threshold)',
-        ch === 'color_contrast' ? 'color contrast: red = positive Laplacian, green = negative' : '',
-        ch === 'grad_mag'       ? 'gradient mag: bright = √(Gx² + Gy²), normalized per layer' : '',
-      ].filter(Boolean);
+        'layer input = average of previous layer channels; each channel applies its own kernel',
+      ];
       document.getElementById('formulaBox').innerHTML = lines.join('<br>');
     }
 
-    function addCol(grid, label, imageData, chClass) {
-      const col = document.createElement('div');
-      col.className = 'layer-col';
-      col.appendChild(makeEl('div', `col-label ${chClass}`, label));
-      const cell = document.createElement('div');
-      cell.className = `canvas-cell ${chClass}`;
-      const canvas = document.createElement('canvas');
-      canvas.width = imageData.width;
-      canvas.height = imageData.height;
-      canvas.getContext('2d').putImageData(imageData, 0, 0);
-      cell.appendChild(canvas);
-      col.appendChild(cell);
-      grid.appendChild(col);
+    // ── Kernel editor ──────────────────────────────────────────────────────────
+
+    function kernelTableHTML(kernel, tableId) {
+      let html = `<table class="kernel-table" id="${tableId}"><tbody>`;
+      for (let y = 0; y < kernel.length; y++) {
+        html += '<tr>';
+        for (let x = 0; x < kernel[y].length; x++) {
+          const v = kernel[y][x];
+          const cls = v > 0 ? 'kv-pos' : v < 0 ? 'kv-neg' : 'kv-zero';
+          html += `<td class="${cls}"><input type="number" value="${v}" step="1" min="-9999" max="9999" oninput="syncCellColor(this)" /></td>`;
+        }
+        html += '</tr>';
+      }
+      return html + '</tbody></table>';
     }
 
-    function makeEl(tag, cls, text) {
-      const el = document.createElement(tag);
-      el.className = cls;
-      if (text !== undefined) el.textContent = text;
-      return el;
+    function syncCellColor(inp) {
+      const v = Number(inp.value);
+      inp.parentElement.className = v > 0 ? 'kv-pos' : v < 0 ? 'kv-neg' : 'kv-zero';
     }
 
-    // ── Image loading ─────────────────────────────────────────────────────────
+    function readTable(tableId) {
+      const tbl = document.getElementById(tableId);
+      return Array.from(tbl.querySelectorAll('tr'), row =>
+        Array.from(row.querySelectorAll('input'), inp => Number(inp.value))
+      );
+    }
+
+    function renderKernelBox() {
+      const k = Number(document.getElementById('kernelSize').value);
+      const l = selectedEditLayer;
+      const cfg = layerConfigs[l - 1];
+      const box = document.getElementById('kernelBox');
+
+      let html = `<div class="kernel-box-title">Layer ${l} — ${k}×${k}  ·  ${cfg.outChannels} output channel${cfg.outChannels > 1 ? 's' : ''}</div>`;
+      html += `<div class="kernel-channels-row">`;
+
+      for (let c = 0; c < cfg.outChannels; c++) {
+        const chCfg = cfg.channels[c];
+        const kern = chCfg.customKernel && chCfg.customKernel.length === k
+          ? chCfg.customKernel
+          : getDefaultKernel(chCfg.filterType, k);
+        const tblId = `kTbl_${l}_${c}`;
+
+        html += `<div class="kernel-ch-block">`;
+        html += `<div class="kernel-ch-label">Ch ${c + 1}</div>`;
+        html += `<select class="kernel-filter-select" onchange="onChannelFilterChange(${l - 1},${c},this.value)">`;
+        for (const ft of FILTER_TYPES)
+          html += `<option value="${ft}"${ft === chCfg.filterType ? ' selected' : ''}>${FILTER_LABELS[ft]}</option>`;
+        html += `</select>`;
+        html += kernelTableHTML(kern, tblId);
+        html += `</div>`;
+      }
+
+      html += `</div>`;
+
+      const btn = box.querySelector('.kernel-refresh-btn');
+      box.innerHTML = html;
+      box.appendChild(btn);
+    }
+
+    function onChannelFilterChange(layerIdx, channelIdx, newFilterType) {
+      layerConfigs[layerIdx].channels[channelIdx].filterType = newFilterType;
+      layerConfigs[layerIdx].channels[channelIdx].customKernel = null;
+      renderKernelBox();
+    }
+
+    function applyAndRefresh() {
+      const k = Number(document.getElementById('kernelSize').value);
+      const l = selectedEditLayer;
+      const cfg = layerConfigs[l - 1];
+      for (let c = 0; c < cfg.outChannels; c++) {
+        cfg.channels[c].customKernel = readTable(`kTbl_${l}_${c}`);
+      }
+      runPipeline();
+    }
+
+    function resetAllCustomKernels() {
+      layerConfigs.forEach(cfg => cfg.channels.forEach(ch => { ch.customKernel = null; }));
+    }
+
+    // ── Layer selector UI ──────────────────────────────────────────────────────
+
+    function selectEditLayer(l) {
+      selectedEditLayer = l;
+      document.getElementById('layerChannels').value = layerConfigs[l - 1].outChannels;
+      updateLayerBtns();
+      renderKernelBox();
+    }
+
+    function updateLayerBtns() {
+      const numLayers = Number(document.getElementById('numLayers').value);
+      if (selectedEditLayer > numLayers) selectedEditLayer = numLayers;
+      const row = document.getElementById('layerBtns');
+      row.innerHTML = '';
+      for (let l = 1; l <= numLayers; l++) {
+        const btn = document.createElement('button');
+        btn.className = 'layer-btn' + (l === selectedEditLayer ? ' active' : '');
+        btn.textContent = `L${l}`;
+        btn.onclick = () => selectEditLayer(l);
+        row.appendChild(btn);
+      }
+    }
+
+    // ── Event listeners ────────────────────────────────────────────────────────
+
+    document.getElementById('imageUpload').addEventListener('change', event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => loadImageFromImg(img);
+        img.onerror = () => alert('Image load failed');
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.getElementById('numLayers').addEventListener('change', () => {
+      updateLayerBtns();
+      document.getElementById('layerChannels').value = layerConfigs[selectedEditLayer - 1].outChannels;
+      renderKernelBox();
+      // No auto-run — user presses Refresh
+    });
+
+    document.getElementById('layerChannels').addEventListener('change', () => {
+      layerConfigs[selectedEditLayer - 1].outChannels = Number(document.getElementById('layerChannels').value);
+      renderKernelBox();
+      // No auto-run — user presses Refresh
+    });
+
+    document.getElementById('kernelSize').addEventListener('change', () => {
+      resetAllCustomKernels();
+      updateSamePaddingLabel();
+      renderKernelBox();
+      // No auto-run — user presses Refresh
+    });
+
+    // α, threshold, contrastScale: live preview (display-only parameters)
+    [['alpha', 'alphaVal', v => Number(v).toFixed(2)],
+     ['threshold', 'thresholdVal', v => v],
+     ['contrastScale', 'contrastScaleVal', v => Number(v).toFixed(1)]
+    ].forEach(([id, labelId, fmt]) => {
+      document.getElementById(id).addEventListener('input', () => {
+        document.getElementById(labelId).textContent = fmt(document.getElementById(id).value);
+        runPipeline();
+      });
+    });
+
+    function updateSamePaddingLabel() {
+      const k = Number(document.getElementById('kernelSize').value);
+      document.querySelector('#paddingMode option[value="same"]').textContent = `auto: p = ${Math.floor((k-1)/2)}`;
+    }
+
+    // ── Image loading ──────────────────────────────────────────────────────────
 
     function loadImageFromImg(img) {
       const scale = Math.min(MAX_SIZE / img.width, MAX_SIZE / img.height, 1);
@@ -553,125 +719,10 @@
       img.src = `https://picsum.photos/id/${PRESET_IDS[name]}/${MAX_SIZE}/${MAX_SIZE}`;
     }
 
-    // ── Event listeners ───────────────────────────────────────────────────────
-
-    document.getElementById('imageUpload').addEventListener('change', event => {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => loadImageFromImg(img);
-        img.onerror = () => alert('Image load failed — check file format');
-        img.src = e.target.result;
-      };
-      reader.onerror = () => alert('File read failed');
-      reader.readAsDataURL(file);
-    });
-
-    ['filterType', 'numLayers', 'kernelSize', 'stride', 'paddingMode', 'poolMode'].forEach(id =>
-      document.getElementById(id).addEventListener('change', runPipeline)
-    );
-
-    // Sliders: update label + re-render
-    [['alpha', 'alphaVal', v => Number(v).toFixed(2)],
-     ['threshold', 'thresholdVal', v => v],
-     ['contrastScale', 'contrastScaleVal', v => Number(v).toFixed(1)]
-    ].forEach(([id, labelId, fmt]) => {
-      const el = document.getElementById(id);
-      el.addEventListener('input', () => {
-        document.getElementById(labelId).textContent = fmt(el.value);
-        runPipeline();
-      });
-    });
-
-    function updateSamePaddingLabel() {
-      const k = Number(document.getElementById('kernelSize').value);
-      const p = Math.floor((k - 1) / 2);
-      document.querySelector('#paddingMode option[value="same"]').textContent = `auto: p = ${p}`;
-    }
-    document.getElementById('kernelSize').addEventListener('change', updateSamePaddingLabel);
-
-    // ── Kernel display (interactive) ─────────────────────────────────────────
-
-    function buildLaplacian(k) {
-      const c = Math.floor(k / 2);
-      return Array.from({length: k}, (_, y) =>
-        Array.from({length: k}, (_, x) => (x === c && y === c) ? k * k - 1 : -1)
-      );
-    }
-
-    function kernelTableHTML(kernel, tableId) {
-      const k = kernel.length;
-      let html = `<table class="kernel-table" id="${tableId}"><tbody>`;
-      for (let y = 0; y < k; y++) {
-        html += '<tr>';
-        for (let x = 0; x < k; x++) {
-          const v = kernel[y][x];
-          const cls = v > 0 ? 'kv-pos' : v < 0 ? 'kv-neg' : 'kv-zero';
-          html += `<td class="${cls}"><input type="number" value="${v}" step="1" min="-9999" max="9999" oninput="syncCellColor(this)" /></td>`;
-        }
-        html += '</tr>';
-      }
-      return html + '</tbody></table>';
-    }
-
-    function syncCellColor(inp) {
-      const v = Number(inp.value);
-      inp.parentElement.className = v > 0 ? 'kv-pos' : v < 0 ? 'kv-neg' : 'kv-zero';
-    }
-
-    function readTable(tableId) {
-      const tbl = document.getElementById(tableId);
-      const rows = tbl.querySelectorAll('tr');
-      return Array.from(rows, row =>
-        Array.from(row.querySelectorAll('input'), inp => Number(inp.value))
-      );
-    }
-
-    function applyCustomKernel() {
-      const ch = document.getElementById('filterType').value;
-      if (ch === 'grad_mag') {
-        customKernelGx = readTable('kernelTblGx');
-        customKernelGy = readTable('kernelTblGy');
-      } else {
-        customKernel = readTable('kernelTblMain');
-      }
-      runPipeline();
-    }
-
-    function resetCustomKernels() {
-      customKernel = customKernelGx = customKernelGy = null;
-    }
-
-    function renderKernelBox() {
-      const ch = document.getElementById('filterType').value;
-      const k  = Number(document.getElementById('kernelSize').value);
-      const box = document.getElementById('kernelBox');
-      const titles = { h_edge: 'H-Edge', v_edge: 'V-Edge', grad_mag: 'Gradient Magnitude', color_contrast: 'Color Contrast' };
-
-      let html = `<div class="kernel-box-title">${titles[ch]} — ${k}×${k}</div>`;
-      if (ch === 'grad_mag') {
-        html += '<div class="kernel-pair">';
-        html += `<div><div class="kernel-box-subtitle">Gx</div>${kernelTableHTML(buildKernel('v_edge', k), 'kernelTblGx')}</div>`;
-        html += `<div><div class="kernel-box-subtitle">Gy</div>${kernelTableHTML(buildKernel('h_edge', k), 'kernelTblGy')}</div>`;
-        html += '</div>';
-      } else if (ch === 'color_contrast') {
-        html += kernelTableHTML(buildLaplacian(k), 'kernelTblMain');
-      } else {
-        html += kernelTableHTML(buildKernel(ch, k), 'kernelTblMain');
-      }
-
-      // preserve the refresh button (append before it)
-      const btn = box.querySelector('.kernel-refresh-btn');
-      box.innerHTML = html;
-      box.appendChild(btn);
-    }
-
-    document.getElementById('filterType').addEventListener('change', () => { resetCustomKernels(); renderKernelBox(); });
-    document.getElementById('kernelSize').addEventListener('change', () => { resetCustomKernels(); renderKernelBox(); });
+    // ── Init ───────────────────────────────────────────────────────────────────
 
     updateSamePaddingLabel();
+    updateLayerBtns();
     renderKernelBox();
     loadPreset('street');
   </script>
