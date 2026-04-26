@@ -43,6 +43,14 @@
     .col-label.editing { outline: 2px solid #1d4ed8; outline-offset: 1px; }
     .col-label[data-layer-btn]:hover { background: #e2e8f0; }
     .col-row-label { font-size: 10px; font-weight: 700; color: #777; margin-top: 3px; text-align: center; }
+    .ch-toggle-btn {
+      margin-top: 2px; padding: 3px 12px; border-radius: 5px; border: 1px solid #d1d5db;
+      background: #f9fafb; color: #555; font-size: 10px; font-weight: 600;
+      cursor: pointer; width: auto; display: block;
+    }
+    .ch-toggle-btn:hover { background: #e5e7eb; }
+    .ch-detail { display: none; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
+    .ch-detail.open { display: flex; }
     .ch-h_edge         { background: #dbeafe; color: #1d4ed8; }
     .ch-v_edge         { background: #dcfce7; color: #15803d; }
     .ch-diag_edge      { background: #fef3c7; color: #92400e; }
@@ -207,6 +215,7 @@
 
     let originalImageData = null;
     let selectedEditLayer = 1;
+    let expandedLayers = new Set();
 
     // layerConfigs[0] = Layer 1, etc.  stride/paddingMode/poolMode are per-layer.
     let layerConfigs = Array.from({length: 4}, () => ({
@@ -498,6 +507,7 @@
         const col = document.createElement('div');
         col.className = 'layer-col';
 
+        // Layer label (edit selector)
         const layerLabel = document.createElement('div');
         layerLabel.className = 'col-label ch-input' + (selectedEditLayer === l ? ' editing' : '');
         layerLabel.textContent = `Layer ${l}`;
@@ -505,15 +515,36 @@
         layerLabel.onclick = () => selectEditLayer(l);
         col.appendChild(layerLabel);
 
+        // Aggregated image: mean of all channel feature maps, then overlay
+        const aggMap = maps.length === 1 ? maps[0] : avgMaps(maps);
+        const aggOverlaid = overlayFeature(originalImageData, aggMap);
+        const aggCell = document.createElement('div');
+        aggCell.className = 'canvas-cell';
+        const aggCanvas = document.createElement('canvas');
+        aggCanvas.width = aggOverlaid.width;
+        aggCanvas.height = aggOverlaid.height;
+        aggCanvas.getContext('2d').putImageData(aggOverlaid, 0, 0);
+        aggCell.appendChild(aggCanvas);
+        col.appendChild(aggCell);
+
+        // Toggle button
+        const isExpanded = expandedLayers.has(l);
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'ch-toggle-btn';
+        toggleBtn.textContent = isExpanded
+          ? '▲ collapse'
+          : `▾ ${cfg.outChannels} ch`;
+
+        // Per-channel detail section
+        const detail = document.createElement('div');
+        detail.className = 'ch-detail' + (isExpanded ? ' open' : '');
         for (let c = 0; c < maps.length; c++) {
           const chCfg = cfg.channels[c];
           const overlaid = overlayFeature(originalImageData, maps[c]);
-
           const rowLabel = document.createElement('div');
           rowLabel.className = 'col-row-label';
           rowLabel.textContent = `Ch${c + 1}: ${FILTER_LABELS[chCfg.filterType]}`;
-          col.appendChild(rowLabel);
-
+          detail.appendChild(rowLabel);
           const cell = document.createElement('div');
           cell.className = `canvas-cell ch-${chCfg.filterType}`;
           const canvas = document.createElement('canvas');
@@ -521,9 +552,23 @@
           canvas.height = overlaid.height;
           canvas.getContext('2d').putImageData(overlaid, 0, 0);
           cell.appendChild(canvas);
-          col.appendChild(cell);
+          detail.appendChild(cell);
         }
 
+        toggleBtn.onclick = () => {
+          if (expandedLayers.has(l)) {
+            expandedLayers.delete(l);
+            detail.className = 'ch-detail';
+            toggleBtn.textContent = `▾ ${cfg.outChannels} ch`;
+          } else {
+            expandedLayers.add(l);
+            detail.className = 'ch-detail open';
+            toggleBtn.textContent = '▲ collapse';
+          }
+        };
+
+        col.appendChild(toggleBtn);
+        col.appendChild(detail);
         grid.appendChild(col);
       }
     }
