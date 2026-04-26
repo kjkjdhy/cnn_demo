@@ -55,6 +55,7 @@
     .ch-v_edge         { background: #dcfce7; color: #15803d; }
     .ch-diag_edge      { background: #fef3c7; color: #92400e; }
     .ch-color_contrast { background: #fee2e2; color: #991b1b; }
+    .ch-texture        { background: #f3e8ff; color: #7e22ce; }
     .ch-input          { background: #f3f4f6; color: #374151; }
     .canvas-cell { flex: none; }
     .canvas-cell canvas {
@@ -65,6 +66,7 @@
     .canvas-cell.ch-v_edge canvas         { border-color: #86efac; }
     .canvas-cell.ch-diag_edge canvas      { border-color: #fcd34d; }
     .canvas-cell.ch-color_contrast canvas { border-color: #fca5a5; }
+    .canvas-cell.ch-texture canvas        { border-color: #d8b4fe; }
 
     /* Bottom row */
     .bottom-row { display: flex; gap: 16px; align-items: stretch; }
@@ -181,8 +183,8 @@
           <div class="control-group full-span">
             <label>Pooling (this layer)</label>
             <select id="poolMode">
-              <option value="none">None</option>
-              <option value="max2" selected>MaxPool 2×2</option>
+              <option value="none" selected>None</option>
+              <option value="max2">MaxPool 2×2</option>
               <option value="max3">MaxPool 3×3</option>
               <option value="max4">MaxPool 4×4</option>
               <option value="avg2">AvgPool 2×2</option>
@@ -207,10 +209,10 @@
     const THRESHOLD = 15;
     const CONTRAST_SCALE = 3.0;
 
-    const FILTER_TYPES = ['h_edge', 'v_edge', 'diag_edge', 'color_contrast'];
+    const FILTER_TYPES = ['h_edge', 'v_edge', 'diag_edge', 'color_contrast', 'texture'];
     const FILTER_LABELS = {
       h_edge: 'H-Edge', v_edge: 'V-Edge',
-      diag_edge: 'Diag Edge', color_contrast: 'Color Contrast'
+      diag_edge: 'Diag Edge', color_contrast: 'Color Contrast', texture: 'Texture'
     };
 
     let originalImageData = null;
@@ -222,7 +224,7 @@
       outChannels: 1,
       stride: 1,
       paddingMode: 'same',
-      poolMode: 'max2',
+      poolMode: 'none',
       channels: Array.from({length: 4}, (_, c) => ({
         filterType: FILTER_TYPES[c % FILTER_TYPES.length],
         customKernel: null
@@ -320,6 +322,13 @@
       );
     }
 
+    function buildTexture(size) {
+      // checkerboard: k[y][x] = (-1)^(y+x)
+      return Array.from({length: size}, (_, y) =>
+        Array.from({length: size}, (_, x) => (y + x) % 2 === 0 ? 1 : -1)
+      );
+    }
+
     function buildLaplacian(size) {
       const c = Math.floor(size / 2);
       return Array.from({length: size}, (_, y) =>
@@ -331,6 +340,7 @@
       if (filterType === 'h_edge') return buildEdgeKernel('h_edge', size);
       if (filterType === 'v_edge') return buildEdgeKernel('v_edge', size);
       if (filterType === 'diag_edge') return buildDiagEdge(size);
+      if (filterType === 'texture') return buildTexture(size);
       return buildLaplacian(size);
     }
 
