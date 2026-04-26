@@ -41,6 +41,7 @@
       border-radius: 6px; white-space: nowrap; cursor: pointer; user-select: none;
     }
     .col-label.editing { outline: 2px solid #1d4ed8; outline-offset: 1px; }
+    .col-label[data-layer-btn]:hover { background: #e2e8f0; }
     .col-row-label { font-size: 10px; font-weight: 700; color: #777; margin-top: 3px; text-align: center; }
     .ch-h_edge         { background: #dbeafe; color: #1d4ed8; }
     .ch-v_edge         { background: #dcfce7; color: #15803d; }
@@ -49,7 +50,7 @@
     .ch-input          { background: #f3f4f6; color: #374151; }
     .canvas-cell { flex: none; }
     .canvas-cell canvas {
-      display: block; background: #111; width: 280px;
+      display: block; background: #111; max-width: 280px; width: auto;
       border-radius: 8px; border: 2px solid #e5e7eb; image-rendering: pixelated;
     }
     .canvas-cell.ch-h_edge canvas         { border-color: #93c5fd; }
@@ -500,7 +501,7 @@
         const layerLabel = document.createElement('div');
         layerLabel.className = 'col-label ch-input' + (selectedEditLayer === l ? ' editing' : '');
         layerLabel.textContent = `Layer ${l}`;
-        layerLabel.title = 'Click to edit';
+        layerLabel.dataset.layerBtn = l;
         layerLabel.onclick = () => selectEditLayer(l);
         col.appendChild(layerLabel);
 
@@ -626,6 +627,11 @@
       updateLayerBtns();
       updateSamePaddingLabel();
       renderKernelBox();
+      // Sync the grid layer label highlights without re-running the pipeline
+      document.querySelectorAll('[data-layer-btn]').forEach(el => {
+        const n = Number(el.dataset.layerBtn);
+        el.className = 'col-label ch-input' + (n === l ? ' editing' : '');
+      });
     }
 
     function updateLayerBtns() {
