@@ -126,9 +126,11 @@
               <button onclick="loadSynthetic('checkerboard')">Checker</button>
               <button onclick="loadSynthetic('h-stripes')">H-Stripes</button>
               <button onclick="loadSynthetic('v-stripes')">V-Stripes</button>
-              <button onclick="loadSynthetic('diag-stripes')">Diagonal</button>
+              <button onclick="loadSynthetic('diag1')">Diag 1</button>
+              <button onclick="loadSynthetic('diag-stripes')">Diag 2</button>
               <button onclick="loadSynthetic('square')">Square</button>
               <button onclick="loadSynthetic('circle')">Circle</button>
+              <button onclick="loadSynthetic('star')" style="grid-column:1/-1">Star</button>
             </div>
             <div class="preset-divider"></div>
             <div class="preset-buttons">
@@ -808,7 +810,21 @@
         for (let x = 0; x < S; x += stripe * 2)
           ctx.fillRect(x, 0, stripe, S);
 
+      } else if (type === 'diag1') {
+        // "/" direction: stripes perpendicular to diag-stripes
+        const img = ctx.getImageData(0, 0, S, S);
+        const d = img.data;
+        for (let y = 0; y < S; y++)
+          for (let x = 0; x < S; x++) {
+            const v = (((x - y) % (stripe * 2)) + stripe * 2) % (stripe * 2) < stripe ? 255 : 0;
+            const i = (y * S + x) * 4;
+            d[i] = d[i + 1] = d[i + 2] = v;
+            d[i + 3] = 255;
+          }
+        ctx.putImageData(img, 0, 0);
+
       } else if (type === 'diag-stripes') {
+        // "\" direction
         const img = ctx.getImageData(0, 0, S, S);
         const d = img.data;
         for (let y = 0; y < S; y++)
@@ -831,6 +847,21 @@
         ctx.beginPath();
         ctx.arc(S / 2, S / 2, Math.round(S * 0.35), 0, Math.PI * 2);
         ctx.stroke();
+
+      } else if (type === 'star') {
+        const cx = S / 2, cy = S / 2;
+        const outerR = Math.round(S * 0.4);
+        const innerR = Math.round(outerR * 0.382); // ratio for regular 5-pointed star
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const angle = (i * Math.PI / 5) - Math.PI / 2;
+          const r = i % 2 === 0 ? outerR : innerR;
+          const px = cx + r * Math.cos(angle);
+          const py = cy + r * Math.sin(angle);
+          i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
       }
 
       originalImageData = c.getContext('2d').getImageData(0, 0, S, S);
