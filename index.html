@@ -21,8 +21,9 @@
     button { cursor: pointer; background: #222; color: white; border: none; font-weight: 700;
              padding: 8px; border-radius: 8px; font-size: 13px; }
     button:hover { opacity: 0.9; }
-    .preset-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .preset-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .preset-buttons button { background: #3b4252; font-size: 12px; width: 100%; }
+    .preset-divider { border: none; border-top: 1px solid #e5e7eb; margin: 6px 0; }
 
     /* Layer selector buttons */
     .layer-btn-row { display: flex; gap: 5px; }
@@ -121,6 +122,15 @@
           </div>
           <div class="control-group">
             <label>Example Images</label>
+            <div class="preset-buttons">
+              <button onclick="loadSynthetic('checkerboard')">Checker</button>
+              <button onclick="loadSynthetic('h-stripes')">H-Stripes</button>
+              <button onclick="loadSynthetic('v-stripes')">V-Stripes</button>
+              <button onclick="loadSynthetic('diag-stripes')">Diagonal</button>
+              <button onclick="loadSynthetic('square')">Square</button>
+              <button onclick="loadSynthetic('circle')">Circle</button>
+            </div>
+            <div class="preset-divider"></div>
             <div class="preset-buttons">
               <button onclick="loadPreset('portrait')">Portrait</button>
               <button onclick="loadPreset('building')">Building</button>
@@ -769,6 +779,61 @@
       temp.width = w; temp.height = h;
       temp.getContext('2d').drawImage(img, 0, 0, w, h);
       originalImageData = temp.getContext('2d').getImageData(0, 0, w, h);
+      runPipeline();
+    }
+
+    function loadSynthetic(type) {
+      const S = MAX_SIZE;
+      const c = document.createElement('canvas');
+      c.width = S; c.height = S;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, S, S);
+      ctx.fillStyle = '#fff';
+
+      const tile   = Math.round(S / 10); // 32px — checkerboard block size
+      const stripe = Math.round(S / 16); // 20px — stripe width
+
+      if (type === 'checkerboard') {
+        for (let y = 0; y < S; y += tile)
+          for (let x = 0; x < S; x += tile)
+            if (((x / tile) + (y / tile)) % 2 === 0)
+              ctx.fillRect(x, y, tile, tile);
+
+      } else if (type === 'h-stripes') {
+        for (let y = 0; y < S; y += stripe * 2)
+          ctx.fillRect(0, y, S, stripe);
+
+      } else if (type === 'v-stripes') {
+        for (let x = 0; x < S; x += stripe * 2)
+          ctx.fillRect(x, 0, stripe, S);
+
+      } else if (type === 'diag-stripes') {
+        const img = ctx.getImageData(0, 0, S, S);
+        const d = img.data;
+        for (let y = 0; y < S; y++)
+          for (let x = 0; x < S; x++) {
+            const v = (x + y) % (stripe * 2) < stripe ? 255 : 0;
+            const i = (y * S + x) * 4;
+            d[i] = d[i + 1] = d[i + 2] = v;
+            d[i + 3] = 255;
+          }
+        ctx.putImageData(img, 0, 0);
+
+      } else if (type === 'square') {
+        const sq = Math.round(S * 0.4);
+        const off = Math.round((S - sq) / 2);
+        ctx.fillRect(off, off, sq, sq);
+
+      } else if (type === 'circle') {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = Math.round(S * 0.04);
+        ctx.beginPath();
+        ctx.arc(S / 2, S / 2, Math.round(S * 0.35), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      originalImageData = c.getContext('2d').getImageData(0, 0, S, S);
       runPipeline();
     }
 
