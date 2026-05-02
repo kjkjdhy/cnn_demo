@@ -103,6 +103,45 @@
       font-size: 13px; cursor: pointer; display: block; margin-left: auto; margin-right: auto;
     }
     .kernel-refresh-btn:hover { background: #1e40af; }
+
+    /* ── Convolution Animation + Classification ─────────────────────── */
+    .anim-section h2 { font-size: 20px; margin: 0 0 16px 0; }
+    .anim-top { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
+    .anim-preset-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 6px; }
+    .anim-preset-strip { display: flex; gap: 8px; }
+    .anim-preset-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+    .anim-preset-thumb {
+      width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
+      border: 2px solid #e5e7eb; transition: border-color 0.15s; display: block;
+    }
+    .anim-preset-thumb:hover { border-color: #93c5fd; }
+    .anim-preset-thumb.active { border-color: #1d4ed8; box-shadow: 0 0 0 2px #bfdbfe; }
+    .anim-preset-caption { font-size: 10px; font-weight: 600; color: #555; }
+    .anim-controls-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .anim-play-btn {
+      padding: 9px 22px; border-radius: 8px; background: #1d4ed8; color: white;
+      font-weight: 700; font-size: 14px; border: none; cursor: pointer;
+    }
+    .anim-play-btn:hover { background: #1e40af; }
+    .anim-speed-row { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+    .anim-kernel-select { padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; background: white; }
+    .anim-body { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+    .anim-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .anim-col-label { font-size: 12px; font-weight: 700; color: #555; }
+    .anim-canvas { border-radius: 8px; border: 2px solid #e5e7eb; display: block; }
+    .anim-arrow { font-size: 28px; color: #d1d5db; align-self: center; padding-top: 20px; }
+    .class-col { flex: 1; min-width: 220px; }
+    .class-col-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 10px; }
+    .class-waiting { color: #9ca3af; font-size: 13px; }
+    .class-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .class-label {
+      font-size: 13px; font-weight: 600; width: 150px; flex-shrink: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222;
+    }
+    .class-bar-bg { flex: 1; background: #f3f4f6; border-radius: 4px; height: 16px; overflow: hidden; }
+    .class-bar { height: 16px; border-radius: 4px; background: #1d4ed8; }
+    .class-pct { font-size: 13px; font-weight: 700; min-width: 40px; text-align: right; color: #374151; }
+    .model-note { font-size: 11px; color: #9ca3af; margin-top: 12px; }
   </style>
 </head>
 <body>
@@ -213,8 +252,54 @@
         </div>
       </div>
     </div>
+
+    <!-- ── Convolution Animation + Image Classification ─────────────────── -->
+    <div class="panel anim-section">
+      <h2>How Convolution Works</h2>
+
+      <div class="anim-top">
+        <div>
+          <div class="anim-preset-label">Try These Images</div>
+          <div class="anim-preset-strip" id="animPresetStrip"></div>
+        </div>
+        <div class="anim-controls-row">
+          <button class="anim-play-btn" id="animPlayBtn" onclick="animToggle()">▶ Play</button>
+          <div class="anim-speed-row">
+            Speed
+            <input type="range" id="animSpeed" min="1" max="30" value="6" style="width:80px">
+          </div>
+          <select class="anim-kernel-select" id="animKernelSelect">
+            <option value="h_edge">H-Edge</option>
+            <option value="v_edge">V-Edge</option>
+            <option value="diag_edge">Diag Edge</option>
+            <option value="texture">Texture</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="anim-body">
+        <div class="anim-col">
+          <div class="anim-col-label">Input + Kernel</div>
+          <canvas id="animInputCanvas" class="anim-canvas" width="256" height="256"></canvas>
+        </div>
+        <div class="anim-arrow">→</div>
+        <div class="anim-col">
+          <div class="anim-col-label">Feature Map</div>
+          <canvas id="animOutputCanvas" class="anim-canvas" width="256" height="256"></canvas>
+        </div>
+        <div class="anim-arrow">→</div>
+        <div class="class-col">
+          <div class="class-col-label">Classification (MobileNet)</div>
+          <div id="classResult"><div class="class-waiting">Select an image and press ▶ Play</div></div>
+          <div class="model-note" id="modelStatus">Loading MobileNet…</div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <script>
     const MAX_SIZE = 320;
     const ALPHA = 0.7;
@@ -884,6 +969,258 @@
     updateLayerBtns();
     renderKernelBox();
     loadPreset('street');
+
+    // ── Convolution Animation + Classification ──────────────────────────────
+
+    const ANIM_SIZE = 64;
+    const ANIM_DISPLAY = 256;
+
+    const ANIM_PRESETS = [
+      { label: 'Dog',    url: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=320&h=320&fit=crop' },
+      { label: 'Cat',    url: 'https://images.unsplash.com/photo-1514888751-11e19d5dc3aa?w=320&h=320&fit=crop' },
+      { label: 'Bird',   url: 'https://images.unsplash.com/photo-1444464333584-b7e2daa55bf0?w=320&h=320&fit=crop' },
+      { label: 'Car',    url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=320&h=320&fit=crop' },
+      { label: 'Plane',  url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=320&h=320&fit=crop' },
+      { label: 'Flower', url: 'https://images.unsplash.com/photo-1490750967868-88df5691cc99?w=320&h=320&fit=crop' },
+    ];
+
+    // 'idle' | 'running' | 'paused' | 'done'
+    let animState = 'idle';
+    let animRAF = null;
+    let animPos = 0;
+    let animSmall = null;
+    let animFullImg = null;
+    let animKernel = null;
+    let animOutW = 0, animOutH = 0;
+    let animOutPixels = null;
+    let mobileNetModel = null;
+
+    function buildAnimPresets() {
+      const strip = document.getElementById('animPresetStrip');
+      ANIM_PRESETS.forEach((p, i) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'anim-preset-item';
+        const img = document.createElement('img');
+        img.className = 'anim-preset-thumb';
+        img.src = p.url;
+        img.crossOrigin = 'anonymous';
+        img.alt = p.label;
+        img.title = p.label;
+        img.onclick = () => loadAnimPreset(i);
+        const cap = document.createElement('div');
+        cap.className = 'anim-preset-caption';
+        cap.textContent = p.label;
+        wrap.appendChild(img);
+        wrap.appendChild(cap);
+        strip.appendChild(wrap);
+      });
+    }
+
+    function loadAnimPreset(idx) {
+      document.querySelectorAll('.anim-preset-thumb').forEach((el, i) =>
+        el.classList.toggle('active', i === idx));
+
+      if (animState === 'running') cancelAnimationFrame(animRAF);
+      animState = 'idle';
+      animPos = 0;
+      document.getElementById('animPlayBtn').textContent = '▶ Play';
+      document.getElementById('classResult').innerHTML =
+        '<div class="class-waiting">Press ▶ Play to animate & classify</div>';
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const scale = Math.min(MAX_SIZE / img.width, MAX_SIZE / img.height, 1);
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img, 0, 0, w, h);
+        animFullImg = c.getContext('2d').getImageData(0, 0, w, h);
+        originalImageData = animFullImg;
+        runPipeline();
+        paintAnimInput(animFullImg, -1, -1, false);
+        clearAnimOutput();
+      };
+      img.onerror = () => alert('Image failed to load — check network.');
+      img.src = ANIM_PRESETS[idx].url;
+    }
+
+    function paintAnimInput(imageData, ox, oy, pixelated) {
+      const canvas = document.getElementById('animInputCanvas');
+      const ctx = canvas.getContext('2d');
+      const tmp = document.createElement('canvas');
+      tmp.width = imageData.width; tmp.height = imageData.height;
+      tmp.getContext('2d').putImageData(imageData, 0, 0);
+      ctx.imageSmoothingEnabled = !pixelated;
+      ctx.clearRect(0, 0, ANIM_DISPLAY, ANIM_DISPLAY);
+      ctx.drawImage(tmp, 0, 0, ANIM_DISPLAY, ANIM_DISPLAY);
+
+      if (ox >= 0 && oy >= 0 && animKernel) {
+        const scale = ANIM_DISPLAY / ANIM_SIZE;
+        const kSize = animKernel.length;
+        const padding = 1;
+        const rx = (ox - padding) * scale;
+        const ry = (oy - padding) * scale;
+        const rw = kSize * scale;
+        ctx.fillStyle = 'rgba(255,60,60,0.18)';
+        ctx.fillRect(rx, ry, rw, rw);
+        ctx.strokeStyle = '#ff3c3c';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(rx + 1, ry + 1, rw - 2, rw - 2);
+        ctx.fillStyle = 'rgba(255,60,60,0.55)';
+        ctx.fillRect(ox * scale, oy * scale, scale, scale);
+      }
+    }
+
+    function clearAnimOutput() {
+      const ctx = document.getElementById('animOutputCanvas').getContext('2d');
+      ctx.fillStyle = '#1a1a2e';
+      ctx.fillRect(0, 0, ANIM_DISPLAY, ANIM_DISPLAY);
+    }
+
+    function paintAnimOutput() {
+      const tmp = document.createElement('canvas');
+      tmp.width = animOutW; tmp.height = animOutH;
+      tmp.getContext('2d').putImageData(
+        new ImageData(new Uint8ClampedArray(animOutPixels), animOutW, animOutH), 0, 0);
+      const ctx = document.getElementById('animOutputCanvas').getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(tmp, 0, 0, ANIM_DISPLAY, ANIM_DISPLAY);
+    }
+
+    function setupAnim() {
+      const src = animFullImg || originalImageData;
+      animSmall = scaleImageTo(src, ANIM_SIZE, ANIM_SIZE);
+      const kSize = 3;
+      const padding = 1;
+      animKernel = getDefaultKernel(
+        document.getElementById('animKernelSelect').value, kSize);
+      animOutW = Math.floor((ANIM_SIZE + 2 * padding - kSize) / 1 + 1);
+      animOutH = animOutW;
+      animOutPixels = new Uint8ClampedArray(animOutW * animOutH * 4);
+      for (let i = 3; i < animOutPixels.length; i += 4) animOutPixels[i] = 255;
+      animPos = 0;
+      paintAnimInput(animSmall, -1, -1, true);
+      clearAnimOutput();
+    }
+
+    function animToggle() {
+      if (animState === 'running') {
+        cancelAnimationFrame(animRAF);
+        animState = 'paused';
+        document.getElementById('animPlayBtn').textContent = '▶ Resume';
+        return;
+      }
+
+      const src = animFullImg || originalImageData;
+      if (!src) { alert('Please load an image first'); return; }
+
+      if (animState === 'idle' || animState === 'done') {
+        setupAnim();
+        document.getElementById('classResult').innerHTML =
+          '<div class="class-waiting">Animating…</div>';
+      }
+
+      animState = 'running';
+      document.getElementById('animPlayBtn').textContent = '⏸ Pause';
+      animRAF = requestAnimationFrame(animFrame);
+    }
+
+    function animFrame() {
+      if (animState !== 'running') return;
+
+      const speed = Number(document.getElementById('animSpeed').value);
+      const total = animOutW * animOutH;
+      const padding = 1;
+      const kSize = animKernel.length;
+
+      for (let step = 0; step < speed && animPos < total; step++, animPos++) {
+        const ox = animPos % animOutW;
+        const oy = Math.floor(animPos / animOutW);
+        let sum = 0;
+        for (let ky = 0; ky < kSize; ky++) {
+          for (let kx = 0; kx < kSize; kx++) {
+            const ix = ox + kx - padding;
+            const iy = oy + ky - padding;
+            if (ix >= 0 && ix < ANIM_SIZE && iy >= 0 && iy < ANIM_SIZE) {
+              const di = (iy * ANIM_SIZE + ix) * 4;
+              const gray = (animSmall.data[di] + animSmall.data[di+1] + animSmall.data[di+2]) / 3;
+              sum += gray * animKernel[ky][kx];
+            }
+          }
+        }
+        const v = clamp(Math.abs(sum));
+        const base = (oy * animOutW + ox) * 4;
+        animOutPixels[base] = animOutPixels[base+1] = animOutPixels[base+2] = v;
+      }
+
+      const curOx = animPos % animOutW;
+      const curOy = Math.floor(animPos / animOutW);
+      if (animPos < total) paintAnimInput(animSmall, curOx, curOy, true);
+      paintAnimOutput();
+
+      if (animPos >= total) {
+        animState = 'done';
+        document.getElementById('animPlayBtn').textContent = '↺ Replay';
+        paintAnimInput(animSmall, -1, -1, true);
+        runClassification();
+        return;
+      }
+
+      animRAF = requestAnimationFrame(animFrame);
+    }
+
+    async function runClassification() {
+      const src = animFullImg || originalImageData;
+      if (!src) return;
+      const el = document.getElementById('classResult');
+      el.innerHTML = '<div class="class-waiting">Classifying with MobileNet…</div>';
+      try {
+        if (!mobileNetModel) {
+          document.getElementById('modelStatus').textContent = 'Loading MobileNet…';
+          mobileNetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
+        }
+        const tmp = document.createElement('canvas');
+        tmp.width = src.width; tmp.height = src.height;
+        tmp.getContext('2d').putImageData(src, 0, 0);
+        const predictions = await mobileNetModel.classify(tmp, 5);
+        const top = predictions[0].probability;
+        el.innerHTML = predictions.map((p, rank) => {
+          const pct = (p.probability * 100).toFixed(1);
+          const barW = Math.round((p.probability / top) * 100);
+          const label = p.className.split(',')[0].trim();
+          const color = rank === 0 ? '#1d4ed8' : '#93c5fd';
+          return `<div class="class-row">
+            <div class="class-label" title="${p.className}">${label}</div>
+            <div class="class-bar-bg">
+              <div class="class-bar" style="width:${barW}%;background:${color}"></div>
+            </div>
+            <div class="class-pct">${pct}%</div>
+          </div>`;
+        }).join('');
+        document.getElementById('modelStatus').textContent = '';
+      } catch(e) {
+        el.innerHTML = `<div class="class-waiting">Classification failed: ${e.message}</div>`;
+      }
+    }
+
+    // Pre-load MobileNet in background so it's ready when user clicks Play
+    (async () => {
+      try {
+        mobileNetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
+        const st = document.getElementById('modelStatus');
+        if (st) {
+          st.textContent = 'MobileNet ready ✓';
+          setTimeout(() => { if (st) st.textContent = ''; }, 3000);
+        }
+      } catch(e) {
+        const st = document.getElementById('modelStatus');
+        if (st) st.textContent = 'Model load failed — check network';
+      }
+    })();
+
+    buildAnimPresets();
   </script>
 </body>
 </html>
