@@ -8,284 +8,112 @@
     * { box-sizing: border-box; font-family: Arial, sans-serif; }
     body { margin: 0; padding: 24px; background: #f5f6f8; color: #222; }
     h1 { margin-top: 0; font-size: 28px; text-align: center; }
-    .subtitle { color: #555; margin-bottom: 24px; line-height: 1.5; text-align: center; }
-    .container { display: flex; flex-direction: column; gap: 16px; }
-    .panel { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
-    .controls { display: flex; gap: 20px; align-items: flex-start; align-self: flex-start; }
-    .controls-left { display: flex; flex-direction: column; gap: 10px; width: 180px; }
-    .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
-    .full-span { grid-column: 1 / -1; }
-    .control-group { min-width: 140px; max-width: 170px; margin-bottom: 0; }
-    label { display: block; font-weight: 700; margin-bottom: 5px; font-size: 13px; }
-    select, input[type="file"] { width: 100%; padding: 8px; border-radius: 8px; border: 1px solid #ccc; background: white; font-size: 13px; }
-    button { cursor: pointer; background: #222; color: white; border: none; font-weight: 700;
-             padding: 8px; border-radius: 8px; font-size: 13px; }
-    button:hover { opacity: 0.9; }
-    .preset-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-    .preset-buttons button { background: #3b4252; font-size: 12px; width: 100%; }
-    .preset-divider { border: none; border-top: 1px solid #e5e7eb; margin: 6px 0; }
+    h2 { font-size: 17px; margin: 0 0 14px; color: #111; }
+    .container { display: flex; flex-direction: column; gap: 16px; max-width: 1100px; margin: 0 auto; }
+    .panel { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
 
-    /* Layer selector buttons */
-    .layer-btn-row { display: flex; gap: 5px; }
-    .layer-btn {
-      flex: 1; padding: 7px 4px; border-radius: 6px; border: 1px solid #ccc;
-      background: white; font-weight: 700; font-size: 12px; cursor: pointer; color: #555;
-    }
-    .layer-btn.active { background: #1d4ed8; color: white; border-color: #1d4ed8; }
-    .layer-btn:hover:not(.active) { background: #f3f4f6; }
-
-    /* Image grid */
-    #layerGrid { display: flex; gap: 16px; align-items: flex-start; overflow-x: auto; padding-bottom: 6px; }
-    .layer-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .col-label {
-      font-size: 11px; font-weight: 700; padding: 3px 10px;
-      border-radius: 6px; white-space: nowrap; cursor: pointer; user-select: none;
-    }
-    .col-label.editing { outline: 2px solid #1d4ed8; outline-offset: 1px; }
-    .col-label[data-layer-btn]:hover { background: #e2e8f0; }
-    .col-row-label { font-size: 10px; font-weight: 700; color: #777; margin-top: 3px; text-align: center; }
-    .ch-toggle-btn {
-      margin-top: 2px; padding: 3px 12px; border-radius: 5px; border: 1px solid #d1d5db;
-      background: #f9fafb; color: #555; font-size: 10px; font-weight: 600;
-      cursor: pointer; width: auto; display: block;
-    }
-    .ch-toggle-btn:hover { background: #e5e7eb; }
-    .ch-detail { display: none; flex-direction: column; align-items: center; gap: 5px; width: 100%; }
-    .ch-detail.open { display: flex; }
-    .ch-h_edge         { background: #dbeafe; color: #1d4ed8; }
-    .ch-v_edge         { background: #dcfce7; color: #15803d; }
-    .ch-diag_edge      { background: #fef3c7; color: #92400e; }
-    .ch-color_contrast { background: #fee2e2; color: #991b1b; }
-    .ch-texture        { background: #f3e8ff; color: #7e22ce; }
-    .ch-input          { background: #f3f4f6; color: #374151; }
-    .canvas-cell { flex: none; }
-    .canvas-cell canvas {
-      display: block; background: #111; max-width: 280px; width: auto;
-      border-radius: 8px; border: 2px solid #e5e7eb; image-rendering: pixelated;
-    }
-    .canvas-cell.ch-h_edge canvas         { border-color: #93c5fd; }
-    .canvas-cell.ch-v_edge canvas         { border-color: #86efac; }
-    .canvas-cell.ch-diag_edge canvas      { border-color: #fcd34d; }
-    .canvas-cell.ch-color_contrast canvas { border-color: #fca5a5; }
-    .canvas-cell.ch-texture canvas        { border-color: #d8b4fe; }
-
-    /* Bottom row */
-    .bottom-row { display: flex; gap: 16px; align-items: stretch; }
-    .kernel-display-area { flex: 1; display: flex; align-items: flex-start; justify-content: center; }
-    .kernel-box {
-      background: white; border-radius: 14px; padding: 16px 20px;
-      box-shadow: 0 4px 18px rgba(0,0,0,0.08); text-align: center; width: 100%;
-    }
-    .kernel-box-title { font-size: 13px; font-weight: 700; color: #333; margin-bottom: 12px; }
-    .kernel-channels-row { display: flex; gap: 10px; align-items: flex-start; overflow-x: auto; padding: 2px 0; }
-    .kernel-ch-block { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: none; }
-    .kernel-ch-label { font-size: 11px; font-weight: 700; color: #555; }
-    .kernel-filter-select {
-      padding: 3px 4px; border-radius: 5px; border: 1px solid #ccc;
-      font-size: 11px; background: white; cursor: pointer;
-    }
-    .kernel-table { border-collapse: collapse; margin: 0 auto; }
-    .kernel-table td { width: 30px; height: 30px; text-align: center; border: 1px solid #e5e7eb; padding: 0; }
-    .kernel-table input {
-      width: 30px; height: 30px; border: none; background: transparent;
-      text-align: center; font-family: Consolas, monospace; font-size: 11px; font-weight: 700;
-      outline: none; cursor: text; -moz-appearance: textfield; appearance: textfield;
-    }
-    .kernel-table input::-webkit-outer-spin-button,
-    .kernel-table input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .kernel-table input:focus { box-shadow: inset 0 0 0 2px #3b82f6; border-radius: 2px; }
-    .kv-pos  { background: #dbeafe; color: #1d4ed8; }
-    .kv-neg  { background: #fee2e2; color: #991b1b; }
-    .kv-zero { background: #f3f4f6; color: #9ca3af; }
-    .kernel-refresh-btn {
-      margin-top: 14px; padding: 8px 32px; border-radius: 8px;
-      background: #1d4ed8; color: white; border: none; font-weight: 700;
-      font-size: 13px; cursor: pointer; display: block; margin-left: auto; margin-right: auto;
-    }
-    .kernel-refresh-btn:hover { background: #1e40af; }
-
-    /* ── Convolution Animation + Classification ─────────────────────── */
-    .anim-section h2 { font-size: 20px; margin: 0 0 16px 0; }
-    .anim-top { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 20px; flex-wrap: wrap; }
-    .anim-preset-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 6px; }
-    .anim-preset-strip { display: flex; gap: 8px; }
-    .anim-preset-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-    .anim-preset-thumb {
+    /* ── Top control bar ─────────────────────────────────────────────────── */
+    .top-bar { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 18px; flex-wrap: wrap; }
+    .preset-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 6px; }
+    .preset-strip { display: flex; gap: 8px; }
+    .preset-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+    .preset-thumb {
       width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
-      border: 2px solid #e5e7eb; transition: border-color 0.15s; display: block;
+      border: 2px solid #e5e7eb; transition: border-color 0.15s; display: block; background: #f3f4f6;
     }
-    .anim-preset-thumb:hover { border-color: #93c5fd; }
-    .anim-preset-thumb.active { border-color: #1d4ed8; box-shadow: 0 0 0 2px #bfdbfe; }
-    .anim-preset-caption { font-size: 10px; font-weight: 600; color: #555; }
-    .anim-controls-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .anim-play-btn {
+    .preset-thumb:hover { border-color: #93c5fd; }
+    .preset-thumb.active { border-color: #1d4ed8; box-shadow: 0 0 0 2px #bfdbfe; }
+    .preset-caption { font-size: 10px; font-weight: 600; color: #555; }
+    .controls-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .play-btn {
       padding: 9px 22px; border-radius: 8px; background: #1d4ed8; color: white;
       font-weight: 700; font-size: 14px; border: none; cursor: pointer;
     }
-    .anim-play-btn:hover { background: #1e40af; }
-    .anim-speed-row { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
-    .anim-kernel-select { padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; background: white; }
-    .anim-body { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
-    .anim-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .play-btn:hover { background: #1e40af; }
+    .speed-row { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+    .filter-select { padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; background: white; }
+
+    /* ── Animation area ──────────────────────────────────────────────────── */
+    .main-area { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+    .anim-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .anim-col-label { font-size: 12px; font-weight: 700; color: #555; }
     .anim-canvas { border-radius: 8px; border: 2px solid #e5e7eb; display: block; }
-    .anim-arrow { font-size: 28px; color: #d1d5db; align-self: center; padding-top: 20px; }
-    .class-col { flex: 1; min-width: 220px; }
-    .class-col-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 10px; }
+    .anim-arrow { font-size: 22px; color: #d1d5db; align-self: center; padding-top: 18px; }
+
+    /* ── Kernel display ───────────────────────────────────────────────────── */
+    .kernel-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .kernel-col-label { font-size: 12px; font-weight: 700; color: #555; }
+    .kernel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+    .kernel-cell {
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      font-family: Consolas, monospace; font-size: 10px; font-weight: 700;
+      border-radius: 4px; border: 1px solid #e5e7eb;
+    }
+    .kp { background: #dbeafe; color: #1d4ed8; }
+    .kn { background: #fee2e2; color: #991b1b; }
+    .kz { background: #f3f4f6; color: #9ca3af; }
+    .kernel-note { font-size: 10px; color: #9ca3af; text-align: center; max-width: 116px; line-height: 1.4; }
+
+    /* ── Classification ───────────────────────────────────────────────────── */
+    .class-col { flex: 1; min-width: 190px; }
+    .class-col-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 8px; }
     .class-waiting { color: #9ca3af; font-size: 13px; }
-    .class-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .class-row { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
     .class-label {
-      font-size: 13px; font-weight: 600; width: 150px; flex-shrink: 0;
+      font-size: 13px; font-weight: 600; width: 130px; flex-shrink: 0;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222;
     }
-    .class-bar-bg { flex: 1; background: #f3f4f6; border-radius: 4px; height: 16px; overflow: hidden; }
-    .class-bar { height: 16px; border-radius: 4px; background: #1d4ed8; }
-    .class-pct { font-size: 13px; font-weight: 700; min-width: 40px; text-align: right; color: #374151; }
-    .model-note { font-size: 11px; color: #9ca3af; margin-top: 12px; }
+    .class-bar-bg { flex: 1; background: #f3f4f6; border-radius: 4px; height: 15px; overflow: hidden; }
+    .class-bar { height: 15px; border-radius: 4px; background: #1d4ed8; }
+    .class-pct { font-size: 13px; font-weight: 700; min-width: 38px; text-align: right; color: #374151; }
+    .model-note { font-size: 11px; color: #9ca3af; margin-top: 8px; }
+
+    /* ── Architecture panel ───────────────────────────────────────────────── */
+    .arch-canvas-wrap { overflow-x: auto; }
+    .arch-canvas-wrap canvas { display: block; }
+    .arch-legend { display: flex; gap: 18px; margin-top: 10px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #555; }
+    .legend-swatch { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
   <h1>CNN Convolution Demo</h1>
 
   <div class="container">
+    <!-- ── Upper panel ─────────────────────────────────────────────────── -->
     <div class="panel">
-      <div id="layerGrid"></div>
-    </div>
-
-    <div class="bottom-row">
-      <div class="panel controls">
-        <div class="controls-left">
-          <div class="control-group">
-            <label for="imageUpload">Upload Image</label>
-            <input id="imageUpload" type="file" accept="image/*" />
-          </div>
-          <div class="control-group">
-            <label>Example Images</label>
-            <div class="preset-buttons">
-              <button onclick="loadSynthetic('v-stripes')">V-Stripes</button>
-              <button onclick="loadSynthetic('h-stripes')">H-Stripes</button>
-              <button onclick="loadSynthetic('diag1')">Diag 1</button>
-              <button onclick="loadSynthetic('diag-stripes')">Diag 2</button>
-              <button onclick="loadSynthetic('square')">Square</button>
-              <button onclick="loadSynthetic('checkerboard')">Checker</button>
-              <button onclick="loadSynthetic('circle')">Circle</button>
-              <button onclick="loadSynthetic('star')">Star</button>
-            </div>
-            <div class="preset-divider"></div>
-            <div class="preset-buttons">
-              <button onclick="loadPreset('portrait')">Portrait</button>
-              <button onclick="loadPreset('building')">Building</button>
-              <button onclick="loadPreset('street')">Street</button>
-              <button onclick="loadPreset('nature')">Nature</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="controls-grid">
-          <div class="control-group full-span">
-            <label>Edit Layer</label>
-            <div class="layer-btn-row" id="layerBtns"></div>
-          </div>
-          <div class="control-group">
-            <label>Channels (this layer)</label>
-            <select id="layerChannels">
-              <option value="1" selected>1</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-            </select>
-          </div>
-          <div class="control-group">
-            <label for="numLayers">Layers</label>
-            <select id="numLayers">
-              <option value="1">1 Layer</option>
-              <option value="2" selected>2 Layers</option>
-              <option value="3">3 Layers</option>
-              <option value="4">4 Layers</option>
-            </select>
-          </div>
-          <div class="control-group full-span">
-            <label for="kernelSize">Kernel Size (global)</label>
-            <select id="kernelSize">
-              <option value="3" selected>3 × 3</option>
-              <option value="5">5 × 5</option>
-              <option value="7">7 × 7</option>
-            </select>
-          </div>
-          <div class="control-group">
-            <label for="stride">Stride (this layer)</label>
-            <select id="stride">
-              <option value="1" selected>1</option>
-              <option value="2">2</option>
-              <option value="4">4</option>
-            </select>
-          </div>
-          <div class="control-group">
-            <label for="paddingMode">Padding (this layer)</label>
-            <select id="paddingMode">
-              <option value="same" selected>auto: p = 1</option>
-              <option value="custom0">custom: p = 0</option>
-              <option value="custom1">custom: p = 1</option>
-              <option value="custom2">custom: p = 2</option>
-              <option value="custom3">custom: p = 3</option>
-              <option value="custom5">custom: p = 5</option>
-            </select>
-          </div>
-          <div class="control-group full-span">
-            <label>Pooling (this layer)</label>
-            <select id="poolMode">
-              <option value="none" selected>None</option>
-              <option value="max2">MaxPool 2×2</option>
-              <option value="max3">MaxPool 3×3</option>
-              <option value="max4">MaxPool 4×4</option>
-              <option value="avg2">AvgPool 2×2</option>
-              <option value="avg3">AvgPool 3×3</option>
-              <option value="avg4">AvgPool 4×4</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div class="kernel-display-area">
-        <div class="kernel-box" id="kernelBox">
-          <button class="kernel-refresh-btn" onclick="applyAndRefresh()">↻ Refresh</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── Convolution Animation + Image Classification ─────────────────── -->
-    <div class="panel anim-section">
-      <h2>How Convolution Works</h2>
-
-      <div class="anim-top">
+      <div class="top-bar">
         <div>
-          <div class="anim-preset-label">Try These Images</div>
-          <div class="anim-preset-strip" id="animPresetStrip"></div>
+          <div class="preset-label">Choose an Image</div>
+          <div class="preset-strip" id="presetStrip"></div>
         </div>
-        <div class="anim-controls-row">
-          <button class="anim-play-btn" id="animPlayBtn" onclick="animToggle()">▶ Play</button>
-          <div class="anim-speed-row">
+        <div class="controls-row">
+          <button class="play-btn" id="playBtn" onclick="animToggle()">▶ Play</button>
+          <div class="speed-row">
             Speed
             <input type="range" id="animSpeed" min="1" max="30" value="6" style="width:80px">
           </div>
-          <select class="anim-kernel-select" id="animKernelSelect">
-            <option value="h_edge">H-Edge</option>
-            <option value="v_edge">V-Edge</option>
-            <option value="diag_edge">Diag Edge</option>
-            <option value="texture">Texture</option>
+          <select class="filter-select" id="filterSelect" onchange="onFilterChange()">
+            <option value="0">Filter #1</option>
           </select>
         </div>
       </div>
 
-      <div class="anim-body">
+      <div class="main-area">
         <div class="anim-col">
           <div class="anim-col-label">Input + Kernel</div>
-          <canvas id="animInputCanvas" class="anim-canvas" width="256" height="256"></canvas>
+          <canvas id="inputCanvas" class="anim-canvas" width="220" height="220"></canvas>
+        </div>
+        <div class="anim-arrow">→</div>
+        <div class="kernel-col">
+          <div class="kernel-col-label">Kernel Weights</div>
+          <div class="kernel-grid" id="kernelGrid"></div>
+          <div class="kernel-note" id="kernelNote">Loading model weights…</div>
         </div>
         <div class="anim-arrow">→</div>
         <div class="anim-col">
           <div class="anim-col-label">Feature Map</div>
-          <canvas id="animOutputCanvas" class="anim-canvas" width="256" height="256"></canvas>
+          <canvas id="outputCanvas" class="anim-canvas" width="220" height="220"></canvas>
         </div>
         <div class="anim-arrow">→</div>
         <div class="class-col">
@@ -296,919 +124,420 @@
       </div>
     </div>
 
+    <!-- ── Lower panel: Architecture ───────────────────────────────────── -->
+    <div class="panel">
+      <h2>MobileNet V2 — Model Architecture</h2>
+      <div class="arch-canvas-wrap">
+        <canvas id="archCanvas" width="900" height="230"></canvas>
+      </div>
+      <div class="arch-legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:#d4d8e0"></div>Convolution</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#c8e6c9"></div>Pooling</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#bbdefb"></div>Fully Connected</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:#f3e8ff"></div>Softmax Output</div>
+      </div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <script>
-    const MAX_SIZE = 320;
-    const ALPHA = 0.7;
-    const THRESHOLD = 15;
-    const CONTRAST_SCALE = 3.0;
-
-    const FILTER_TYPES = ['h_edge', 'v_edge', 'diag_edge', 'color_contrast', 'texture'];
-    const FILTER_LABELS = {
-      h_edge: 'H-Edge', v_edge: 'V-Edge',
-      diag_edge: 'Diag Edge', color_contrast: 'Color Contrast', texture: 'Texture'
-    };
-
-    let originalImageData = null;
-    let selectedEditLayer = 1;
-    let expandedLayers = new Set();
-
-    // layerConfigs[0] = Layer 1, etc.  stride/paddingMode/poolMode are per-layer.
-    let layerConfigs = Array.from({length: 4}, () => ({
-      outChannels: 1,
-      stride: 1,
-      paddingMode: 'same',
-      poolMode: 'none',
-      channels: Array.from({length: 4}, (_, c) => ({
-        filterType: FILTER_TYPES[c % FILTER_TYPES.length],
-        customKernel: null
-      }))
-    }));
-
-    // ── Utilities ──────────────────────────────────────────────────────────────
-
-    function clamp(x) { return Math.max(0, Math.min(255, x)); }
-
-    function getPixel(data, W, H, x, y, c) {
-      if (x < 0 || x >= W || y < 0 || y >= H) return 0;
-      return data[(y * W + x) * 4 + c];
-    }
-
-    function avgMaps(maps) {
-      const w = maps[0].width, h = maps[0].height;
-      const out = new ImageData(w, h);
-      for (let i = 0; i < out.data.length; i += 4) {
-        for (let c = 0; c < 3; c++) {
-          let s = 0; for (const m of maps) s += m.data[i + c];
-          out.data[i + c] = clamp(s / maps.length);
-        }
-        out.data[i + 3] = 255;
-      }
-      return out;
-    }
-
-    function scaleImageTo(imageData, targetW, targetH) {
-      if (imageData.width === targetW && imageData.height === targetH) return imageData;
-      const src = document.createElement('canvas');
-      src.width = imageData.width; src.height = imageData.height;
-      src.getContext('2d').putImageData(imageData, 0, 0);
-      const dst = document.createElement('canvas');
-      dst.width = targetW; dst.height = targetH;
-      dst.getContext('2d').drawImage(src, 0, 0, targetW, targetH);
-      return dst.getContext('2d').getImageData(0, 0, targetW, targetH);
-    }
-
-    // ── Kernel builders ────────────────────────────────────────────────────────
-
-    // p such that floor((dim + 2p - k) / stride + 1) == dim  →  p = ceil(((stride-1)*dim + k - stride) / 2)
-    function computeAutoPadding(dim, k, stride) {
-      return Math.max(0, Math.ceil(((stride - 1) * dim + k - stride) / 2));
-    }
-
-    // inputW/inputH only needed for 'same' mode
-    function getPadding(mode, k, stride, inputW, inputH) {
-      if (mode === 'same') {
-        const dim = Math.max(inputW || MAX_SIZE, inputH || MAX_SIZE);
-        return computeAutoPadding(dim, k, stride);
-      }
-      return Number(mode.replace('custom', ''));
-    }
-
-    // Simulate image size after layers 0..(layerIdx-1) to get accurate input size for layer layerIdx
-    function computeExpectedInputSize(layerIdx) {
-      const k = Number(document.getElementById('kernelSize').value);
-      let size = originalImageData
-        ? Math.max(originalImageData.width, originalImageData.height)
-        : MAX_SIZE;
-      for (let l = 0; l < layerIdx; l++) {
-        const cfg = layerConfigs[l];
-        const p = getPadding(cfg.paddingMode, k, cfg.stride, size, size);
-        size = Math.max(1, Math.floor((size + 2 * p - k) / cfg.stride + 1));
-        if (cfg.poolMode !== 'none') {
-          const s = parseInt(cfg.poolMode.slice(3));
-          size = Math.max(1, Math.floor(size / s));
-        }
-      }
-      return size;
-    }
-
-    function binomialRow(n) {
-      const row = [1];
-      for (let i = 1; i < n; i++) row[i] = row[i - 1] * (n - i) / i;
-      return row;
-    }
-
-    function buildEdgeKernel(type, size) {
-      const k = Array.from({length: size}, () => Array(size).fill(0));
-      const c = Math.floor(size / 2);
-      const binom = binomialRow(size);
-      const deriv = Array.from({length: size}, (_, i) => i - c);
-      for (let y = 0; y < size; y++)
-        for (let x = 0; x < size; x++)
-          k[y][x] = type === 'h_edge' ? deriv[y] * binom[x] : deriv[x] * binom[y];
-      return k;
-    }
-
-    function buildDiagEdge(size) {
-      // k[y][x] = y - x; main diagonal (y==x) = 0, sensitive to \ edges
-      return Array.from({length: size}, (_, y) =>
-        Array.from({length: size}, (_, x) => y - x)
-      );
-    }
-
-    function buildTexture(size) {
-      // checkerboard: k[y][x] = (-1)^(y+x)
-      return Array.from({length: size}, (_, y) =>
-        Array.from({length: size}, (_, x) => (y + x) % 2 === 0 ? 1 : -1)
-      );
-    }
-
-    function buildLaplacian(size) {
-      const c = Math.floor(size / 2);
-      return Array.from({length: size}, (_, y) =>
-        Array.from({length: size}, (_, x) => (x === c && y === c) ? size * size - 1 : -1)
-      );
-    }
-
-    function getDefaultKernel(filterType, size) {
-      if (filterType === 'h_edge') return buildEdgeKernel('h_edge', size);
-      if (filterType === 'v_edge') return buildEdgeKernel('v_edge', size);
-      if (filterType === 'diag_edge') return buildDiagEdge(size);
-      if (filterType === 'texture') return buildTexture(size);
-      return buildLaplacian(size);
-    }
-
-    // ── Convolutions ───────────────────────────────────────────────────────────
-
-    function convolveAbs(imageData, kernel, stride, padding) {
-      const W = imageData.width, H = imageData.height;
-      const k = kernel.length;
-      const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
-      const outH = Math.max(1, Math.floor((H + 2 * padding - k) / stride + 1));
-      const output = new Uint8ClampedArray(outW * outH * 4);
-      for (let oy = 0; oy < outH; oy++)
-        for (let ox = 0; ox < outW; ox++) {
-          const base = (oy * outW + ox) * 4;
-          for (let c = 0; c < 3; c++) {
-            let sum = 0;
-            for (let ky = 0; ky < k; ky++)
-              for (let kx = 0; kx < k; kx++)
-                sum += getPixel(imageData.data, W, H, ox * stride + kx - padding, oy * stride + ky - padding, c) * kernel[ky][kx];
-            output[base + c] = clamp(Math.abs(sum));
-          }
-          output[base + 3] = 255;
-        }
-      return new ImageData(output, outW, outH);
-    }
-
-    function computeColorContrast(imageData, stride, padding, kern) {
-      const W = imageData.width, H = imageData.height;
-      const k = kern.length;
-      const outW = Math.max(1, Math.floor((W + 2 * padding - k) / stride + 1));
-      const outH = Math.max(1, Math.floor((H + 2 * padding - k) / stride + 1));
-      const signed = new Float32Array(outW * outH);
-      let maxAbs = 0;
-      for (let oy = 0; oy < outH; oy++)
-        for (let ox = 0; ox < outW; ox++) {
-          let sum = 0;
-          for (let ky = 0; ky < k; ky++)
-            for (let kx = 0; kx < k; kx++) {
-              const ix = ox * stride + kx - padding, iy = oy * stride + ky - padding;
-              const r = getPixel(imageData.data, W, H, ix, iy, 0);
-              const g = getPixel(imageData.data, W, H, ix, iy, 1);
-              const b = getPixel(imageData.data, W, H, ix, iy, 2);
-              sum += (0.299 * r + 0.587 * g + 0.114 * b) * kern[ky][kx];
-            }
-          signed[oy * outW + ox] = sum;
-          if (Math.abs(sum) > maxAbs) maxAbs = Math.abs(sum);
-        }
-      const output = new Uint8ClampedArray(outW * outH * 4);
-      const scale = maxAbs > 0 ? (255 * CONTRAST_SCALE) / maxAbs : 1;
-      for (let i = 0; i < outW * outH; i++) {
-        const v = signed[i] * scale;
-        output[i * 4]     = v > 0 ? clamp(v) : 0;
-        output[i * 4 + 1] = v < 0 ? clamp(-v) : 0;
-        output[i * 4 + 2] = 0;
-        output[i * 4 + 3] = 255;
-      }
-      return new ImageData(output, outW, outH);
-    }
-
-    function applyFilter(imageData, filterType, k, stride, padding, customKernel) {
-      if (filterType === 'color_contrast') {
-        const kern = customKernel || buildLaplacian(k);
-        return computeColorContrast(imageData, stride, padding, kern);
-      }
-      const kern = customKernel || getDefaultKernel(filterType, k);
-      return convolveAbs(imageData, kern, stride, padding);
-    }
-
-    // ── Pooling ────────────────────────────────────────────────────────────────
-
-    function applyPool(imageData, mode) {
-      if (mode === 'none') return imageData;
-      const isMax = mode.startsWith('max');
-      const s = parseInt(mode.slice(3));
-      const W = imageData.width, H = imageData.height;
-      const outW = Math.max(1, Math.floor(W / s));
-      const outH = Math.max(1, Math.floor(H / s));
-      const output = new Uint8ClampedArray(outW * outH * 4);
-      for (let oy = 0; oy < outH; oy++)
-        for (let ox = 0; ox < outW; ox++) {
-          const base = (oy * outW + ox) * 4;
-          for (let c = 0; c < 3; c++) {
-            let acc = 0, cnt = 0;
-            for (let py = 0; py < s; py++)
-              for (let px = 0; px < s; px++) {
-                const ix = ox * s + px, iy = oy * s + py;
-                if (ix < W && iy < H) {
-                  const v = imageData.data[(iy * W + ix) * 4 + c];
-                  acc = isMax ? Math.max(acc, v) : acc + v;
-                  cnt++;
-                }
-              }
-            output[base + c] = isMax ? acc : Math.round(acc / cnt);
-          }
-          output[base + 3] = 255;
-        }
-      return new ImageData(output, outW, outH);
-    }
-
-    // ── Overlay ────────────────────────────────────────────────────────────────
-
-    function overlayFeature(originalRGB, featureMap) {
-      const W = featureMap.width, H = featureMap.height;
-      const scaledOrig = scaleImageTo(originalRGB, W, H);
-      const result = new ImageData(W, H);
-      for (let i = 0; i < result.data.length; i += 4) {
-        const brightness = Math.max(featureMap.data[i], featureMap.data[i + 1], featureMap.data[i + 2]);
-        const a = brightness >= THRESHOLD ? ALPHA : 0;
-        for (let c = 0; c < 3; c++)
-          result.data[i + c] = clamp((1 - a) * scaledOrig.data[i + c] + a * featureMap.data[i + c]);
-        result.data[i + 3] = 255;
-      }
-      return result;
-    }
-
-    // ── Pipeline ───────────────────────────────────────────────────────────────
-
-    function runPipeline() {
-      if (!originalImageData) return;
-
-      const numLayers = Number(document.getElementById('numLayers').value);
-      const k         = Number(document.getElementById('kernelSize').value);
-
-      // layers[0] = [originalImageData]; layers[l] = [fm_c0, fm_c1, ...]
-      const layers = [[originalImageData]];
-
-      for (let l = 0; l < numLayers; l++) {
-        const cfg = layerConfigs[l];
-        const stride  = cfg.stride;
-        const prevMaps = layers[l];
-        const inputImg = prevMaps.length === 1 ? prevMaps[0] : avgMaps(prevMaps);
-        const padding = getPadding(cfg.paddingMode, k, stride, inputImg.width, inputImg.height);
-        const outputMaps = [];
-        for (let c = 0; c < cfg.outChannels; c++) {
-          const chCfg = cfg.channels[c];
-          let fm = applyFilter(inputImg, chCfg.filterType, k, stride, padding, chCfg.customKernel);
-          fm = applyPool(fm, cfg.poolMode);
-          outputMaps.push(fm);
-        }
-        layers.push(outputMaps);
-      }
-
-      renderGrid(layers, k);
-    }
-
-    // ── Rendering ──────────────────────────────────────────────────────────────
-
-    function renderGrid(layers, k) {
-      const grid = document.getElementById('layerGrid');
-      grid.innerHTML = '';
-
-      // Input column
-      const inputCol = document.createElement('div');
-      inputCol.className = 'layer-col';
-      const inputLabel = document.createElement('div');
-      inputLabel.className = 'col-label ch-input';
-      inputLabel.textContent = 'Input';
-      inputCol.appendChild(inputLabel);
-      const inputCell = document.createElement('div');
-      inputCell.className = 'canvas-cell';
-      const inputCanvas = document.createElement('canvas');
-      inputCanvas.width = originalImageData.width;
-      inputCanvas.height = originalImageData.height;
-      inputCanvas.getContext('2d').putImageData(originalImageData, 0, 0);
-      inputCell.appendChild(inputCanvas);
-      inputCol.appendChild(inputCell);
-      grid.appendChild(inputCol);
-
-      // Layer columns
-      const numLayers = layers.length - 1;
-      for (let l = 1; l <= numLayers; l++) {
-        const cfg = layerConfigs[l - 1];
-        const maps = layers[l];
-        const col = document.createElement('div');
-        col.className = 'layer-col';
-
-        // Layer label (edit selector)
-        const layerLabel = document.createElement('div');
-        layerLabel.className = 'col-label ch-input' + (selectedEditLayer === l ? ' editing' : '');
-        layerLabel.textContent = `Layer ${l}`;
-        layerLabel.dataset.layerBtn = l;
-        layerLabel.onclick = () => selectEditLayer(l);
-        col.appendChild(layerLabel);
-
-        // Aggregated image: mean of all channel feature maps, then overlay
-        const aggMap = maps.length === 1 ? maps[0] : avgMaps(maps);
-        const aggOverlaid = overlayFeature(originalImageData, aggMap);
-        const aggCell = document.createElement('div');
-        aggCell.className = 'canvas-cell';
-        const aggCanvas = document.createElement('canvas');
-        aggCanvas.width = aggOverlaid.width;
-        aggCanvas.height = aggOverlaid.height;
-        aggCanvas.getContext('2d').putImageData(aggOverlaid, 0, 0);
-        aggCell.appendChild(aggCanvas);
-        col.appendChild(aggCell);
-
-        // Toggle button
-        const isExpanded = expandedLayers.has(l);
-        const toggleBtn = document.createElement('button');
-        toggleBtn.className = 'ch-toggle-btn';
-        toggleBtn.textContent = isExpanded
-          ? '▲ collapse'
-          : `▾ ${cfg.outChannels} ch`;
-
-        // Per-channel detail section
-        const detail = document.createElement('div');
-        detail.className = 'ch-detail' + (isExpanded ? ' open' : '');
-        for (let c = 0; c < maps.length; c++) {
-          const chCfg = cfg.channels[c];
-          const overlaid = overlayFeature(originalImageData, maps[c]);
-          const rowLabel = document.createElement('div');
-          rowLabel.className = 'col-row-label';
-          rowLabel.textContent = `Ch${c + 1}: ${FILTER_LABELS[chCfg.filterType]}`;
-          detail.appendChild(rowLabel);
-          const cell = document.createElement('div');
-          cell.className = `canvas-cell ch-${chCfg.filterType}`;
-          const canvas = document.createElement('canvas');
-          canvas.width = overlaid.width;
-          canvas.height = overlaid.height;
-          canvas.getContext('2d').putImageData(overlaid, 0, 0);
-          cell.appendChild(canvas);
-          detail.appendChild(cell);
-        }
-
-        toggleBtn.onclick = () => {
-          if (expandedLayers.has(l)) {
-            expandedLayers.delete(l);
-            detail.className = 'ch-detail';
-            toggleBtn.textContent = `▾ ${cfg.outChannels} ch`;
-          } else {
-            expandedLayers.add(l);
-            detail.className = 'ch-detail open';
-            toggleBtn.textContent = '▲ collapse';
-          }
-        };
-
-        col.appendChild(toggleBtn);
-        col.appendChild(detail);
-        grid.appendChild(col);
-      }
-    }
-
-    // ── Kernel editor ──────────────────────────────────────────────────────────
-
-    function kernelTableHTML(kernel, tableId) {
-      let html = `<table class="kernel-table" id="${tableId}"><tbody>`;
-      for (let y = 0; y < kernel.length; y++) {
-        html += '<tr>';
-        for (let x = 0; x < kernel[y].length; x++) {
-          const v = kernel[y][x];
-          const cls = v > 0 ? 'kv-pos' : v < 0 ? 'kv-neg' : 'kv-zero';
-          html += `<td class="${cls}"><input type="number" value="${v}" step="1" min="-9999" max="9999" oninput="syncCellColor(this)" /></td>`;
-        }
-        html += '</tr>';
-      }
-      return html + '</tbody></table>';
-    }
-
-    function syncCellColor(inp) {
-      const v = Number(inp.value);
-      inp.parentElement.className = v > 0 ? 'kv-pos' : v < 0 ? 'kv-neg' : 'kv-zero';
-    }
-
-    function readTable(tableId) {
-      const tbl = document.getElementById(tableId);
-      return Array.from(tbl.querySelectorAll('tr'), row =>
-        Array.from(row.querySelectorAll('input'), inp => Number(inp.value))
-      );
-    }
-
-    function renderKernelBox() {
-      const k = Number(document.getElementById('kernelSize').value);
-      const l = selectedEditLayer;
-      const cfg = layerConfigs[l - 1];
-      const expectedSize = computeExpectedInputSize(l - 1);
-      const p = getPadding(cfg.paddingMode, k, cfg.stride, expectedSize, expectedSize);
-      const poolStr = cfg.poolMode === 'none' ? 'no pool'
-        : `${cfg.poolMode.startsWith('max') ? 'MaxPool' : 'AvgPool'} ${cfg.poolMode.slice(3)}×${cfg.poolMode.slice(3)}`;
-      const box = document.getElementById('kernelBox');
-
-      let html = `<div class="kernel-box-title">`;
-      html += `Layer ${l}  ·  ${cfg.outChannels} ch  ·  ${k}×${k}  ·  stride=${cfg.stride}  p=${p}  ${poolStr}`;
-      html += `</div>`;
-      html += `<div class="kernel-channels-row">`;
-
-      for (let c = 0; c < cfg.outChannels; c++) {
-        const chCfg = cfg.channels[c];
-        const kern = chCfg.customKernel && chCfg.customKernel.length === k
-          ? chCfg.customKernel
-          : getDefaultKernel(chCfg.filterType, k);
-        const tblId = `kTbl_${l}_${c}`;
-
-        html += `<div class="kernel-ch-block">`;
-        html += `<div class="kernel-ch-label">Ch ${c + 1}</div>`;
-        html += `<select class="kernel-filter-select" onchange="onChannelFilterChange(${l - 1},${c},this.value)">`;
-        for (const ft of FILTER_TYPES)
-          html += `<option value="${ft}"${ft === chCfg.filterType ? ' selected' : ''}>${FILTER_LABELS[ft]}</option>`;
-        html += `</select>`;
-        html += kernelTableHTML(kern, tblId);
-        html += `</div>`;
-      }
-
-      html += `</div>`;
-
-      const btn = box.querySelector('.kernel-refresh-btn');
-      box.innerHTML = html;
-      box.appendChild(btn);
-    }
-
-    function onChannelFilterChange(layerIdx, channelIdx, newFilterType) {
-      layerConfigs[layerIdx].channels[channelIdx].filterType = newFilterType;
-      layerConfigs[layerIdx].channels[channelIdx].customKernel = null;
-      renderKernelBox();
-    }
-
-    function applyAndRefresh() {
-      const k = Number(document.getElementById('kernelSize').value);
-      const l = selectedEditLayer;
-      const cfg = layerConfigs[l - 1];
-      for (let c = 0; c < cfg.outChannels; c++) {
-        cfg.channels[c].customKernel = readTable(`kTbl_${l}_${c}`);
-      }
-      runPipeline();
-    }
-
-    function resetAllCustomKernels() {
-      layerConfigs.forEach(cfg => cfg.channels.forEach(ch => { ch.customKernel = null; }));
-    }
-
-    // ── Layer selector UI ──────────────────────────────────────────────────────
-
-    function selectEditLayer(l) {
-      selectedEditLayer = l;
-      const cfg = layerConfigs[l - 1];
-      document.getElementById('layerChannels').value = cfg.outChannels;
-      document.getElementById('stride').value = cfg.stride;
-      document.getElementById('paddingMode').value = cfg.paddingMode;
-      document.getElementById('poolMode').value = cfg.poolMode;
-      updateLayerBtns();
-      updateSamePaddingLabel();
-      renderKernelBox();
-      // Sync the grid layer label highlights without re-running the pipeline
-      document.querySelectorAll('[data-layer-btn]').forEach(el => {
-        const n = Number(el.dataset.layerBtn);
-        el.className = 'col-label ch-input' + (n === l ? ' editing' : '');
-      });
-    }
-
-    function updateLayerBtns() {
-      const numLayers = Number(document.getElementById('numLayers').value);
-      if (selectedEditLayer > numLayers) selectedEditLayer = numLayers;
-      const row = document.getElementById('layerBtns');
-      row.innerHTML = '';
-      for (let l = 1; l <= numLayers; l++) {
-        const btn = document.createElement('button');
-        btn.className = 'layer-btn' + (l === selectedEditLayer ? ' active' : '');
-        btn.textContent = `L${l}`;
-        btn.onclick = () => selectEditLayer(l);
-        row.appendChild(btn);
-      }
-    }
-
-    // ── Event listeners ────────────────────────────────────────────────────────
-
-    document.getElementById('imageUpload').addEventListener('change', event => {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => loadImageFromImg(img);
-        img.onerror = () => alert('Image load failed');
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-
-    document.getElementById('numLayers').addEventListener('change', () => {
-      updateLayerBtns();
-      selectEditLayer(selectedEditLayer); // sync dropdowns to (possibly clamped) layer
-    });
-
-    document.getElementById('layerChannels').addEventListener('change', () => {
-      layerConfigs[selectedEditLayer - 1].outChannels = Number(document.getElementById('layerChannels').value);
-      renderKernelBox();
-    });
-
-    document.getElementById('kernelSize').addEventListener('change', () => {
-      resetAllCustomKernels();
-      updateSamePaddingLabel();
-      renderKernelBox();
-    });
-
-    document.getElementById('stride').addEventListener('change', () => {
-      layerConfigs[selectedEditLayer - 1].stride = Number(document.getElementById('stride').value);
-      updateSamePaddingLabel();
-      renderKernelBox();
-    });
-
-    document.getElementById('paddingMode').addEventListener('change', () => {
-      layerConfigs[selectedEditLayer - 1].paddingMode = document.getElementById('paddingMode').value;
-      renderKernelBox();
-    });
-
-    document.getElementById('poolMode').addEventListener('change', () => {
-      layerConfigs[selectedEditLayer - 1].poolMode = document.getElementById('poolMode').value;
-      renderKernelBox();
-    });
-
-    function updateSamePaddingLabel() {
-      const l = selectedEditLayer;
-      const cfg = layerConfigs[l - 1];
-      const k = Number(document.getElementById('kernelSize').value);
-      const expectedSize = computeExpectedInputSize(l - 1);
-      const p = computeAutoPadding(expectedSize, k, cfg.stride);
-      document.querySelector('#paddingMode option[value="same"]').textContent = `auto: p = ${p}`;
-    }
-
-    // ── Image loading ──────────────────────────────────────────────────────────
-
-    function loadImageFromImg(img) {
-      const scale = Math.min(MAX_SIZE / img.width, MAX_SIZE / img.height, 1);
-      const w = Math.round(img.width * scale);
-      const h = Math.round(img.height * scale);
-      const temp = document.createElement('canvas');
-      temp.width = w; temp.height = h;
-      temp.getContext('2d').drawImage(img, 0, 0, w, h);
-      originalImageData = temp.getContext('2d').getImageData(0, 0, w, h);
-      runPipeline();
-    }
-
-    function loadSynthetic(type) {
-      const S = MAX_SIZE;
-      const c = document.createElement('canvas');
-      c.width = S; c.height = S;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, S, S);
-      ctx.fillStyle = '#fff';
-
-      const tile   = Math.round(S / 10); // 32px — checkerboard block size
-      const stripe = Math.round(S / 16); // 20px — stripe width
-
-      if (type === 'checkerboard') {
-        for (let y = 0; y < S; y += tile)
-          for (let x = 0; x < S; x += tile)
-            if (((x / tile) + (y / tile)) % 2 === 0)
-              ctx.fillRect(x, y, tile, tile);
-
-      } else if (type === 'h-stripes') {
-        for (let y = 0; y < S; y += stripe * 2)
-          ctx.fillRect(0, y, S, stripe);
-
-      } else if (type === 'v-stripes') {
-        for (let x = 0; x < S; x += stripe * 2)
-          ctx.fillRect(x, 0, stripe, S);
-
-      } else if (type === 'diag1') {
-        // "/" direction: stripes perpendicular to diag-stripes
-        const img = ctx.getImageData(0, 0, S, S);
-        const d = img.data;
-        for (let y = 0; y < S; y++)
-          for (let x = 0; x < S; x++) {
-            const v = (((x - y) % (stripe * 2)) + stripe * 2) % (stripe * 2) < stripe ? 255 : 0;
-            const i = (y * S + x) * 4;
-            d[i] = d[i + 1] = d[i + 2] = v;
-            d[i + 3] = 255;
-          }
-        ctx.putImageData(img, 0, 0);
-
-      } else if (type === 'diag-stripes') {
-        // "\" direction
-        const img = ctx.getImageData(0, 0, S, S);
-        const d = img.data;
-        for (let y = 0; y < S; y++)
-          for (let x = 0; x < S; x++) {
-            const v = (x + y) % (stripe * 2) < stripe ? 255 : 0;
-            const i = (y * S + x) * 4;
-            d[i] = d[i + 1] = d[i + 2] = v;
-            d[i + 3] = 255;
-          }
-        ctx.putImageData(img, 0, 0);
-
-      } else if (type === 'square') {
-        const sq = Math.round(S * 0.4);
-        const off = Math.round((S - sq) / 2);
-        ctx.fillRect(off, off, sq, sq);
-
-      } else if (type === 'circle') {
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = Math.round(S * 0.04);
-        ctx.beginPath();
-        ctx.arc(S / 2, S / 2, Math.round(S * 0.35), 0, Math.PI * 2);
-        ctx.stroke();
-
-      } else if (type === 'star') {
-        const cx = S / 2, cy = S / 2;
-        const outerR = Math.round(S * 0.4);
-        const innerR = Math.round(outerR * 0.382); // ratio for regular 5-pointed star
-        ctx.beginPath();
-        for (let i = 0; i < 10; i++) {
-          const angle = (i * Math.PI / 5) - Math.PI / 2;
-          const r = i % 2 === 0 ? outerR : innerR;
-          const px = cx + r * Math.cos(angle);
-          const py = cy + r * Math.sin(angle);
-          i === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-        ctx.fill();
-      }
-
-      originalImageData = c.getContext('2d').getImageData(0, 0, S, S);
-      runPipeline();
-    }
-
-    const PRESET_IDS = { portrait: 338, building: 283, street: 320, nature: 260 };
-
-    function loadPreset(name) {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => loadImageFromImg(img);
-      img.onerror = () => alert('Image load failed — check network connection');
-      img.src = `https://picsum.photos/id/${PRESET_IDS[name]}/${MAX_SIZE}/${MAX_SIZE}`;
-    }
-
-    // ── Init ───────────────────────────────────────────────────────────────────
-
-    updateSamePaddingLabel();
-    updateLayerBtns();
-    renderKernelBox();
-    loadPreset('street');
-
-    // ── Convolution Animation + Classification ──────────────────────────────
-
+    // ── Constants ─────────────────────────────────────────────────────────────
     const ANIM_SIZE = 64;
-    const ANIM_DISPLAY = 256;
+    const DISP_SIZE = 220;
+    const MAX_IMG   = 320;
 
-    const ANIM_PRESETS = [
+    const PRESETS = [
       { label: 'Dog',    url: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=320&h=320&fit=crop' },
-      { label: 'Cat',    url: 'https://images.unsplash.com/photo-1514888751-11e19d5dc3aa?w=320&h=320&fit=crop' },
-      { label: 'Bird',   url: 'https://images.unsplash.com/photo-1444464333584-b7e2daa55bf0?w=320&h=320&fit=crop' },
+      { label: 'Cat',    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/480px-Cat03.jpg' },
+      { label: 'Bird',   url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Erithacus_rubecula_with_cocked_head.jpg/480px-Erithacus_rubecula_with_cocked_head.jpg' },
       { label: 'Car',    url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=320&h=320&fit=crop' },
       { label: 'Plane',  url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=320&h=320&fit=crop' },
-      { label: 'Flower', url: 'https://images.unsplash.com/photo-1490750967868-88df5691cc99?w=320&h=320&fit=crop' },
+      { label: 'Flower', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunflower_sky_backdrop.jpg/480px-Sunflower_sky_backdrop.jpg' },
     ];
 
-    // 'idle' | 'running' | 'paused' | 'done'
-    let animState = 'idle';
-    let animRAF = null;
-    let animPos = 0;
-    let animSmall = null;
-    let animFullImg = null;
-    let animKernel = null;
-    let animOutW = 0, animOutH = 0;
-    let animOutPixels = null;
-    let mobileNetModel = null;
+    // ── State ─────────────────────────────────────────────────────────────────
+    let animState    = 'idle';
+    let animRAF      = null;
+    let animPos      = 0;
+    let animSmall    = null;
+    let animFull     = null;
+    let animKernel   = null;
+    let animOutW     = 0, animOutH = 0;
+    let animOutPx    = null;
 
-    function buildAnimPresets() {
-      const strip = document.getElementById('animPresetStrip');
-      ANIM_PRESETS.forEach((p, i) => {
+    let mobileNetModel = null;
+    let allFilters     = null;
+    let currentFilter  = 0;
+
+    // ── Utilities ─────────────────────────────────────────────────────────────
+    function clamp(x) { return Math.max(0, Math.min(255, Math.round(x))); }
+
+    function scaleImageTo(imageData, tw, th) {
+      if (imageData.width === tw && imageData.height === th) return imageData;
+      const s = document.createElement('canvas');
+      s.width = imageData.width; s.height = imageData.height;
+      s.getContext('2d').putImageData(imageData, 0, 0);
+      const d = document.createElement('canvas');
+      d.width = tw; d.height = th;
+      d.getContext('2d').drawImage(s, 0, 0, tw, th);
+      return d.getContext('2d').getImageData(0, 0, tw, th);
+    }
+
+    // ── Presets ───────────────────────────────────────────────────────────────
+    function buildPresets() {
+      const strip = document.getElementById('presetStrip');
+      PRESETS.forEach((p, i) => {
         const wrap = document.createElement('div');
-        wrap.className = 'anim-preset-item';
+        wrap.className = 'preset-item';
         const img = document.createElement('img');
-        img.className = 'anim-preset-thumb';
-        img.src = p.url;
+        img.className = 'preset-thumb';
         img.crossOrigin = 'anonymous';
+        img.src = p.url;
         img.alt = p.label;
         img.title = p.label;
-        img.onclick = () => loadAnimPreset(i);
+        img.onclick = () => loadPreset(i);
         const cap = document.createElement('div');
-        cap.className = 'anim-preset-caption';
+        cap.className = 'preset-caption';
         cap.textContent = p.label;
-        wrap.appendChild(img);
-        wrap.appendChild(cap);
+        wrap.appendChild(img); wrap.appendChild(cap);
         strip.appendChild(wrap);
       });
     }
 
-    function loadAnimPreset(idx) {
-      document.querySelectorAll('.anim-preset-thumb').forEach((el, i) =>
+    function loadPreset(idx) {
+      document.querySelectorAll('.preset-thumb').forEach((el, i) =>
         el.classList.toggle('active', i === idx));
-
       if (animState === 'running') cancelAnimationFrame(animRAF);
-      animState = 'idle';
-      animPos = 0;
-      document.getElementById('animPlayBtn').textContent = '▶ Play';
+      animState = 'idle'; animPos = 0;
+      document.getElementById('playBtn').textContent = '▶ Play';
       document.getElementById('classResult').innerHTML =
         '<div class="class-waiting">Press ▶ Play to animate & classify</div>';
 
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.onload = () => {
-        const scale = Math.min(MAX_SIZE / img.width, MAX_SIZE / img.height, 1);
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
+        const sc = Math.min(MAX_IMG / img.width, MAX_IMG / img.height, 1);
+        const w = Math.round(img.width * sc), h = Math.round(img.height * sc);
         const c = document.createElement('canvas');
         c.width = w; c.height = h;
         c.getContext('2d').drawImage(img, 0, 0, w, h);
-        animFullImg = c.getContext('2d').getImageData(0, 0, w, h);
-        originalImageData = animFullImg;
-        runPipeline();
-        paintAnimInput(animFullImg, -1, -1, false);
-        clearAnimOutput();
+        animFull = c.getContext('2d').getImageData(0, 0, w, h);
+        paintStatic(animFull, false);
+        clearOutput();
       };
-      img.onerror = () => alert('Image failed to load — check network.');
-      img.src = ANIM_PRESETS[idx].url;
+      img.onerror = () => alert('Image failed to load.');
+      img.src = PRESETS[idx].url;
     }
 
-    function paintAnimInput(imageData, ox, oy, pixelated) {
-      const canvas = document.getElementById('animInputCanvas');
-      const ctx = canvas.getContext('2d');
+    // ── Canvas helpers ────────────────────────────────────────────────────────
+    function paintStatic(imageData, pixelated) {
+      const ctx = document.getElementById('inputCanvas').getContext('2d');
       const tmp = document.createElement('canvas');
       tmp.width = imageData.width; tmp.height = imageData.height;
       tmp.getContext('2d').putImageData(imageData, 0, 0);
       ctx.imageSmoothingEnabled = !pixelated;
-      ctx.clearRect(0, 0, ANIM_DISPLAY, ANIM_DISPLAY);
-      ctx.drawImage(tmp, 0, 0, ANIM_DISPLAY, ANIM_DISPLAY);
-
-      if (ox >= 0 && oy >= 0 && animKernel) {
-        const scale = ANIM_DISPLAY / ANIM_SIZE;
-        const kSize = animKernel.length;
-        const padding = 1;
-        const rx = (ox - padding) * scale;
-        const ry = (oy - padding) * scale;
-        const rw = kSize * scale;
-        ctx.fillStyle = 'rgba(255,60,60,0.18)';
-        ctx.fillRect(rx, ry, rw, rw);
-        ctx.strokeStyle = '#ff3c3c';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(rx + 1, ry + 1, rw - 2, rw - 2);
-        ctx.fillStyle = 'rgba(255,60,60,0.55)';
-        ctx.fillRect(ox * scale, oy * scale, scale, scale);
-      }
+      ctx.clearRect(0, 0, DISP_SIZE, DISP_SIZE);
+      ctx.drawImage(tmp, 0, 0, DISP_SIZE, DISP_SIZE);
     }
 
-    function clearAnimOutput() {
-      const ctx = document.getElementById('animOutputCanvas').getContext('2d');
+    function paintWithKernel(ox, oy) {
+      paintStatic(animSmall, true);
+      if (ox < 0 || !animKernel) return;
+      const ctx = document.getElementById('inputCanvas').getContext('2d');
+      const sc = DISP_SIZE / ANIM_SIZE, p = 1, ks = animKernel.length;
+      const rx = (ox - p) * sc, ry = (oy - p) * sc, rw = ks * sc;
+      ctx.fillStyle = 'rgba(255,60,60,0.18)';
+      ctx.fillRect(rx, ry, rw, rw);
+      ctx.strokeStyle = '#ff3c3c'; ctx.lineWidth = 2;
+      ctx.strokeRect(rx+1, ry+1, rw-2, rw-2);
+      ctx.fillStyle = 'rgba(255,60,60,0.55)';
+      ctx.fillRect(ox*sc, oy*sc, sc, sc);
+    }
+
+    function clearOutput() {
+      const ctx = document.getElementById('outputCanvas').getContext('2d');
       ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 0, ANIM_DISPLAY, ANIM_DISPLAY);
+      ctx.fillRect(0, 0, DISP_SIZE, DISP_SIZE);
     }
 
-    function paintAnimOutput() {
+    function paintOutput() {
       const tmp = document.createElement('canvas');
       tmp.width = animOutW; tmp.height = animOutH;
       tmp.getContext('2d').putImageData(
-        new ImageData(new Uint8ClampedArray(animOutPixels), animOutW, animOutH), 0, 0);
-      const ctx = document.getElementById('animOutputCanvas').getContext('2d');
+        new ImageData(new Uint8ClampedArray(animOutPx), animOutW, animOutH), 0, 0);
+      const ctx = document.getElementById('outputCanvas').getContext('2d');
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(tmp, 0, 0, ANIM_DISPLAY, ANIM_DISPLAY);
+      ctx.drawImage(tmp, 0, 0, DISP_SIZE, DISP_SIZE);
     }
 
+    // ── Kernel display ────────────────────────────────────────────────────────
+    function displayKernel(k) {
+      const grid = document.getElementById('kernelGrid');
+      grid.innerHTML = '';
+      let maxAbs = 0;
+      k.forEach(r => r.forEach(v => { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); }));
+      k.forEach(row => row.forEach(v => {
+        const cell = document.createElement('div');
+        const n = maxAbs > 0 ? v / maxAbs : 0;
+        cell.className = 'kernel-cell ' + (n > 0.08 ? 'kp' : n < -0.08 ? 'kn' : 'kz');
+        cell.textContent = v.toFixed(2);
+        grid.appendChild(cell);
+      }));
+      document.getElementById('kernelNote').textContent =
+        `Filter #${currentFilter + 1} · Conv Layer 1`;
+    }
+
+    // ── Extract MobileNet filters ─────────────────────────────────────────────
+    async function extractFilters() {
+      try {
+        for (const layer of mobileNetModel.model.layers) {
+          if (layer.getClassName && layer.getClassName() === 'Conv2D') {
+            const w = layer.getWeights();
+            if (!w.length) continue;
+            const arr = await w[0].array();       // [kH, kW, inC, outC]
+            const nF = arr[0][0][0].length;
+            allFilters = [];
+            for (let f = 0; f < nF; f++)
+              allFilters.push(arr.map(row => row.map(cell => cell[0][f])));
+
+            const sel = document.getElementById('filterSelect');
+            sel.innerHTML = '';
+            for (let i = 0; i < nF; i++) {
+              const opt = document.createElement('option');
+              opt.value = i; opt.textContent = `Filter #${i + 1}`;
+              sel.appendChild(opt);
+            }
+            displayKernel(allFilters[0]);
+            return;
+          }
+        }
+      } catch(e) {
+        document.getElementById('kernelNote').textContent = 'Weights unavailable';
+      }
+    }
+
+    function onFilterChange() {
+      currentFilter = Number(document.getElementById('filterSelect').value);
+      if (allFilters) displayKernel(allFilters[currentFilter]);
+      if (animState !== 'running') { animState = 'idle'; animPos = 0; }
+    }
+
+    // ── Animation engine ──────────────────────────────────────────────────────
     function setupAnim() {
-      const src = animFullImg || originalImageData;
-      animSmall = scaleImageTo(src, ANIM_SIZE, ANIM_SIZE);
-      const kSize = 3;
-      const padding = 1;
-      animKernel = getDefaultKernel(
-        document.getElementById('animKernelSelect').value, kSize);
-      animOutW = Math.floor((ANIM_SIZE + 2 * padding - kSize) / 1 + 1);
-      animOutH = animOutW;
-      animOutPixels = new Uint8ClampedArray(animOutW * animOutH * 4);
-      for (let i = 3; i < animOutPixels.length; i += 4) animOutPixels[i] = 255;
-      animPos = 0;
-      paintAnimInput(animSmall, -1, -1, true);
-      clearAnimOutput();
+      if (!animFull) return false;
+      animSmall  = scaleImageTo(animFull, ANIM_SIZE, ANIM_SIZE);
+      animKernel = (allFilters && allFilters[currentFilter]) || [[0,1,0],[1,-4,1],[0,1,0]];
+      const pad  = 1, ks = 3;
+      animOutW   = Math.floor((ANIM_SIZE + 2*pad - ks) / 1 + 1);
+      animOutH   = animOutW;
+      animOutPx  = new Uint8ClampedArray(animOutW * animOutH * 4);
+      for (let i = 3; i < animOutPx.length; i += 4) animOutPx[i] = 255;
+      animPos    = 0;
+      paintStatic(animSmall, true);
+      clearOutput();
+      return true;
     }
 
     function animToggle() {
       if (animState === 'running') {
         cancelAnimationFrame(animRAF);
         animState = 'paused';
-        document.getElementById('animPlayBtn').textContent = '▶ Resume';
+        document.getElementById('playBtn').textContent = '▶ Resume';
         return;
       }
-
-      const src = animFullImg || originalImageData;
-      if (!src) { alert('Please load an image first'); return; }
-
+      if (!animFull) { alert('Please select an image first'); return; }
       if (animState === 'idle' || animState === 'done') {
-        setupAnim();
+        if (!setupAnim()) return;
         document.getElementById('classResult').innerHTML =
           '<div class="class-waiting">Animating…</div>';
       }
-
       animState = 'running';
-      document.getElementById('animPlayBtn').textContent = '⏸ Pause';
+      document.getElementById('playBtn').textContent = '⏸ Pause';
       animRAF = requestAnimationFrame(animFrame);
     }
 
     function animFrame() {
       if (animState !== 'running') return;
-
       const speed = Number(document.getElementById('animSpeed').value);
       const total = animOutW * animOutH;
-      const padding = 1;
-      const kSize = animKernel.length;
+      const pad = 1, ks = animKernel.length;
 
       for (let step = 0; step < speed && animPos < total; step++, animPos++) {
-        const ox = animPos % animOutW;
-        const oy = Math.floor(animPos / animOutW);
+        const ox = animPos % animOutW, oy = Math.floor(animPos / animOutW);
         let sum = 0;
-        for (let ky = 0; ky < kSize; ky++) {
-          for (let kx = 0; kx < kSize; kx++) {
-            const ix = ox + kx - padding;
-            const iy = oy + ky - padding;
-            if (ix >= 0 && ix < ANIM_SIZE && iy >= 0 && iy < ANIM_SIZE) {
-              const di = (iy * ANIM_SIZE + ix) * 4;
-              const gray = (animSmall.data[di] + animSmall.data[di+1] + animSmall.data[di+2]) / 3;
-              sum += gray * animKernel[ky][kx];
-            }
+        for (let ky = 0; ky < ks; ky++) for (let kx = 0; kx < ks; kx++) {
+          const ix = ox + kx - pad, iy = oy + ky - pad;
+          if (ix >= 0 && ix < ANIM_SIZE && iy >= 0 && iy < ANIM_SIZE) {
+            const di = (iy * ANIM_SIZE + ix) * 4;
+            const g  = (animSmall.data[di] + animSmall.data[di+1] + animSmall.data[di+2]) / 3;
+            sum += g * animKernel[ky][kx];
           }
         }
-        const v = clamp(Math.abs(sum));
-        const base = (oy * animOutW + ox) * 4;
-        animOutPixels[base] = animOutPixels[base+1] = animOutPixels[base+2] = v;
+        const v = clamp(Math.abs(sum) * 2.5);
+        const b = (oy * animOutW + ox) * 4;
+        animOutPx[b] = animOutPx[b+1] = animOutPx[b+2] = v;
       }
 
-      const curOx = animPos % animOutW;
-      const curOy = Math.floor(animPos / animOutW);
-      if (animPos < total) paintAnimInput(animSmall, curOx, curOy, true);
-      paintAnimOutput();
+      const cx = animPos % animOutW, cy = Math.floor(animPos / animOutW);
+      if (animPos < total) paintWithKernel(cx, cy); else paintStatic(animSmall, true);
+      paintOutput();
 
       if (animPos >= total) {
         animState = 'done';
-        document.getElementById('animPlayBtn').textContent = '↺ Replay';
-        paintAnimInput(animSmall, -1, -1, true);
+        document.getElementById('playBtn').textContent = '↺ Replay';
         runClassification();
         return;
       }
-
       animRAF = requestAnimationFrame(animFrame);
     }
 
+    // ── Classification ────────────────────────────────────────────────────────
     async function runClassification() {
-      const src = animFullImg || originalImageData;
-      if (!src) return;
       const el = document.getElementById('classResult');
-      el.innerHTML = '<div class="class-waiting">Classifying with MobileNet…</div>';
+      el.innerHTML = '<div class="class-waiting">Classifying…</div>';
       try {
-        if (!mobileNetModel) {
-          document.getElementById('modelStatus').textContent = 'Loading MobileNet…';
-          mobileNetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
-        }
         const tmp = document.createElement('canvas');
-        tmp.width = src.width; tmp.height = src.height;
-        tmp.getContext('2d').putImageData(src, 0, 0);
-        const predictions = await mobileNetModel.classify(tmp, 5);
-        const top = predictions[0].probability;
-        el.innerHTML = predictions.map((p, rank) => {
-          const pct = (p.probability * 100).toFixed(1);
+        tmp.width = animFull.width; tmp.height = animFull.height;
+        tmp.getContext('2d').putImageData(animFull, 0, 0);
+        const preds = await mobileNetModel.classify(tmp, 5);
+        const top   = preds[0].probability;
+        el.innerHTML = preds.map((p, rank) => {
+          const pct  = (p.probability * 100).toFixed(1);
           const barW = Math.round((p.probability / top) * 100);
-          const label = p.className.split(',')[0].trim();
-          const color = rank === 0 ? '#1d4ed8' : '#93c5fd';
+          const lbl  = p.className.split(',')[0].trim();
+          const col  = rank === 0 ? '#1d4ed8' : '#93c5fd';
           return `<div class="class-row">
-            <div class="class-label" title="${p.className}">${label}</div>
-            <div class="class-bar-bg">
-              <div class="class-bar" style="width:${barW}%;background:${color}"></div>
-            </div>
+            <div class="class-label" title="${p.className}">${lbl}</div>
+            <div class="class-bar-bg"><div class="class-bar" style="width:${barW}%;background:${col}"></div></div>
             <div class="class-pct">${pct}%</div>
           </div>`;
         }).join('');
         document.getElementById('modelStatus').textContent = '';
       } catch(e) {
-        el.innerHTML = `<div class="class-waiting">Classification failed: ${e.message}</div>`;
+        el.innerHTML = `<div class="class-waiting">Failed: ${e.message}</div>`;
       }
     }
 
-    // Pre-load MobileNet in background so it's ready when user clicks Play
+    // ── Architecture diagram ──────────────────────────────────────────────────
+    function hexShade(hex, pct) {
+      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+      const f = 1 + pct;
+      return `rgb(${clamp(r*f)},${clamp(g*f)},${clamp(b*f)})`;
+    }
+
+    function drawBlock3D(ctx, fx, fy, fw, fh, depth, color, poolColor, label, sub) {
+      const dx = depth * 0.6, dy = depth * 0.3;
+
+      // Right face
+      ctx.fillStyle = hexShade(color, -0.18);
+      ctx.beginPath();
+      ctx.moveTo(fx+fw, fy); ctx.lineTo(fx+fw+dx, fy-dy);
+      ctx.lineTo(fx+fw+dx, fy+fh-dy); ctx.lineTo(fx+fw, fy+fh);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = '#bbb'; ctx.lineWidth = 0.7; ctx.stroke();
+
+      // Top face
+      ctx.fillStyle = hexShade(color, 0.14);
+      ctx.beginPath();
+      ctx.moveTo(fx, fy); ctx.lineTo(fx+dx, fy-dy);
+      ctx.lineTo(fx+fw+dx, fy-dy); ctx.lineTo(fx+fw, fy);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+
+      // Front face
+      if (poolColor) {
+        const ph = Math.min(fh * 0.32, 28);
+        ctx.fillStyle = color;
+        ctx.fillRect(fx, fy, fw, fh - ph);
+        ctx.fillStyle = poolColor;
+        ctx.fillRect(fx, fy + fh - ph, fw, ph);
+      } else {
+        ctx.fillStyle = color;
+        ctx.fillRect(fx, fy, fw, fh);
+      }
+      ctx.strokeRect(fx, fy, fw, fh);
+
+      // Label
+      const cx = fx + fw / 2 + dx / 2;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#333'; ctx.font = 'bold 11px Arial';
+      ctx.fillText(label, cx, fy + fh + 16);
+      if (sub) {
+        ctx.fillStyle = '#777'; ctx.font = '10px Arial';
+        ctx.fillText(sub, cx, fy + fh + 28);
+      }
+    }
+
+    function drawArch3D(ctx, x1, x2, y) {
+      ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2-8, y); ctx.stroke();
+      ctx.fillStyle = '#bbb';
+      ctx.beginPath(); ctx.moveTo(x2, y); ctx.lineTo(x2-8, y-4); ctx.lineTo(x2-8, y+4); ctx.closePath(); ctx.fill();
+    }
+
+    function drawArchitecture() {
+      const canvas = document.getElementById('archCanvas');
+      const ctx    = canvas.getContext('2d');
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const baseY = 188;
+      const CONV  = '#d4d8e0';
+      const POOL  = '#c8e6c9';
+      const FC    = '#bbdefb';
+      const OUT   = '#f3e8ff';
+
+      // [fx, fw, fh, depth, poolColor, label, sub]
+      const blocks = [
+        [22,  18, 155, 12,  null, 'Input',          '224×224×3'],
+        [95,  24, 120, 40,  POOL, 'Conv + Pool',    '3×3, 32ch → 56²'],
+        [215, 28,  90, 60,  POOL, 'Conv + Pool',    '3×3, 64ch → 28²'],
+        [352, 30,  66, 78,  POOL, 'Conv + Pool',    '3×3, 128ch → 14²'],
+        [509, 28,  46, 78,  POOL, 'Conv + Pool',    '3×3, 256ch → 7²'],
+        [660, 22,  32, 46,  null, 'Dense',          'Flatten → 1024'],
+        [774, 20,  22, 32,  null, 'Softmax',        '1000 classes'],
+      ];
+
+      // Compute right edges for arrows
+      blocks.forEach(([fx, fw, fh, depth, pc, lbl, sub]) => {
+        drawBlock3D(ctx, fx, baseY - fh, fw, fh, depth,
+          lbl === 'Dense' ? FC : lbl === 'Softmax' ? OUT : CONV,
+          pc, lbl, sub);
+      });
+
+      // Arrows: from right edge of block[i] to left edge of block[i+1]
+      for (let i = 0; i < blocks.length - 1; i++) {
+        const [fx, fw, fh, depth] = blocks[i];
+        const [fx2] = blocks[i + 1];
+        const rightEdge = fx + fw + depth * 0.6 + 4;
+        const arrowY    = baseY - Math.min(blocks[i][2], blocks[i+1][2]) / 2;
+        drawArch3D(ctx, rightEdge, fx2 - 4, arrowY);
+      }
+
+      // "pooling" label on second block (like PPT)
+      const [fx2, fw2, fh2, d2] = blocks[1];
+      const ph = Math.min(fh2 * 0.32, 28);
+      const labelX = fx2 + fw2 / 2 + d2 * 0.3;
+      const labelY = baseY - ph / 2;
+      ctx.fillStyle = '#4caf50'; ctx.font = 'italic bold 11px Arial'; ctx.textAlign = 'left';
+      ctx.fillText('pooling', labelX + fw2/2 + 6, labelY);
+
+      // Small bracket lines for pooling annotation
+      ctx.strokeStyle = '#4caf50'; ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(labelX + fw2/2 + 4, baseY - ph);
+      ctx.lineTo(labelX + fw2/2 + 2, labelY);
+      ctx.lineTo(labelX + fw2/2 + 4, baseY);
+      ctx.stroke();
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    buildPresets();
+    drawArchitecture();
+
     (async () => {
       try {
         mobileNetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
+        await extractFilters();
         const st = document.getElementById('modelStatus');
         if (st) {
           st.textContent = 'MobileNet ready ✓';
@@ -1216,11 +545,9 @@
         }
       } catch(e) {
         const st = document.getElementById('modelStatus');
-        if (st) st.textContent = 'Model load failed — check network';
+        if (st) st.textContent = 'Model failed to load — check network';
       }
     })();
-
-    buildAnimPresets();
   </script>
 </body>
 </html>
