@@ -12,7 +12,7 @@
     .container { display: flex; flex-direction: column; gap: 16px; max-width: 1100px; margin: 0 auto; }
     .panel { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
 
-    /* ── Top control bar ─────────────────────────────────────────────────── */
+    /* ── Top bar ─────────────────────────────────────────────────────────── */
     .top-bar { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 18px; flex-wrap: wrap; }
     .preset-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 6px; }
     .preset-strip { display: flex; gap: 8px; }
@@ -25,62 +25,63 @@
     .preset-thumb.active { border-color: #1d4ed8; box-shadow: 0 0 0 2px #bfdbfe; }
     .preset-caption { font-size: 10px; font-weight: 600; color: #555; }
     .controls-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .play-btn {
-      padding: 9px 22px; border-radius: 8px; background: #1d4ed8; color: white;
-      font-weight: 700; font-size: 14px; border: none; cursor: pointer;
-    }
+    .play-btn { padding: 9px 22px; border-radius: 8px; background: #1d4ed8; color: white;
+      font-weight: 700; font-size: 14px; border: none; cursor: pointer; }
     .play-btn:hover { background: #1e40af; }
     .speed-row { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
-    .filter-select { padding: 6px 8px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; background: white; }
 
     /* ── Animation area ──────────────────────────────────────────────────── */
-    .main-area { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+    .anim-area { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
     .anim-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
     .anim-col-label { font-size: 12px; font-weight: 700; color: #555; }
     .anim-canvas { border-radius: 8px; border: 2px solid #e5e7eb; display: block; }
-    .anim-arrow { font-size: 22px; color: #d1d5db; align-self: center; padding-top: 18px; }
+    .anim-arrow { font-size: 22px; color: #d1d5db; align-self: center; margin-top: 18px; }
 
-    /* ── Kernel display ───────────────────────────────────────────────────── */
-    .kernel-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .kernel-col-label { font-size: 12px; font-weight: 700; color: #555; }
-    .kernel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
-    .kernel-cell {
-      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-      font-family: Consolas, monospace; font-size: 10px; font-weight: 700;
-      border-radius: 4px; border: 1px solid #e5e7eb;
-    }
-    .kp { background: #dbeafe; color: #1d4ed8; }
-    .kn { background: #fee2e2; color: #991b1b; }
-    .kz { background: #f3f4f6; color: #9ca3af; }
-    .kernel-note { font-size: 10px; color: #9ca3af; text-align: center; max-width: 116px; line-height: 1.4; }
-
-    /* ── Classification ───────────────────────────────────────────────────── */
+    /* ── Classification ──────────────────────────────────────────────────── */
     .class-col { flex: 1; min-width: 190px; }
     .class-col-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 8px; }
     .class-waiting { color: #9ca3af; font-size: 13px; }
     .class-row { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
-    .class-label {
-      font-size: 13px; font-weight: 600; width: 130px; flex-shrink: 0;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222;
-    }
+    .class-lbl { font-size: 13px; font-weight: 600; width: 130px; flex-shrink: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222; }
     .class-bar-bg { flex: 1; background: #f3f4f6; border-radius: 4px; height: 15px; overflow: hidden; }
     .class-bar { height: 15px; border-radius: 4px; background: #1d4ed8; }
     .class-pct { font-size: 13px; font-weight: 700; min-width: 38px; text-align: right; color: #374151; }
     .model-note { font-size: 11px; color: #9ca3af; margin-top: 8px; }
 
-    /* ── Architecture panel ───────────────────────────────────────────────── */
-    .arch-canvas-wrap { overflow-x: auto; }
-    .arch-canvas-wrap canvas { display: block; }
-    .arch-legend { display: flex; gap: 18px; margin-top: 10px; flex-wrap: wrap; }
+    /* ── Kernel weights panel ────────────────────────────────────────────── */
+    .kw-section { margin-bottom: 14px; }
+    .kw-layer-title { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px;
+      padding: 4px 8px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #1d4ed8; }
+    .kw-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+    .kw-filter { cursor: pointer; border: 2px solid #e5e7eb; border-radius: 6px; padding: 3px 3px 1px;
+      flex-shrink: 0; transition: border-color 0.12s; }
+    .kw-filter:hover { border-color: #93c5fd; }
+    .kw-filter.sel { border-color: #1d4ed8; background: #eff6ff; }
+    .mini-grid { display: grid; grid-template-columns: repeat(3, 18px); gap: 1px; }
+    .mini-cell { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
+      font-family: Consolas, monospace; font-size: 6.5px; font-weight: 700; border-radius: 2px; }
+    .kp { background: #dbeafe; color: #1e40af; }
+    .kn { background: #fee2e2; color: #991b1b; }
+    .kz { background: #f3f4f6; color: #9ca3af; }
+    .kw-num { font-size: 8.5px; text-align: center; color: #9ca3af; margin-top: 2px; }
+    .kw-more { align-self: center; font-size: 11px; color: #9ca3af; flex-shrink: 0; padding-left: 4px; }
+    .kw-loading { color: #9ca3af; font-size: 13px; }
+
+    /* ── Architecture panel ──────────────────────────────────────────────── */
+    .arch-wrap { overflow-x: auto; }
+    .arch-wrap canvas { display: block; }
+    .arch-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
     .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #555; }
-    .legend-swatch { width: 13px; height: 13px; border-radius: 3px; flex-shrink: 0; border: 1px solid #ccc; }
+    .legend-sw { width: 13px; height: 13px; border-radius: 3px; border: 1px solid #ccc; flex-shrink: 0; }
   </style>
 </head>
 <body>
   <h1>CNN Convolution Demo</h1>
 
   <div class="container">
-    <!-- ── Upper panel ─────────────────────────────────────────────────── -->
+
+    <!-- ── Panel 1: Animation ─────────────────────────────────────────── -->
     <div class="panel">
       <div class="top-bar">
         <div>
@@ -89,26 +90,16 @@
         </div>
         <div class="controls-row">
           <button class="play-btn" id="playBtn" onclick="animToggle()">▶ Play</button>
-          <div class="speed-row">
-            Speed
+          <div class="speed-row">Speed
             <input type="range" id="animSpeed" min="1" max="30" value="6" style="width:80px">
           </div>
-          <select class="filter-select" id="filterSelect" onchange="onFilterChange()">
-            <option value="0">Filter #1</option>
-          </select>
         </div>
       </div>
 
-      <div class="main-area">
+      <div class="anim-area">
         <div class="anim-col">
           <div class="anim-col-label">Input + Kernel</div>
           <canvas id="inputCanvas" class="anim-canvas" width="220" height="220"></canvas>
-        </div>
-        <div class="anim-arrow">→</div>
-        <div class="kernel-col">
-          <div class="kernel-col-label">Kernel Weights</div>
-          <div class="kernel-grid" id="kernelGrid"></div>
-          <div class="kernel-note" id="kernelNote">Loading model weights…</div>
         </div>
         <div class="anim-arrow">→</div>
         <div class="anim-col">
@@ -124,19 +115,26 @@
       </div>
     </div>
 
-    <!-- ── Lower panel: Architecture ───────────────────────────────────── -->
+    <!-- ── Panel 2: Kernel Weights ────────────────────────────────────── -->
+    <div class="panel">
+      <h2>Learned Kernel Weights  <span style="font-weight:400;font-size:13px;color:#9ca3af">— click any filter to use it in the animation above</span></h2>
+      <div id="kernelWeightsPanel"><div class="kw-loading">Waiting for MobileNet to load…</div></div>
+    </div>
+
+    <!-- ── Panel 3: Architecture ──────────────────────────────────────── -->
     <div class="panel">
       <h2>MobileNet V2 — Model Architecture</h2>
-      <div class="arch-canvas-wrap">
+      <div class="arch-wrap">
         <canvas id="archCanvas" width="900" height="230"></canvas>
       </div>
       <div class="arch-legend">
-        <div class="legend-item"><div class="legend-swatch" style="background:#d4d8e0"></div>Convolution</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#c8e6c9"></div>Pooling</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#bbdefb"></div>Fully Connected</div>
-        <div class="legend-item"><div class="legend-swatch" style="background:#f3e8ff"></div>Softmax Output</div>
+        <div class="legend-item"><div class="legend-sw" style="background:#d4d8e0"></div>Convolution</div>
+        <div class="legend-item"><div class="legend-sw" style="background:#c8e6c9"></div>Pooling</div>
+        <div class="legend-item"><div class="legend-sw" style="background:#bbdefb"></div>Fully Connected</div>
+        <div class="legend-item"><div class="legend-sw" style="background:#f3e8ff"></div>Softmax Output</div>
       </div>
     </div>
+
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0/dist/tf.min.js"></script>
@@ -144,40 +142,39 @@
   <script>
     // ── Constants ─────────────────────────────────────────────────────────────
     const ANIM_SIZE = 64;
-    const DISP_SIZE = 220;
+    const DISP      = 220;
     const MAX_IMG   = 320;
 
     const PRESETS = [
       { label: 'Dog',    url: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=320&h=320&fit=crop' },
-      { label: 'Cat',    url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/3a/Cat03.jpg/480px-Cat03.jpg' },
-      { label: 'Bird',   url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Erithacus_rubecula_with_cocked_head.jpg/480px-Erithacus_rubecula_with_cocked_head.jpg' },
+      { label: 'Cat',    url: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=320&h=320&fit=crop' },
+      { label: 'Bird',   url: 'https://images.unsplash.com/photo-1522926193341-e9ffd686c60f?w=320&h=320&fit=crop' },
       { label: 'Car',    url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=320&h=320&fit=crop' },
       { label: 'Plane',  url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=320&h=320&fit=crop' },
-      { label: 'Flower', url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Sunflower_sky_backdrop.jpg/480px-Sunflower_sky_backdrop.jpg' },
+      { label: 'Flower', url: 'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=320&h=320&fit=crop' },
     ];
 
     // ── State ─────────────────────────────────────────────────────────────────
-    let animState    = 'idle';
-    let animRAF      = null;
-    let animPos      = 0;
-    let animSmall    = null;
-    let animFull     = null;
-    let animKernel   = null;
-    let animOutW     = 0, animOutH = 0;
-    let animOutPx    = null;
+    let animState  = 'idle';
+    let animRAF    = null;
+    let animPos    = 0;
+    let animSmall  = null;
+    let animFull   = null;
+    let animKernel = [[0,0,0],[0,1,0],[0,0,0]];
+    let animOutW   = 0, animOutH = 0;
+    let animOutPx  = null;
 
-    let mobileNetModel = null;
-    let allFilters     = null;
-    let currentFilter  = 0;
+    let mobileNetModel  = null;
+    let allLayerData    = [];
+    let selLayer = 0, selFilter = 0;
 
     // ── Utilities ─────────────────────────────────────────────────────────────
     function clamp(x) { return Math.max(0, Math.min(255, Math.round(x))); }
 
-    function scaleImageTo(imageData, tw, th) {
-      if (imageData.width === tw && imageData.height === th) return imageData;
+    function scaleImageTo(src, tw, th) {
       const s = document.createElement('canvas');
-      s.width = imageData.width; s.height = imageData.height;
-      s.getContext('2d').putImageData(imageData, 0, 0);
+      s.width = src.width; s.height = src.height;
+      s.getContext('2d').putImageData(src, 0, 0);
       const d = document.createElement('canvas');
       d.width = tw; d.height = th;
       d.getContext('2d').drawImage(s, 0, 0, tw, th);
@@ -194,12 +191,10 @@
         img.className = 'preset-thumb';
         img.crossOrigin = 'anonymous';
         img.src = p.url;
-        img.alt = p.label;
-        img.title = p.label;
+        img.alt = p.label; img.title = p.label;
         img.onclick = () => loadPreset(i);
         const cap = document.createElement('div');
-        cap.className = 'preset-caption';
-        cap.textContent = p.label;
+        cap.className = 'preset-caption'; cap.textContent = p.label;
         wrap.appendChild(img); wrap.appendChild(cap);
         strip.appendChild(wrap);
       });
@@ -226,7 +221,7 @@
         paintStatic(animFull, false);
         clearOutput();
       };
-      img.onerror = () => alert('Image failed to load.');
+      img.onerror = () => alert('Image failed to load. Check network.');
       img.src = PRESETS[idx].url;
     }
 
@@ -237,18 +232,16 @@
       tmp.width = imageData.width; tmp.height = imageData.height;
       tmp.getContext('2d').putImageData(imageData, 0, 0);
       ctx.imageSmoothingEnabled = !pixelated;
-      ctx.clearRect(0, 0, DISP_SIZE, DISP_SIZE);
-      ctx.drawImage(tmp, 0, 0, DISP_SIZE, DISP_SIZE);
+      ctx.clearRect(0, 0, DISP, DISP);
+      ctx.drawImage(tmp, 0, 0, DISP, DISP);
     }
 
     function paintWithKernel(ox, oy) {
       paintStatic(animSmall, true);
-      if (ox < 0 || !animKernel) return;
       const ctx = document.getElementById('inputCanvas').getContext('2d');
-      const sc = DISP_SIZE / ANIM_SIZE, p = 1, ks = animKernel.length;
+      const sc = DISP / ANIM_SIZE, p = 1, ks = animKernel.length;
       const rx = (ox - p) * sc, ry = (oy - p) * sc, rw = ks * sc;
-      ctx.fillStyle = 'rgba(255,60,60,0.18)';
-      ctx.fillRect(rx, ry, rw, rw);
+      ctx.fillStyle = 'rgba(255,60,60,0.18)'; ctx.fillRect(rx, ry, rw, rw);
       ctx.strokeStyle = '#ff3c3c'; ctx.lineWidth = 2;
       ctx.strokeRect(rx+1, ry+1, rw-2, rw-2);
       ctx.fillStyle = 'rgba(255,60,60,0.55)';
@@ -258,7 +251,7 @@
     function clearOutput() {
       const ctx = document.getElementById('outputCanvas').getContext('2d');
       ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 0, DISP_SIZE, DISP_SIZE);
+      ctx.fillRect(0, 0, DISP, DISP);
     }
 
     function paintOutput() {
@@ -268,72 +261,19 @@
         new ImageData(new Uint8ClampedArray(animOutPx), animOutW, animOutH), 0, 0);
       const ctx = document.getElementById('outputCanvas').getContext('2d');
       ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(tmp, 0, 0, DISP_SIZE, DISP_SIZE);
+      ctx.drawImage(tmp, 0, 0, DISP, DISP);
     }
 
-    // ── Kernel display ────────────────────────────────────────────────────────
-    function displayKernel(k) {
-      const grid = document.getElementById('kernelGrid');
-      grid.innerHTML = '';
-      let maxAbs = 0;
-      k.forEach(r => r.forEach(v => { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); }));
-      k.forEach(row => row.forEach(v => {
-        const cell = document.createElement('div');
-        const n = maxAbs > 0 ? v / maxAbs : 0;
-        cell.className = 'kernel-cell ' + (n > 0.08 ? 'kp' : n < -0.08 ? 'kn' : 'kz');
-        cell.textContent = v.toFixed(2);
-        grid.appendChild(cell);
-      }));
-      document.getElementById('kernelNote').textContent =
-        `Filter #${currentFilter + 1} · Conv Layer 1`;
-    }
-
-    // ── Extract MobileNet filters ─────────────────────────────────────────────
-    async function extractFilters() {
-      try {
-        for (const layer of mobileNetModel.model.layers) {
-          if (layer.getClassName && layer.getClassName() === 'Conv2D') {
-            const w = layer.getWeights();
-            if (!w.length) continue;
-            const arr = await w[0].array();       // [kH, kW, inC, outC]
-            const nF = arr[0][0][0].length;
-            allFilters = [];
-            for (let f = 0; f < nF; f++)
-              allFilters.push(arr.map(row => row.map(cell => cell[0][f])));
-
-            const sel = document.getElementById('filterSelect');
-            sel.innerHTML = '';
-            for (let i = 0; i < nF; i++) {
-              const opt = document.createElement('option');
-              opt.value = i; opt.textContent = `Filter #${i + 1}`;
-              sel.appendChild(opt);
-            }
-            displayKernel(allFilters[0]);
-            return;
-          }
-        }
-      } catch(e) {
-        document.getElementById('kernelNote').textContent = 'Weights unavailable';
-      }
-    }
-
-    function onFilterChange() {
-      currentFilter = Number(document.getElementById('filterSelect').value);
-      if (allFilters) displayKernel(allFilters[currentFilter]);
-      if (animState !== 'running') { animState = 'idle'; animPos = 0; }
-    }
-
-    // ── Animation engine ──────────────────────────────────────────────────────
+    // ── Animation ─────────────────────────────────────────────────────────────
     function setupAnim() {
       if (!animFull) return false;
-      animSmall  = scaleImageTo(animFull, ANIM_SIZE, ANIM_SIZE);
-      animKernel = (allFilters && allFilters[currentFilter]) || [[0,1,0],[1,-4,1],[0,1,0]];
-      const pad  = 1, ks = 3;
-      animOutW   = Math.floor((ANIM_SIZE + 2*pad - ks) / 1 + 1);
-      animOutH   = animOutW;
-      animOutPx  = new Uint8ClampedArray(animOutW * animOutH * 4);
+      animSmall = scaleImageTo(animFull, ANIM_SIZE, ANIM_SIZE);
+      const pad = 1, ks = 3;
+      animOutW  = Math.floor((ANIM_SIZE + 2*pad - ks) / 1 + 1);
+      animOutH  = animOutW;
+      animOutPx = new Uint8ClampedArray(animOutW * animOutH * 4);
       for (let i = 3; i < animOutPx.length; i += 4) animOutPx[i] = 255;
-      animPos    = 0;
+      animPos   = 0;
       paintStatic(animSmall, true);
       clearOutput();
       return true;
@@ -360,8 +300,7 @@
     function animFrame() {
       if (animState !== 'running') return;
       const speed = Number(document.getElementById('animSpeed').value);
-      const total = animOutW * animOutH;
-      const pad = 1, ks = animKernel.length;
+      const total = animOutW * animOutH, pad = 1, ks = animKernel.length;
 
       for (let step = 0; step < speed && animPos < total; step++, animPos++) {
         const ox = animPos % animOutW, oy = Math.floor(animPos / animOutW);
@@ -401,22 +340,130 @@
         tmp.width = animFull.width; tmp.height = animFull.height;
         tmp.getContext('2d').putImageData(animFull, 0, 0);
         const preds = await mobileNetModel.classify(tmp, 5);
-        const top   = preds[0].probability;
+        const top = preds[0].probability;
         el.innerHTML = preds.map((p, rank) => {
-          const pct  = (p.probability * 100).toFixed(1);
-          const barW = Math.round((p.probability / top) * 100);
-          const lbl  = p.className.split(',')[0].trim();
-          const col  = rank === 0 ? '#1d4ed8' : '#93c5fd';
+          const pct = (p.probability * 100).toFixed(1);
+          const w   = Math.round((p.probability / top) * 100);
+          const lbl = p.className.split(',')[0].trim();
+          const col = rank === 0 ? '#1d4ed8' : '#93c5fd';
           return `<div class="class-row">
-            <div class="class-label" title="${p.className}">${lbl}</div>
-            <div class="class-bar-bg"><div class="class-bar" style="width:${barW}%;background:${col}"></div></div>
-            <div class="class-pct">${pct}%</div>
-          </div>`;
+            <div class="class-lbl" title="${p.className}">${lbl}</div>
+            <div class="class-bar-bg"><div class="class-bar" style="width:${w}%;background:${col}"></div></div>
+            <div class="class-pct">${pct}%</div></div>`;
         }).join('');
         document.getElementById('modelStatus').textContent = '';
       } catch(e) {
         el.innerHTML = `<div class="class-waiting">Failed: ${e.message}</div>`;
       }
+    }
+
+    // ── Kernel weights extraction & display ───────────────────────────────────
+    async function extractAllFilters() {
+      allLayerData = [];
+      for (const layer of mobileNetModel.model.layers) {
+        const w = layer.getWeights();
+        if (!w.length) continue;
+        const shape = w[0].shape;
+        if (shape.length !== 4 || shape[0] !== 3 || shape[1] !== 3) continue;
+
+        const inC = shape[2], outC = shape[3];
+        const arr = await w[0].array();   // [3, 3, inC, outC]
+        const filters = [];
+
+        if (outC === 1) {
+          // Depthwise conv: one filter per input channel
+          for (let c = 0; c < Math.min(inC, 32); c++)
+            filters.push(arr.map(row => row.map(cell => cell[c][0])));
+        } else {
+          // Regular conv: outC filters, average over inC for display
+          for (let f = 0; f < Math.min(outC, 32); f++)
+            filters.push(arr.map(row => row.map(cell => {
+              let s = 0;
+              for (let c = 0; c < inC; c++) s += cell[c][f];
+              return s / inC;
+            })));
+        }
+
+        const nTotal = outC === 1 ? inC : outC;
+        const type   = outC === 1 ? 'Depthwise Conv' : 'Conv';
+        allLayerData.push({ label: `${type}  3×3  ·  ${nTotal} filters`, nFilters: nTotal, filters });
+        if (allLayerData.length >= 4) break;
+      }
+
+      if (allLayerData.length > 0) animKernel = allLayerData[0].filters[0];
+      renderKernelWeights();
+    }
+
+    function renderKernelWeights() {
+      const panel = document.getElementById('kernelWeightsPanel');
+      panel.innerHTML = '';
+
+      if (!allLayerData.length) {
+        panel.innerHTML = '<div class="kw-loading">Weights unavailable.</div>';
+        return;
+      }
+
+      allLayerData.forEach((ld, li) => {
+        const sec = document.createElement('div');
+        sec.className = 'kw-section';
+
+        const title = document.createElement('div');
+        title.className = 'kw-layer-title';
+        title.textContent = `Layer ${li + 1}  —  ${ld.label}`;
+        sec.appendChild(title);
+
+        const row = document.createElement('div');
+        row.className = 'kw-row';
+
+        ld.filters.slice(0, 16).forEach((kernel, fi) => {
+          let maxAbs = 0;
+          kernel.forEach(r => r.forEach(v => { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); }));
+
+          const wrap = document.createElement('div');
+          wrap.className = 'kw-filter' + (li === selLayer && fi === selFilter ? ' sel' : '');
+          wrap.dataset.layer = li; wrap.dataset.filter = fi;
+          wrap.onclick = () => selectKernel(li, fi);
+
+          const grid = document.createElement('div');
+          grid.className = 'mini-grid';
+          kernel.forEach(r => r.forEach(v => {
+            const cell = document.createElement('div');
+            const n = maxAbs > 0 ? v / maxAbs : 0;
+            cell.className = 'mini-cell ' + (n > 0.08 ? 'kp' : n < -0.08 ? 'kn' : 'kz');
+            // Show one decimal, keep sign, omit leading zero
+            const abs = Math.abs(v);
+            cell.textContent = abs < 0.005 ? '0'
+              : (v < 0 ? '-' : '+') + abs.toFixed(1).replace('0.', '.');
+            grid.appendChild(cell);
+          }));
+
+          const lbl = document.createElement('div');
+          lbl.className = 'kw-num';
+          lbl.textContent = '#' + (fi + 1);
+
+          wrap.appendChild(grid); wrap.appendChild(lbl);
+          row.appendChild(wrap);
+        });
+
+        if (ld.nFilters > 16) {
+          const more = document.createElement('div');
+          more.className = 'kw-more';
+          more.textContent = `+${ld.nFilters - 16} more`;
+          row.appendChild(more);
+        }
+
+        sec.appendChild(row);
+        panel.appendChild(sec);
+      });
+    }
+
+    function selectKernel(li, fi) {
+      selLayer = li; selFilter = fi;
+      animKernel = allLayerData[li].filters[fi];
+      document.querySelectorAll('.kw-filter').forEach(el =>
+        el.classList.toggle('sel',
+          parseInt(el.dataset.layer) === li && parseInt(el.dataset.filter) === fi));
+      if (animState !== 'running') { animState = 'idle'; animPos = 0; }
     }
 
     // ── Architecture diagram ──────────────────────────────────────────────────
@@ -426,16 +473,16 @@
       return `rgb(${clamp(r*f)},${clamp(g*f)},${clamp(b*f)})`;
     }
 
-    function drawBlock3D(ctx, fx, fy, fw, fh, depth, color, poolColor, label, sub) {
+    function drawBlock(ctx, fx, fy, fw, fh, depth, color, poolColor, label, sub) {
       const dx = depth * 0.6, dy = depth * 0.3;
+      ctx.strokeStyle = '#bbb'; ctx.lineWidth = 0.7;
 
       // Right face
       ctx.fillStyle = hexShade(color, -0.18);
       ctx.beginPath();
       ctx.moveTo(fx+fw, fy); ctx.lineTo(fx+fw+dx, fy-dy);
       ctx.lineTo(fx+fw+dx, fy+fh-dy); ctx.lineTo(fx+fw, fy+fh);
-      ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#bbb'; ctx.lineWidth = 0.7; ctx.stroke();
+      ctx.closePath(); ctx.fill(); ctx.stroke();
 
       // Top face
       ctx.fillStyle = hexShade(color, 0.14);
@@ -447,28 +494,21 @@
       // Front face
       if (poolColor) {
         const ph = Math.min(fh * 0.32, 28);
-        ctx.fillStyle = color;
-        ctx.fillRect(fx, fy, fw, fh - ph);
-        ctx.fillStyle = poolColor;
-        ctx.fillRect(fx, fy + fh - ph, fw, ph);
+        ctx.fillStyle = color;   ctx.fillRect(fx, fy, fw, fh - ph);
+        ctx.fillStyle = poolColor; ctx.fillRect(fx, fy + fh - ph, fw, ph);
       } else {
-        ctx.fillStyle = color;
-        ctx.fillRect(fx, fy, fw, fh);
+        ctx.fillStyle = color; ctx.fillRect(fx, fy, fw, fh);
       }
       ctx.strokeRect(fx, fy, fw, fh);
 
-      // Label
-      const cx = fx + fw / 2 + dx / 2;
+      const cx = fx + fw/2 + dx/2;
       ctx.textAlign = 'center';
       ctx.fillStyle = '#333'; ctx.font = 'bold 11px Arial';
       ctx.fillText(label, cx, fy + fh + 16);
-      if (sub) {
-        ctx.fillStyle = '#777'; ctx.font = '10px Arial';
-        ctx.fillText(sub, cx, fy + fh + 28);
-      }
+      if (sub) { ctx.fillStyle = '#777'; ctx.font = '10px Arial'; ctx.fillText(sub, cx, fy + fh + 28); }
     }
 
-    function drawArch3D(ctx, x1, x2, y) {
+    function drawArrow(ctx, x1, x2, y) {
       ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2-8, y); ctx.stroke();
       ctx.fillStyle = '#bbb';
@@ -479,54 +519,41 @@
       const canvas = document.getElementById('archCanvas');
       const ctx    = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-
       const baseY = 188;
-      const CONV  = '#d4d8e0';
-      const POOL  = '#c8e6c9';
-      const FC    = '#bbdefb';
-      const OUT   = '#f3e8ff';
+      const CONV = '#d4d8e0', POOL = '#c8e6c9', FC = '#bbdefb', OUT = '#f3e8ff';
 
       // [fx, fw, fh, depth, poolColor, label, sub]
       const blocks = [
-        [22,  18, 155, 12,  null, 'Input',          '224×224×3'],
-        [95,  24, 120, 40,  POOL, 'Conv + Pool',    '3×3, 32ch → 56²'],
-        [215, 28,  90, 60,  POOL, 'Conv + Pool',    '3×3, 64ch → 28²'],
-        [352, 30,  66, 78,  POOL, 'Conv + Pool',    '3×3, 128ch → 14²'],
-        [509, 28,  46, 78,  POOL, 'Conv + Pool',    '3×3, 256ch → 7²'],
-        [660, 22,  32, 46,  null, 'Dense',          'Flatten → 1024'],
-        [774, 20,  22, 32,  null, 'Softmax',        '1000 classes'],
+        [22,  18, 155, 12,  null, 'Input',        '224×224×3'],
+        [95,  24, 120, 40,  POOL, 'Conv + Pool',  '3×3, 32ch → 56²'],
+        [215, 28,  90, 60,  POOL, 'Conv + Pool',  '3×3, 64ch → 28²'],
+        [352, 30,  66, 78,  POOL, 'Conv + Pool',  '3×3, 128ch → 14²'],
+        [509, 28,  46, 78,  POOL, 'Conv + Pool',  '3×3, 256ch → 7²'],
+        [660, 22,  32, 46,  null, 'Dense',        'Flatten → 1024'],
+        [774, 20,  22, 32,  null, 'Softmax',      '1000 classes'],
       ];
 
-      // Compute right edges for arrows
       blocks.forEach(([fx, fw, fh, depth, pc, lbl, sub]) => {
-        drawBlock3D(ctx, fx, baseY - fh, fw, fh, depth,
-          lbl === 'Dense' ? FC : lbl === 'Softmax' ? OUT : CONV,
-          pc, lbl, sub);
+        const color = lbl === 'Dense' ? FC : lbl === 'Softmax' ? OUT : CONV;
+        drawBlock(ctx, fx, baseY - fh, fw, fh, depth, color, pc, lbl, sub);
       });
 
-      // Arrows: from right edge of block[i] to left edge of block[i+1]
+      // Arrows between blocks
       for (let i = 0; i < blocks.length - 1; i++) {
-        const [fx, fw, fh, depth] = blocks[i];
-        const [fx2] = blocks[i + 1];
-        const rightEdge = fx + fw + depth * 0.6 + 4;
-        const arrowY    = baseY - Math.min(blocks[i][2], blocks[i+1][2]) / 2;
-        drawArch3D(ctx, rightEdge, fx2 - 4, arrowY);
+        const [fx, fw,, depth] = blocks[i], [fx2,,fh2] = blocks[i+1];
+        const ax = fx + fw + depth * 0.6 + 4;
+        drawArrow(ctx, ax, fx2 - 4, baseY - fh2 / 2);
       }
 
-      // "pooling" label on second block (like PPT)
+      // Pooling annotation on second block
       const [fx2, fw2, fh2, d2] = blocks[1];
       const ph = Math.min(fh2 * 0.32, 28);
-      const labelX = fx2 + fw2 / 2 + d2 * 0.3;
-      const labelY = baseY - ph / 2;
+      const ax = fx2 + fw2 + d2 * 0.3, ay = baseY - ph / 2;
       ctx.fillStyle = '#4caf50'; ctx.font = 'italic bold 11px Arial'; ctx.textAlign = 'left';
-      ctx.fillText('pooling', labelX + fw2/2 + 6, labelY);
-
-      // Small bracket lines for pooling annotation
+      ctx.fillText('pooling', ax + 8, ay);
       ctx.strokeStyle = '#4caf50'; ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(labelX + fw2/2 + 4, baseY - ph);
-      ctx.lineTo(labelX + fw2/2 + 2, labelY);
-      ctx.lineTo(labelX + fw2/2 + 4, baseY);
+      ctx.moveTo(ax + 6, baseY - ph); ctx.lineTo(ax + 3, ay); ctx.lineTo(ax + 6, baseY);
       ctx.stroke();
     }
 
@@ -537,15 +564,12 @@
     (async () => {
       try {
         mobileNetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
-        await extractFilters();
+        await extractAllFilters();
         const st = document.getElementById('modelStatus');
-        if (st) {
-          st.textContent = 'MobileNet ready ✓';
-          setTimeout(() => { if (st) st.textContent = ''; }, 3000);
-        }
+        if (st) { st.textContent = 'MobileNet ready ✓'; setTimeout(() => { if(st) st.textContent=''; }, 3000); }
       } catch(e) {
-        const st = document.getElementById('modelStatus');
-        if (st) st.textContent = 'Model failed to load — check network';
+        document.getElementById('modelStatus').textContent = 'Model failed to load — check network';
+        document.getElementById('kernelWeightsPanel').innerHTML = '<div class="kw-loading">Model unavailable.</div>';
       }
     })();
   </script>
