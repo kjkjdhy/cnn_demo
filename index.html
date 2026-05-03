@@ -1,671 +1,509 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CNN Convolution Demo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CNN Demo — Tiny VGG</title>
   <style>
-    * { box-sizing: border-box; font-family: Arial, sans-serif; }
-    body { margin: 0; padding: 20px; background: #f5f6f8; color: #222; }
-    h1 { margin-top: 0; font-size: 26px; text-align: center; margin-bottom: 16px; }
-    .container { display: flex; flex-direction: column; gap: 12px; max-width: 1060px; margin: 0 auto; }
-    .panel { background: white; border-radius: 14px; padding: 16px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
-
-    /* ── Top: Input + layer grid ─────────────────────────────────────────── */
-    .canvas-outer { display: flex; gap: 10px; align-items: flex-start; }
-
-    .input-col { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; }
-    .cv-badge {
-      font-size: 11px; font-weight: 700; color: #374151;
-      background: #eff6ff; border: 1.5px solid #bfdbfe;
-      border-radius: 5px; padding: 1px 10px; white-space: nowrap;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100%;
+      min-height: 100vh;
     }
-    .cv-canvas { border-radius: 6px; border: 2px solid #e5e7eb; display: block; }
-    .cv-desc { font-size: 9px; color: #9ca3af; text-align: center; line-height: 1.3; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
 
-    /* 7-column grid for layers */
-    .layers-grid {
+    /* Header */
+    .header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 9px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-title { font-size: 14px; font-weight: 700; }
+    .header-sub   { font-size: 11px; color: #94a3b8; }
+    #statusBadge  {
+      margin-left: auto;
+      font-size: 11px;
+      color: #94a3b8;
+      background: #1e293b;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+
+    /* App layout */
+    .app {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      align-items: stretch;
+      width: 100%;
+    }
+
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 10px 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07);
+    }
+    .card-title {
+      font-size: 10px;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      margin-bottom: 8px;
+    }
+
+    /* Left panel */
+    .left-panel {
+      width: 160px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #inputCanvas {
+      display: block;
+      width: 136px;
+      height: 136px;
+      border: 1px solid #e2e8f0;
+      border-radius: 5px;
+      image-rendering: pixelated;
+      background: #e2e8f0;
+    }
+    .img-picker {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 7px;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      margin-top: 2px;
+    }
+    .img-btn {
+      font-size: 9.5px;
+      padding: 4px 2px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: white;
+      cursor: pointer;
+      color: #475569;
+      text-align: center;
+      transition: background .1s, border-color .1s;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .img-btn:hover  { background: #f8fafc; border-color: #94a3b8; }
+    .img-btn.active { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; font-weight: 600; }
+
+    /* Center panel */
+    .center-panel {
       flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
-    .layer-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-
-    /* ── Bottom: 3 columns ───────────────────────────────────────────────── */
-    .bottom-panel { display: flex; gap: 16px; align-items: flex-start; }
-    .col { min-width: 0; }
-    .col-images   { width: 170px; flex-shrink: 0; }
-    .col-controls { flex: 1; border-left: 1px solid #f0f0f0; padding-left: 16px; }
-    .col-right    { width: 220px; flex-shrink: 0; border-left: 1px solid #f0f0f0; padding-left: 16px; }
-
-    .col-title { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 7px; }
-
-    /* Upload */
-    .upload-row { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
-    .upload-btn {
-      display: inline-block; padding: 4px 10px; background: #f3f4f6;
-      border: 1.5px solid #d1d5db; border-radius: 6px;
-      font-size: 12px; font-weight: 600; cursor: pointer; color: #374151; white-space: nowrap;
+    .layer-row {
+      display: flex;
+      gap: 8px;
     }
-    .upload-btn:hover { background: #e5e7eb; }
-    .file-name { font-size: 11px; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    /* Preset buttons */
-    .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-    .preset-btn {
-      padding: 5px 4px; background: #f3f4f6; border: 1.5px solid #d1d5db;
-      border-radius: 6px; font-size: 12px; font-weight: 600; color: #374151;
-      cursor: pointer; text-align: center;
+    .layer-group {
+      flex: 1;
+      min-width: 0;
     }
-    .preset-btn:hover { background: #dbeafe; border-color: #93c5fd; }
-    .preset-btn.active { background: #dbeafe; border-color: #1d4ed8; color: #1d4ed8; }
-
-    /* Filter thumbnails */
-    .filter-thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-    .filter-thumb {
-      cursor: pointer; border: 2px solid #e5e7eb; border-radius: 7px;
-      padding: 6px 6px 4px; text-align: center; transition: border-color 0.12s;
+    .fm-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
     }
-    .filter-thumb:hover { border-color: #93c5fd; }
-    .filter-thumb.active { border-color: #1d4ed8; background: #eff6ff; }
-    .thumb-grid { display: grid; grid-template-columns: repeat(3, 14px); gap: 2px; }
-    .tc { width: 14px; height: 14px; border-radius: 2px; }
-    .tcp { background: #3b82f6; }
-    .tcn { background: #ef4444; }
-    .tcz { background: #e2e8f0; }
-    .thumb-label { font-size: 10px; font-weight: 700; color: #6b7280; margin-top: 3px; }
-
-    /* Speed + Play */
-    .speed-row { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; margin-bottom: 8px; color: #374151; }
-    .play-btn {
-      padding: 8px 28px; border-radius: 8px; background: #1d4ed8;
-      color: white; font-weight: 700; font-size: 14px; border: none; cursor: pointer;
+    .fm-cell {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
     }
-    .play-btn:hover { background: #1e40af; }
-
-    /* Right column */
-    .kernel-name-badge {
-      display: inline-block; font-size: 12px; font-weight: 700; color: #1d4ed8;
-      background: #eff6ff; border: 1.5px solid #bfdbfe;
-      border-radius: 6px; padding: 2px 10px; margin-bottom: 7px;
+    canvas.kc {
+      width: 15px;
+      height: 15px;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      flex-shrink: 0;
     }
-    .kernel-grid3x3 { display: grid; grid-template-columns: repeat(3, 42px); gap: 3px; margin-bottom: 5px; }
-    .kc {
-      width: 42px; height: 42px; display: flex; align-items: center; justify-content: center;
-      font-family: Consolas, monospace; font-size: 10px; font-weight: 700;
-      border-radius: 5px; border: 1px solid rgba(0,0,0,0.06);
+    canvas.fc {
+      width: 100%;
+      aspect-ratio: 1;
+      display: block;
+      border: 1px solid #f1f5f9;
+      border-radius: 2px;
+      background: #f8fafc;
     }
-    .kcp { background: #dbeafe; color: #1e40af; }
-    .kcn { background: #fee2e2; color: #991b1b; }
-    .kcz { background: #f3f4f6; color: #9ca3af; }
-    .kernel-legend { font-size: 10px; color: #6b7280; margin-bottom: 4px; }
-
-    .col-divider { border: none; border-top: 1px solid #e5e7eb; margin: 10px 0; }
-
-    /* Prediction */
-    .class-waiting { color: #9ca3af; font-size: 12px; }
-    .class-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-    .class-lbl {
-      font-size: 12px; font-weight: 600; width: 52px; flex-shrink: 0; color: #222;
+    .fm-label {
+      font-size: 8px;
+      color: #94a3b8;
     }
-    .class-bar-bg { flex: 1; background: #f3f4f6; border-radius: 4px; height: 12px; overflow: hidden; }
-    .class-bar { height: 12px; border-radius: 4px; }
-    .class-pct { font-size: 12px; font-weight: 700; min-width: 36px; text-align: right; color: #374151; }
-    .model-note { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+
+    /* MaxPool separator */
+    .pool-sep {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 2px;
+    }
+    .pool-sep-line  { flex: 1; height: 1px; background: #e2e8f0; }
+    .pool-sep-label { font-size: 10px; color: #94a3b8; white-space: nowrap; }
+
+    /* Right panel */
+    .right-panel {
+      width: 200px;
+      flex-shrink: 0;
+    }
+    .right-panel .card {
+      height: 100%;
+    }
+    .pred-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 7px;
+    }
+    .pred-name {
+      font-size: 10px;
+      color: #475569;
+      width: 76px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .pred-bar-bg {
+      flex: 1;
+      height: 12px;
+      background: #f1f5f9;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .pred-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: #93c5fd;
+      transition: width .3s ease;
+    }
+    .pred-bar-fill.top { background: #2563eb; }
+    .pred-pct {
+      font-size: 10px;
+      color: #64748b;
+      width: 34px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .loading-msg { font-size: 11px; color: #94a3b8; text-align: center; padding: 18px 0; }
   </style>
 </head>
 <body>
-  <h1>CNN Convolution Demo</h1>
 
-  <div class="container">
+<div class="header">
+  <span class="header-title">CNN Demo</span>
+  <span class="header-sub">Tiny VGG · 4 Conv layers · 10 filters each · 10-class ImageNet</span>
+  <span id="statusBadge">Loading model…</span>
+</div>
 
-    <!-- ── Top: Input + all layer canvases ───────────────────────────────── -->
-    <div class="panel">
-      <div class="canvas-outer">
-        <div class="input-col">
-          <div class="cv-badge">Input</div>
-          <canvas id="inputCanvas" class="cv-canvas" width="130" height="130"></canvas>
-          <div class="cv-desc">Original image</div>
-        </div>
-        <div class="layers-grid" id="layersGrid">
-          <!-- Built dynamically after model loads -->
-          <div class="class-waiting" style="grid-column:1/-1;padding:20px 0">Loading MobileNet…</div>
-        </div>
-      </div>
+<div class="app">
+
+  <!-- Left: input image + picker -->
+  <div class="left-panel">
+    <div class="card">
+      <div class="card-title">Input (64 × 64)</div>
+      <canvas id="inputCanvas" width="64" height="64"></canvas>
     </div>
-
-    <!-- ── Bottom: 3 columns ─────────────────────────────────────────────── -->
-    <div class="panel bottom-panel">
-
-      <!-- Col 1 -->
-      <div class="col col-images">
-        <div class="col-title">Uploaded Image</div>
-        <div class="upload-row">
-          <label class="upload-btn">Browse…<input type="file" id="fileInput" accept="image/*" style="display:none"></label>
-          <span class="file-name" id="fileName">No file…</span>
-        </div>
-        <div class="col-title" style="margin-top:10px">Example Images</div>
-        <div class="preset-grid" id="presetGrid"></div>
-      </div>
-
-      <!-- Col 2: Filter selection -->
-      <div class="col col-controls">
-        <div class="col-title">
-          Select a Filter
-          <span style="font-weight:400;font-size:11px;color:#9ca3af"> — real weights from MobileNet. Each filter detects a different pattern.</span>
-        </div>
-        <div class="filter-thumbs" id="filterThumbs">
-          <div class="class-waiting">Loading filters…</div>
-        </div>
-        <div class="speed-row">
-          Speed <input type="range" id="animSpeed" min="1" max="30" value="6" style="width:90px">
-        </div>
-        <button class="play-btn" id="playBtn" onclick="animToggle()">▶ Play</button>
-      </div>
-
-      <!-- Col 3: Kernel + Prediction -->
-      <div class="col col-right">
-        <div class="col-title">Selected Kernel <span style="font-weight:400;font-size:11px;color:#9ca3af">(Layer 1, 3×3)</span></div>
-        <div class="kernel-name-badge" id="kernelNameBadge">—</div>
-        <div id="kernelGrid3x3" class="kernel-grid3x3"></div>
-        <div class="kernel-legend">Blue = amplify &nbsp;·&nbsp; Red = suppress</div>
-
-        <hr class="col-divider">
-
-        <div class="col-title">Prediction (MobileNet)</div>
-        <div id="classResult"><div class="class-waiting">Select an image and press ▶ Play</div></div>
-        <div class="model-note" id="modelStatus">Loading MobileNet…</div>
-      </div>
-
+    <div class="card">
+      <div class="card-title">Test Images</div>
+      <div class="img-picker" id="imgPicker"></div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
-  <script>
-    const ANIM_SIZE = 64;
-    const DISP_INPUT = 130;
-    const DISP_LAYER = 110;
-    const MAX_IMG    = 320;
-    const N_THUMB    = 6;
+  <!-- Center: conv layer feature maps -->
+  <div class="center-panel" id="centerPanel">
+    <div class="loading-msg">Loading model…</div>
+  </div>
 
-    const PRESETS = [
-      { label: 'Dog',    url: 'https://images.unsplash.com/photo-1552053831-71594a27632d?w=320&h=320&fit=crop' },
-      { label: 'Cat',    url: 'https://images.unsplash.com/photo-1537151608828-ea2b11777ee8?w=320&h=320&fit=crop' },
-      { label: 'Bird',   url: 'https://images.unsplash.com/photo-1522926193341-e9ffd686c60f?w=320&h=320&fit=crop' },
-      { label: 'Car',    url: 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?w=320&h=320&fit=crop' },
-      { label: 'Plane',  url: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=320&h=320&fit=crop' },
-      { label: 'Flower', url: 'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=320&h=320&fit=crop' },
-    ];
+  <!-- Right: prediction bars -->
+  <div class="right-panel">
+    <div class="card">
+      <div class="card-title">Prediction</div>
+      <div id="predBars"><div class="loading-msg">—</div></div>
+    </div>
+  </div>
 
-    // Keyword patterns to map ImageNet predictions → our 6 categories
-    const CAT_RE = {
-      Dog:    /dog|hound|terrier|retriever|shepherd|poodle|bulldog|spaniel|setter|pointer|mastiff|boxer|collie|husky|samoyed|dalmatian|chihuahua|pomeranian|dachshund|beagle|corgi|malinois|saluki|borzoi|papillon|basset|bloodhound|greyhound|pug|schnauzer|rottweiler|doberman/i,
-      Cat:    /\bcat\b|tabby|persian|siamese|egyptian|angora|lynx|cougar|cheetah|tiger|lion|leopard|jaguar|panther|kitten/i,
-      Bird:   /bird|finch|sparrow|robin|warbler|jay|wren|dove|pigeon|eagle|hawk|owl|parrot|macaw|toucan|pelican|hummingbird|peacock|flamingo|crane|heron|bulbul|brambling|goldfinch|indigo|junco|chickadee|magpie|albatross|water ouzel/i,
-      Car:    /\bcar\b|automobile|racer|sports car|jeep|cab|taxi|limo|ambulance|minivan|grille|car wheel|convertible|beach wagon|station wagon|pickup/i,
-      Plane:  /plane|aircraft|airliner|jet|bomber|warplane|airship|biplane|stealth|space shuttle/i,
-      Flower: /flower|rose|daisy|tulip|sunflower|orchid|lily|dahlia|hibiscus|blossom|bouquet|carnation|poppy|vase/i,
-    };
+</div>
 
-    let animKernels = [];
-    let animState   = 'idle';
-    let animRAF     = null;
-    let animPos     = 0;
-    let animSmall   = null;
-    let animFull    = null;
-    let animOutPx   = null;
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+<script>
+const MODEL_URL   = 'https://poloclub.github.io/cnn-explainer/assets/data/model.json';
+const IMG_BASE    = 'https://poloclub.github.io/cnn-explainer/assets/img/';
+const CLASS_NAMES = [
+  'lifeboat','ladybug','pizza','bell pepper','school bus',
+  'koala','espresso','red panda','orange','sport car'
+];
+const IMAGES = [
+  {label:'Espresso',    file:'espresso_1.jpeg'},
+  {label:'Ladybug',     file:'bug_1.jpeg'},
+  {label:'Pizza',       file:'pizza_1.jpeg'},
+  {label:'Bell Pepper', file:'pepper_1.jpeg'},
+  {label:'School Bus',  file:'bus_1.jpeg'},
+  {label:'Koala',       file:'koala_1.jpeg'},
+  {label:'Lifeboat',    file:'boat_1.jpeg'},
+  {label:'Red Panda',   file:'panda_1.jpeg'},
+  {label:'Orange',      file:'orange_1.jpeg'},
+  {label:'Sport Car',   file:'car_1.jpeg'},
+];
+const LAYER_DISPLAY = ['Conv 1-1','Conv 1-2','Conv 2-1','Conv 2-2'];
 
-    let mobileNetModel = null;
-    let kernelModel    = null;
-    let allLayerData   = [];   // { filters, type, stride, nFilters }[]
-    let selFilterIdx   = 0;
+let model      = null;
+let intermMdls = [];
+let convLayers = [];
+let imgTensor  = null;
 
-    function clamp(x) { return Math.max(0, Math.min(255, Math.round(x))); }
+// ── Init ──────────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    setStatus('Loading model…');
+    model = await tf.loadLayersModel(MODEL_URL);
 
-    function scaleImageTo(src, tw, th) {
-      const s = document.createElement('canvas');
-      s.width = src.width; s.height = src.height;
-      s.getContext('2d').putImageData(src, 0, 0);
-      const d = document.createElement('canvas');
-      d.width = tw; d.height = th;
-      d.getContext('2d').drawImage(s, 0, 0, tw, th);
-      return d.getContext('2d').getImageData(0, 0, tw, th);
-    }
-
-    // ── Presets ───────────────────────────────────────────────────────────
-    function buildPresets() {
-      const grid = document.getElementById('presetGrid');
-      PRESETS.forEach((p, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'preset-btn';
-        btn.textContent = p.label;
-        btn.onclick = () => loadPreset(i);
-        grid.appendChild(btn);
-      });
-    }
-
-    function loadPreset(idx) {
-      document.querySelectorAll('.preset-btn').forEach((el, i) =>
-        el.classList.toggle('active', i === idx));
-      stopAnim();
-      document.getElementById('fileName').textContent = PRESETS[idx].label;
-      document.getElementById('classResult').innerHTML =
-        '<div class="class-waiting">Press ▶ Play to animate &amp; classify</div>';
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        const sc = Math.min(MAX_IMG / img.width, MAX_IMG / img.height, 1);
-        const w = Math.round(img.width * sc), h = Math.round(img.height * sc);
-        const c = document.createElement('canvas');
-        c.width = w; c.height = h;
-        c.getContext('2d').drawImage(img, 0, 0, w, h);
-        animFull = c.getContext('2d').getImageData(0, 0, w, h);
-        paintInput(animFull, false);
-        clearAllOutputs();
-      };
-      img.onerror = () => alert('Image failed to load.');
-      img.src = PRESETS[idx].url;
-    }
-
-    // ── File upload ────────────────────────────────────────────────────────
-    document.getElementById('fileInput').addEventListener('change', function () {
-      if (!this.files.length) return;
-      document.getElementById('fileName').textContent = this.files[0].name;
-      document.querySelectorAll('.preset-btn').forEach(el => el.classList.remove('active'));
-      const reader = new FileReader();
-      reader.onload = e => {
-        const img = new Image();
-        img.onload = () => {
-          const sc = Math.min(MAX_IMG / img.width, MAX_IMG / img.height, 1);
-          const w = Math.round(img.width * sc), h = Math.round(img.height * sc);
-          const c = document.createElement('canvas');
-          c.width = w; c.height = h;
-          c.getContext('2d').drawImage(img, 0, 0, w, h);
-          animFull = c.getContext('2d').getImageData(0, 0, w, h);
-          paintInput(animFull, false);
-          clearAllOutputs();
-          stopAnim();
-          document.getElementById('classResult').innerHTML =
-            '<div class="class-waiting">Press ▶ Play to animate &amp; classify</div>';
-        };
-        img.src = e.target.result;
-      };
-      reader.readAsDataURL(this.files[0]);
-    });
-
-    // ── Canvas helpers ─────────────────────────────────────────────────────
-    function paintInput(imageData, pixelated) {
-      const ctx = document.getElementById('inputCanvas').getContext('2d');
-      const tmp = document.createElement('canvas');
-      tmp.width = imageData.width; tmp.height = imageData.height;
-      tmp.getContext('2d').putImageData(imageData, 0, 0);
-      ctx.imageSmoothingEnabled = !pixelated;
-      ctx.clearRect(0, 0, DISP_INPUT, DISP_INPUT);
-      ctx.drawImage(tmp, 0, 0, DISP_INPUT, DISP_INPUT);
-    }
-
-    function paintWithKernel(ox, oy) {
-      paintInput(animSmall, true);
-      const ctx = document.getElementById('inputCanvas').getContext('2d');
-      const sc = DISP_INPUT / ANIM_SIZE;
-      const rx = (ox - 1) * sc, ry = (oy - 1) * sc, rw = 3 * sc;
-      ctx.fillStyle = 'rgba(255,60,60,0.18)'; ctx.fillRect(rx, ry, rw, rw);
-      ctx.strokeStyle = '#ff3c3c'; ctx.lineWidth = 2;
-      ctx.strokeRect(rx + 1, ry + 1, rw - 2, rw - 2);
-      ctx.fillStyle = 'rgba(255,60,60,0.55)';
-      ctx.fillRect(ox * sc, oy * sc, sc, sc);
-    }
-
-    function clearCanvas(id) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const ctx = el.getContext('2d');
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 0, el.width, el.height);
-    }
-
-    function clearAllOutputs() {
-      allLayerData.forEach((_, i) => clearCanvas(`lCanvas${i}`));
-    }
-
-    function paintPixels(id, px, w, h) {
-      const el = document.getElementById(id);
-      if (!el) return;
-      const tmp = document.createElement('canvas');
-      tmp.width = w; tmp.height = h;
-      tmp.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(px), w, h), 0, 0);
-      const ctx = el.getContext('2d');
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(tmp, 0, 0, DISP_LAYER, DISP_LAYER);
-    }
-
-    // ── Convolution (normalises output to full [0,255] range) ──────────────
-    function applyKernel(srcPx, w, h, kernel) {
-      const raw = new Float32Array(w * h);
-      for (let oy = 0; oy < h; oy++) for (let ox = 0; ox < w; ox++) {
-        let s = 0;
-        for (let ky = 0; ky < 3; ky++) for (let kx = 0; kx < 3; kx++) {
-          const ix = ox + kx - 1, iy = oy + ky - 1;
-          if (ix >= 0 && ix < w && iy >= 0 && iy < h)
-            s += srcPx[(iy * w + ix) * 4] * kernel[ky][kx];
-        }
-        raw[oy * w + ox] = Math.abs(s);
+    // Detect Conv2D → Activation (relu) pairs
+    const reluOuts = [];
+    for (let i = 1; i < model.layers.length; i++) {
+      const l = model.layers[i], p = model.layers[i - 1];
+      if (l.getClassName() === 'Activation' && p.getClassName() === 'Conv2D') {
+        reluOuts.push(l.output);
+        convLayers.push(p);
       }
-      const maxVal = raw.reduce((m, x) => Math.max(m, x), 1e-9);
-      const scale  = 255 / maxVal;
-      const out = new Uint8ClampedArray(w * h * 4);
-      for (let i = 0; i < w * h; i++) {
-        const v = Math.round(raw[i] * scale);
-        out[i*4] = out[i*4+1] = out[i*4+2] = v; out[i*4+3] = 255;
-      }
-      return out;
+    }
+    intermMdls = reluOuts.map(o => tf.model({ inputs: model.inputs, outputs: o }));
+
+    buildCenter();
+    drawKernels();
+    await loadImg(0);
+    await runPredict();
+    setStatus('Ready — ' + convLayers.length + ' conv layers · click an image to run');
+  } catch (e) {
+    setStatus('Error: ' + e.message);
+    console.error(e);
+  }
+}
+
+// ── Build center panel layout ─────────────────────────────────────────────────
+function buildCenter() {
+  const cp = document.getElementById('centerPanel');
+  cp.innerHTML = '';
+
+  const rows = [document.createElement('div'), document.createElement('div')];
+  rows.forEach(r => r.className = 'layer-row');
+
+  convLayers.forEach((_, li) => {
+    const grp = document.createElement('div');
+    grp.className = 'layer-group card';
+
+    const title = document.createElement('div');
+    title.className = 'card-title';
+    title.textContent = LAYER_DISPLAY[li] || ('Conv ' + (li + 1));
+    grp.appendChild(title);
+
+    const grid = document.createElement('div');
+    grid.className = 'fm-grid';
+
+    for (let f = 0; f < 10; f++) {
+      const cell = document.createElement('div');
+      cell.className = 'fm-cell';
+
+      const kc = document.createElement('canvas');
+      kc.className = 'kc';
+      kc.id = `kc${li}_${f}`;
+      kc.width = 3; kc.height = 3;
+      cell.appendChild(kc);
+
+      const fc = document.createElement('canvas');
+      fc.className = 'fc';
+      fc.id = `fc${li}_${f}`;
+      fc.width = 80; fc.height = 80;
+      cell.appendChild(fc);
+
+      const lbl = document.createElement('div');
+      lbl.className = 'fm-label';
+      lbl.textContent = 'F' + f;
+      cell.appendChild(lbl);
+
+      grid.appendChild(cell);
     }
 
-    // ── Animation ──────────────────────────────────────────────────────────
-    function stopAnim() {
-      if (animState === 'running') cancelAnimationFrame(animRAF);
-      animState = 'idle'; animPos = 0;
-      document.getElementById('playBtn').textContent = '▶ Play';
-    }
+    grp.appendChild(grid);
+    rows[li < 2 ? 0 : 1].appendChild(grp);
+  });
 
-    function setupAnim() {
-      if (!animFull) return false;
-      animSmall = scaleImageTo(animFull, ANIM_SIZE, ANIM_SIZE);
-      animOutPx = new Uint8ClampedArray(ANIM_SIZE * ANIM_SIZE * 4);
-      for (let i = 3; i < animOutPx.length; i += 4) animOutPx[i] = 255;
-      animPos = 0;
-      paintInput(animSmall, true);
-      clearAllOutputs();
-      return true;
-    }
+  const sep = document.createElement('div');
+  sep.className = 'pool-sep';
+  sep.innerHTML = '<div class="pool-sep-line"></div>'
+    + '<span class="pool-sep-label">MaxPool ÷2</span>'
+    + '<div class="pool-sep-line"></div>';
 
-    function animToggle() {
-      if (animState === 'running') {
-        cancelAnimationFrame(animRAF);
-        animState = 'paused';
-        document.getElementById('playBtn').textContent = '▶ Resume';
-        return;
-      }
-      if (!animFull) { alert('Please select an image first'); return; }
-      if (animState === 'idle' || animState === 'done') {
-        if (!setupAnim()) return;
-        document.getElementById('classResult').innerHTML =
-          '<div class="class-waiting">Animating…</div>';
-      }
-      animState = 'running';
-      document.getElementById('playBtn').textContent = '⏸ Pause';
-      animRAF = requestAnimationFrame(animFrame);
-    }
+  cp.appendChild(rows[0]);
+  cp.appendChild(sep);
+  cp.appendChild(rows[1]);
+}
 
-    function animFrame() {
-      if (animState !== 'running') return;
-      const speed = Number(document.getElementById('animSpeed').value);
-      const total = ANIM_SIZE * ANIM_SIZE;
-      const kernel = animKernels[0];
+// ── Draw kernel thumbnails (3×3 → 15px via CSS) ───────────────────────────────
+function drawKernels() {
+  convLayers.forEach((layer, li) => {
+    const wt  = layer.getWeights()[0]; // [3,3,inC,outC]
+    const arr = wt.arraySync();
+    const inC = arr[0][0].length;
+    const isRGB = (li === 0 && inC === 3);
 
-      for (let step = 0; step < speed && animPos < total; step++, animPos++) {
-        const ox = animPos % ANIM_SIZE, oy = Math.floor(animPos / ANIM_SIZE);
-        let s = 0;
-        for (let ky = 0; ky < 3; ky++) for (let kx = 0; kx < 3; kx++) {
-          const ix = ox + kx - 1, iy = oy + ky - 1;
-          if (ix >= 0 && ix < ANIM_SIZE && iy >= 0 && iy < ANIM_SIZE) {
-            const di = (iy * ANIM_SIZE + ix) * 4;
-            const g  = (animSmall.data[di] + animSmall.data[di+1] + animSmall.data[di+2]) / 3;
-            s += g * kernel[ky][kx];
+    for (let f = 0; f < 10; f++) {
+      const kc  = document.getElementById(`kc${li}_${f}`);
+      const ctx = kc.getContext('2d');
+      const id  = ctx.createImageData(3, 3);
+
+      if (isRGB) {
+        // First layer: show as RGB color
+        const mm = [0, 1, 2].map(c => {
+          let mn = 1e9, mx = -1e9;
+          for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+            mn = Math.min(mn, arr[y][x][c][f]);
+            mx = Math.max(mx, arr[y][x][c][f]);
           }
+          return { mn, mx };
+        });
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+          const pi = (y * 3 + x) * 4;
+          id.data[pi]     = nrm(arr[y][x][0][f], mm[0].mn, mm[0].mx);
+          id.data[pi + 1] = nrm(arr[y][x][1][f], mm[1].mn, mm[1].mx);
+          id.data[pi + 2] = nrm(arr[y][x][2][f], mm[2].mn, mm[2].mx);
+          id.data[pi + 3] = 255;
         }
-        const v = clamp(Math.abs(s) * 2.5);
-        const b = (oy * ANIM_SIZE + ox) * 4;
-        animOutPx[b] = animOutPx[b+1] = animOutPx[b+2] = v;
-      }
-
-      if (animPos < total) {
-        paintWithKernel(animPos % ANIM_SIZE, Math.floor(animPos / ANIM_SIZE));
       } else {
-        paintInput(animSmall, true);
-      }
-      paintPixels('lCanvas0', animOutPx, ANIM_SIZE, ANIM_SIZE);
-
-      if (animPos >= total) {
-        animState = 'done';
-        document.getElementById('playBtn').textContent = '↺ Replay';
-        computeAllLayers();
-        runClassification();
-        return;
-      }
-      animRAF = requestAnimationFrame(animFrame);
-    }
-
-    // Cascade all remaining layers after Layer 1 animation finishes
-    function computeAllLayers() {
-      let prevPx = animOutPx;
-      for (let i = 1; i < allLayerData.length; i++) {
-        prevPx = applyKernel(prevPx, ANIM_SIZE, ANIM_SIZE, animKernels[i]);
-        paintPixels(`lCanvas${i}`, prevPx, ANIM_SIZE, ANIM_SIZE);
-      }
-    }
-
-    // ── Classification → mapped to 6 preset categories ─────────────────────
-    async function runClassification() {
-      const el = document.getElementById('classResult');
-      el.innerHTML = '<div class="class-waiting">Classifying…</div>';
-      try {
-        const tmp = document.createElement('canvas');
-        tmp.width = animFull.width; tmp.height = animFull.height;
-        tmp.getContext('2d').putImageData(animFull, 0, 0);
-
-        // Get top-50 to cover more of the probability mass
-        const rawPreds = await mobileNetModel.classify(tmp, 50);
-
-        const cats = Object.keys(CAT_RE);
-        const scores = {};
-        cats.forEach(c => scores[c] = 0);
-
-        for (const pred of rawPreds) {
-          for (const cat of cats) {
-            if (CAT_RE[cat].test(pred.className)) {
-              scores[cat] += pred.probability;
-              break;
-            }
-          }
+        // Deeper layers: pick highest-magnitude input channel → grayscale
+        let bestC = 0, bestM = 0;
+        for (let c = 0; c < inC; c++) {
+          let m = 0;
+          for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++)
+            m = Math.max(m, Math.abs(arr[y][x][c][f]));
+          if (m > bestM) { bestM = m; bestC = c; }
         }
-
-        const sorted = cats
-          .map(c => ({ label: c, score: scores[c] }))
-          .sort((a, b) => b.score - a.score);
-
-        const topScore = sorted[0].score;
-        el.innerHTML = sorted.map((item, rank) => {
-          const pct = (item.score * 100).toFixed(1);
-          const w   = topScore > 0 ? Math.round((item.score / topScore) * 100) : 0;
-          const col = rank === 0 ? '#1d4ed8' : '#93c5fd';
-          return `<div class="class-row">
-            <div class="class-lbl">${item.label}</div>
-            <div class="class-bar-bg"><div class="class-bar" style="width:${w}%;background:${col}"></div></div>
-            <div class="class-pct">${pct}%</div></div>`;
-        }).join('');
-
-        document.getElementById('modelStatus').textContent = '';
-      } catch (e) {
-        el.innerHTML = `<div class="class-waiting">Failed: ${e.message}</div>`;
+        let mn = 1e9, mx = -1e9;
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+          mn = Math.min(mn, arr[y][x][bestC][f]);
+          mx = Math.max(mx, arr[y][x][bestC][f]);
+        }
+        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
+          const pi = (y * 3 + x) * 4;
+          const v  = nrm(arr[y][x][bestC][f], mn, mx);
+          id.data[pi] = id.data[pi + 1] = id.data[pi + 2] = v;
+          id.data[pi + 3] = 255;
+        }
       }
+      ctx.putImageData(id, 0, 0);
     }
+  });
+}
 
-    // ── Build layer canvas grid ────────────────────────────────────────────
-    function buildLayerGrid() {
-      const grid = document.getElementById('layersGrid');
-      grid.innerHTML = '';
-      allLayerData.forEach((ld, i) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'layer-wrap';
-
-        const badge = document.createElement('div');
-        badge.className = 'cv-badge';
-        badge.textContent = `Layer ${i + 1}`;
-
-        const canvas = document.createElement('canvas');
-        canvas.id = `lCanvas${i}`;
-        canvas.className = 'cv-canvas';
-        canvas.width = DISP_LAYER; canvas.height = DISP_LAYER;
-
-        const desc = document.createElement('div');
-        desc.className = 'cv-desc';
-        desc.textContent = `3×3 · s${ld.stride} · ${ld.nFilters}ch${ld.type === 'DW' ? ' · DW' : ''}`;
-
-        wrap.appendChild(badge);
-        wrap.appendChild(canvas);
-        wrap.appendChild(desc);
-        grid.appendChild(wrap);
-        clearCanvas(`lCanvas${i}`);
-      });
-    }
-
-    // ── Filter thumbnails ──────────────────────────────────────────────────
-    function buildFilterThumbs() {
-      const container = document.getElementById('filterThumbs');
-      container.innerHTML = '';
-      for (let i = 0; i < N_THUMB; i++) {
-        const kernel = allLayerData[0].filters[i];
-        let maxAbs = 0;
-        kernel.forEach(r => r.forEach(v => { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); }));
-
-        const wrap = document.createElement('div');
-        wrap.className = 'filter-thumb' + (i === selFilterIdx ? ' active' : '');
-        wrap.onclick = () => selectFilter(i);
-
-        const gd = document.createElement('div');
-        gd.className = 'thumb-grid';
-        kernel.forEach(r => r.forEach(v => {
-          const cell = document.createElement('div');
-          const n = maxAbs > 0 ? v / maxAbs : 0;
-          cell.className = 'tc ' + (n > 0.08 ? 'tcp' : n < -0.08 ? 'tcn' : 'tcz');
-          gd.appendChild(cell);
-        }));
-
-        const lbl = document.createElement('div');
-        lbl.className = 'thumb-label';
-        lbl.textContent = 'Filter ' + String.fromCharCode(65 + i);
-
-        wrap.appendChild(gd);
-        wrap.appendChild(lbl);
-        container.appendChild(wrap);
-      }
-    }
-
-    function selectFilter(idx) {
-      selFilterIdx = idx;
-      animKernels = allLayerData.map(ld =>
-        ld.filters[Math.min(idx, ld.filters.length - 1)]
+// ── Load a test image ─────────────────────────────────────────────────────────
+async function loadImg(idx) {
+  document.querySelectorAll('.img-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
+  const url = IMG_BASE + IMAGES[idx].file;
+  await new Promise((res, rej) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const c = document.getElementById('inputCanvas');
+      c.getContext('2d').drawImage(img, 0, 0, 64, 64);
+      if (imgTensor) imgTensor.dispose();
+      imgTensor = tf.tidy(() =>
+        tf.browser.fromPixels(c).toFloat().div(255).expandDims(0)
       );
-      document.querySelectorAll('.filter-thumb').forEach((el, i) =>
-        el.classList.toggle('active', i === idx));
-      document.getElementById('kernelNameBadge').textContent =
-        'Filter ' + String.fromCharCode(65 + idx);
-      renderKernelGrid();
-      if (animState !== 'running') animState = 'idle';
-    }
+      res();
+    };
+    img.onerror = rej;
+    img.src = url;
+  });
+}
 
-    // ── Kernel grid display ────────────────────────────────────────────────
-    function fmtWeight(v) {
-      const a = Math.abs(v), s = v < 0 ? '−' : '+';
-      if (a < 1e-7) return '0';
-      if (a < 0.001) return s + a.toExponential(1);
-      if (a < 0.1)   return s + a.toFixed(3);
-      return s + a.toFixed(2);
-    }
+// ── Run inference and draw feature maps ───────────────────────────────────────
+async function runPredict() {
+  if (!imgTensor || !model) return;
 
-    function renderKernelGrid() {
-      const grid = document.getElementById('kernelGrid3x3');
-      grid.innerHTML = '';
-      if (!animKernels.length) return;
-      const kernel = animKernels[0];
-      let maxAbs = 0;
-      kernel.forEach(r => r.forEach(v => { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); }));
-      kernel.forEach(r => r.forEach(v => {
-        const cell = document.createElement('div');
-        const n = maxAbs > 0 ? v / maxAbs : 0;
-        cell.className = 'kc ' + (n > 0.08 ? 'kcp' : n < -0.08 ? 'kcn' : 'kcz');
-        cell.textContent = fmtWeight(v);
-        grid.appendChild(cell);
-      }));
-    }
+  for (let li = 0; li < intermMdls.length; li++) {
+    const out  = intermMdls[li].predict(imgTensor); // [1,H,W,10]
+    const data = (await out.array())[0];            // [H,W,10]
+    out.dispose();
+    const H = data.length, W = data[0].length;
 
-    // ── Kernel extraction ──────────────────────────────────────────────────
-    async function extractAllFilters() {
-      allLayerData = [];
-      console.log('[model] total layers:', kernelModel.layers.length);
-
-      for (const layer of kernelModel.layers) {
-        const w = layer.getWeights();
-        if (!w.length) continue;
-        const shape = w[0].shape;
-        if (shape.length !== 4 || shape[0] !== 3 || shape[1] !== 3) continue;
-
-        const [,, inC, outC] = shape;
-        const arr   = await w[0].array();
-        const cfg   = layer.getConfig();
-        const stride = Array.isArray(cfg.strides) ? cfg.strides[0] : (cfg.strides || 1);
-        const type   = outC === 1 ? 'DW' : 'Conv';
-        const nFilters = outC === 1 ? inC : outC;
-
-        const filters = [];
-        if (outC === 1) {
-          for (let c = 0; c < Math.min(inC, 32); c++)
-            filters.push(arr.map(row => row.map(cell => cell[c][0])));
-        } else {
-          for (let f = 0; f < Math.min(outC, 32); f++) {
-            let bestC = 0, bestMax = 0;
-            for (let c = 0; c < inC; c++) {
-              let m = 0;
-              for (let ky = 0; ky < 3; ky++) for (let kx = 0; kx < 3; kx++) {
-                const a = Math.abs(arr[ky][kx][c][f]);
-                if (a > m) m = a;
-              }
-              if (m > bestMax) { bestMax = m; bestC = c; }
-            }
-            filters.push(arr.map(row => row.map(cell => cell[bestC][f])));
-          }
-        }
-
-        allLayerData.push({ filters, type, stride, nFilters });
+    for (let f = 0; f < 10; f++) {
+      let mn = 1e9, mx = -1e9;
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        if (data[y][x][f] < mn) mn = data[y][x][f];
+        if (data[y][x][f] > mx) mx = data[y][x][f];
       }
 
-      console.log(`[model] found ${allLayerData.length} layers with 3×3 kernels`);
-    }
-
-    // ── Init ──────────────────────────────────────────────────────────────
-    buildPresets();
-
-    (async () => {
-      try {
-        mobileNetModel = await mobilenet.load({ version: 1, alpha: 1.0 });
-
-        // Keras LayersModel — conv kernels accessible via layer.getWeights().
-        // TFHub GraphModel bakes kernels as frozen constants inside the graph,
-        // so they are not reachable via model.weights.
-        kernelModel = await tf.loadLayersModel(
-          'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_1.0_224/model.json'
-        );
-        await extractAllFilters();
-
-        buildLayerGrid();
-        selectFilter(0);
-        buildFilterThumbs();
-
-        const st = document.getElementById('modelStatus');
-        if (st) {
-          st.textContent = 'MobileNet ready ✓';
-          setTimeout(() => { if (st) st.textContent = ''; }, 3000);
-        }
-      } catch (e) {
-        console.error('[load error]', e);
-        document.getElementById('modelStatus').textContent = `Load failed: ${e.message || e}`;
-        document.getElementById('layersGrid').innerHTML =
-          `<div class="class-waiting" style="grid-column:1/-1">Load failed: ${e.message || e}</div>`;
+      const tmp   = document.createElement('canvas');
+      tmp.width = W; tmp.height = H;
+      const tctx  = tmp.getContext('2d');
+      const id    = tctx.createImageData(W, H);
+      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+        const pi = (y * W + x) * 4;
+        const v  = nrm(data[y][x][f], mn, mx);
+        id.data[pi] = id.data[pi + 1] = id.data[pi + 2] = v;
+        id.data[pi + 3] = 255;
       }
-    })();
-  </script>
+      tctx.putImageData(id, 0, 0);
+
+      const fc = document.getElementById(`fc${li}_${f}`);
+      fc.getContext('2d').drawImage(tmp, 0, 0, fc.width, fc.height);
+    }
+  }
+
+  // Final prediction probabilities
+  const pred  = model.predict(imgTensor);
+  const probs = (await pred.array())[0];
+  pred.dispose();
+
+  const order = [...Array(10).keys()].sort((a, b) => probs[b] - probs[a]);
+  const bars  = document.getElementById('predBars');
+  bars.innerHTML = '';
+  order.forEach((cls, rank) => {
+    const pct = (probs[cls] * 100).toFixed(1);
+    const row = document.createElement('div');
+    row.className = 'pred-row';
+    row.innerHTML =
+      `<span class="pred-name">${CLASS_NAMES[cls]}</span>` +
+      `<div class="pred-bar-bg"><div class="pred-bar-fill${rank === 0 ? ' top' : ''}" style="width:${Math.min(100, probs[cls] * 100)}%"></div></div>` +
+      `<span class="pred-pct">${pct}%</span>`;
+    bars.appendChild(row);
+  });
+}
+
+function nrm(v, mn, mx) {
+  if (mx === mn) return 128;
+  return Math.max(0, Math.min(255, Math.round((v - mn) / (mx - mn) * 255)));
+}
+
+function setStatus(msg) { document.getElementById('statusBadge').textContent = msg; }
+
+// ── Build image picker buttons ────────────────────────────────────────────────
+IMAGES.forEach((img, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'img-btn' + (i === 0 ? ' active' : '');
+  btn.textContent = img.label;
+  btn.onclick = async () => { await loadImg(i); await runPredict(); };
+  document.getElementById('imgPicker').appendChild(btn);
+});
+
+init();
+</script>
 </body>
 </html>
