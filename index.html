@@ -520,6 +520,14 @@
     }
 
     // ── Large kernel grid (right column) ──────────────────────────────────
+    function fmtWeight(v) {
+      const a = Math.abs(v), s = v < 0 ? '−' : '+';
+      if (a < 1e-7) return '0';
+      if (a < 0.001) return s + a.toExponential(1);
+      if (a < 0.1)   return s + a.toFixed(3);
+      return s + a.toFixed(2);
+    }
+
     function renderKernelGrid() {
       const grid = document.getElementById('kernelGrid3x3');
       grid.innerHTML = '';
@@ -530,8 +538,7 @@
         const cell = document.createElement('div');
         const n = maxAbs > 0 ? v / maxAbs : 0;
         cell.className = 'kc ' + (n > 0.08 ? 'kcp' : n < -0.08 ? 'kcn' : 'kcz');
-        const abs = Math.abs(v);
-        cell.textContent = abs < 0.001 ? '0' : (v < 0 ? '−' : '+') + abs.toFixed(2);
+        cell.textContent = fmtWeight(v);
         grid.appendChild(cell);
       }));
     }
@@ -539,14 +546,28 @@
     // ── Kernel extraction from Keras LayersModel ───────────────────────────
     async function extractAllFilters() {
       allLayerData = [];
+      console.log('[model] total layers:', kernelModel.layers.length);
+
       for (const layer of kernelModel.layers) {
         if (allLayerData.length >= 4) break;
         const w = layer.getWeights();
         if (!w.length) continue;
         const shape = w[0].shape;
+
+        // Log every layer with 4D weights so we can see what's in the model
+        if (shape.length === 4) {
+          const flat = await w[0].data();
+          const maxA = flat.reduce((m, x) => Math.max(m, Math.abs(x)), 0);
+          console.log(`[layer] ${layer.name}  shape=${JSON.stringify(shape)}  maxAbs=${maxA.toExponential(3)}`);
+        }
+
         if (shape.length !== 4 || shape[0] !== 3 || shape[1] !== 3) continue;
         const [,, inC, outC] = shape;
         const arr = await w[0].array();
+
+        // Log first filter of this layer for debugging
+        const sample = arr.map(row => row.map(c => (outC === 1 ? c[0][0] : c[0][0]).toFixed(5)));
+        console.log(`[3x3 found] ${layer.name}  inC=${inC} outC=${outC}  filter[0][ch0]:`, sample);
         const filters = [];
         if (outC === 1) {
           // Depthwise conv: one filter per input channel
@@ -571,6 +592,15 @@
         }
         allLayerData.push({ filters });
       }
+
+      console.log(`[model] extracted ${allLayerData.length} layers with 3x3 kernels`);
+      if (allLayerData.length > 0) {
+        const f0 = allLayerData[0].filters[0];
+        const maxA = f0.flat().reduce((m, x) => Math.max(m, Math.abs(x)), 0);
+        console.log('[filter A] maxAbs:', maxA.toExponential(3),
+          '  values:', f0.map(r => r.map(v => v.toFixed(5))));
+      }
+
       // Ensure exactly 4 entries (pad with copies if model has fewer conv layers)
       while (allLayerData.length < 4) allLayerData.push(allLayerData[0]);
     }
