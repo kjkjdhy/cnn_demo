@@ -563,7 +563,8 @@ function renderAllKernels() {
           const raw = this.textContent.trim().replace('−','-').replace(',','.');
           const newVal = parseFloat(raw);
           if (isNaN(newVal)) { this.textContent = capturedV.toFixed(2); return; }
-          if (Math.abs(newVal - capturedV) < 1e-10) return;
+          // compare at 2dp to avoid spurious edits from float rounding
+          if (newVal.toFixed(2) === capturedV.toFixed(2)) return;
           onKernelEdit(capturedFi, parseInt(this.dataset.r), parseInt(this.dataset.c), newVal);
         });
 
