@@ -196,7 +196,7 @@
 
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <script>
     const ANIM_SIZE = 64;
@@ -594,7 +594,8 @@
         const st = document.getElementById('modelStatus');
         if (st) { st.textContent = 'MobileNet ready ✓'; setTimeout(() => { if (st) st.textContent = ''; }, 3000); }
       } catch (e) {
-        document.getElementById('modelStatus').textContent = 'Model failed to load — check network';
+        console.error('[MobileNet load error]', e);
+        document.getElementById('modelStatus').textContent = `Load failed: ${e.message || e}`;
       }
     })();
   </script>
