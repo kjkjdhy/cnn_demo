@@ -233,14 +233,16 @@ const DEFAULT_PARAMS = [
   { stride: 1, padding: 'valid', poolAfter: true  },
 ];
 
-let model      = null;
-let convLayers = [];
-let imgTensor  = null;
-let fmCache    = [];
-let selLayer   = 0;
-let selFilter  = 0;
-let expanded   = [false, false, false, false];
-let layerParams = DEFAULT_PARAMS.map(p => ({...p}));
+let model        = null;
+let convLayers   = [];
+let flattenLayer = null;
+let denseLayer   = null;
+let imgTensor    = null;
+let fmCache      = [];
+let selLayer     = 0;
+let selFilter    = 0;
+let expanded     = [false, false, false, false];
+let layerParams  = DEFAULT_PARAMS.map(p => ({...p}));
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
@@ -252,6 +254,8 @@ async function init() {
       const l = model.layers[i], p = model.layers[i - 1];
       if (l.getClassName() === 'Activation' && p.getClassName() === 'Conv2D')
         convLayers.push(p);
+      if (l.getClassName() === 'Flatten') flattenLayer = l;
+      if (l.getClassName() === 'Dense')   denseLayer   = l;
     }
 
     buildPipeline();
@@ -541,17 +545,20 @@ async function loadURL(src, revoke) {
 // ── Run ───────────────────────────────────────────────────────────────────────
 async function run() {
   if (!imgTensor || !model) return;
-  await runCustomForward();
-  await runPrediction();
+  const finalX = await runCustomForward(); // returns the tensor after last layer+pool
+  if (finalX) {
+    await runCustomPrediction(finalX);
+    finalX.dispose();
+  }
 }
 
-// Custom forward pass using current layerParams (for feature map visualization)
+// Custom forward pass using current layerParams; returns final output tensor (caller disposes)
 async function runCustomForward() {
-  if (!imgTensor) return;
+  if (!imgTensor) return null;
   fmCache = [];
 
   let x = imgTensor;
-  let owned = false; // track whether we own x (can dispose it)
+  let owned = false;
 
   for (let li = 0; li < convLayers.length; li++) {
     const { stride, padding, poolAfter } = layerParams[li];
@@ -588,32 +595,48 @@ async function runCustomForward() {
       x.dispose(); x = pooled;
     }
   }
-  if (owned) x.dispose();
 
   updateLayerCfg();
   updateKernel();
+  return x; // caller is responsible for disposing
 }
 
-// Always use the original trained model for prediction
-async function runPrediction() {
-  if (!imgTensor || !model) return;
-  const pred  = model.predict(imgTensor);
-  const probs = (await pred.array())[0];
-  pred.dispose();
+// Run prediction through Flatten + Dense using the custom forward pass output
+async function runCustomPrediction(x) {
+  if (!flattenLayer || !denseLayer) return;
+  const bars = document.getElementById('predBars');
 
-  const order = [...Array(10).keys()].sort((a, b) => probs[b] - probs[a]);
-  const bars  = document.getElementById('predBars');
-  bars.innerHTML = '';
-  order.forEach((cls, rank) => {
-    const pct = (probs[cls] * 100).toFixed(1);
-    const row = document.createElement('div');
-    row.className = 'pred-row';
-    row.innerHTML =
-      `<span class="pred-name">${CLASS_NAMES[cls]}</span>` +
-      `<div class="pred-bar-bg"><div class="pred-bar-fill${rank===0?' top':''}" style="width:${Math.min(100,probs[cls]*100)}%"></div></div>` +
-      `<span class="pred-pct">${pct}%</span>`;
-    bars.appendChild(row);
-  });
+  try {
+    const flat  = flattenLayer.apply(x);
+    const pred  = denseLayer.apply(flat);
+    const probs = (await pred.array())[0];
+    flat.dispose(); pred.dispose();
+
+    const order = [...Array(10).keys()].sort((a, b) => probs[b] - probs[a]);
+    bars.innerHTML = '';
+    order.forEach((cls, rank) => {
+      const pct = (probs[cls] * 100).toFixed(1);
+      const row = document.createElement('div');
+      row.className = 'pred-row';
+      row.innerHTML =
+        `<span class="pred-name">${CLASS_NAMES[cls]}</span>` +
+        `<div class="pred-bar-bg"><div class="pred-bar-fill${rank === 0 ? ' top' : ''}" style="width:${Math.min(100, probs[cls] * 100)}%"></div></div>` +
+        `<span class="pred-pct">${pct}%</span>`;
+      bars.appendChild(row);
+    });
+  } catch (_) {
+    // Spatial dimensions no longer match the Dense layer — teach the student why
+    const shape   = x.shape;
+    const actual  = shape.slice(1).reduce((a, b) => a * b, 1);
+    bars.innerHTML = `
+      <div style="font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px;line-height:1.7">
+        ⚠ <strong>Architecture mismatch</strong><br>
+        Classifier expects <strong>1,690</strong> inputs<br>
+        (13×13×10 with default params)<br>
+        Current output: <strong>${actual}</strong><br>
+        <span style="color:#92400e">Try resetting stride &amp; padding to defaults.</span>
+      </div>`;
+  }
 }
 
 // ── Draw helpers ──────────────────────────────────────────────────────────────
