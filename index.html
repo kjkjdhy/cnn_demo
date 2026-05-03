@@ -43,16 +43,9 @@
     .expand-btn:hover { border-color: #94a3b8; }
     .expand-btn.open  { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
 
-    /* Expanded filter grid */
+    /* Expanded single filter canvas */
     .expand-sect { display: none; width: 100%; margin-top: 6px; }
     .expand-sect.open { display: block; }
-    .expand-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
-    .expand-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; }
-    .expand-cell canvas {
-      width: 100%; aspect-ratio: 1; display: block;
-      image-rendering: pixelated; border-radius: 2px; background: #f1f5f9;
-    }
-    .expand-cell span { font-size: 7px; color: #94a3b8; }
 
     .pipe-arrow { flex-shrink: 0; padding: 0 4px; padding-top: 32px; color: #cbd5e1; font-size: 18px; }
 
@@ -340,22 +333,16 @@ function makeLayerCol(li) {
   btn.onclick = () => toggleExpand(li);
   col.appendChild(btn);
 
-  // Expand section (10 filter canvases)
+  // Expand section — single canvas showing selected filter, same size as main
   const sect = document.createElement('div');
   sect.className = 'expand-sect'; sect.id = `esect${li}`;
-  const grid = document.createElement('div');
-  grid.className = 'expand-grid';
-  for (let f = 0; f < 10; f++) {
-    const cell = document.createElement('div');
-    cell.className = 'expand-cell';
-    const fc = document.createElement('canvas');
-    fc.id = `efc${li}_${f}`; fc.width = 30; fc.height = 30;
-    const sp = document.createElement('span');
-    sp.textContent = 'F' + f;
-    cell.append(fc, sp);
-    grid.appendChild(cell);
-  }
-  sect.appendChild(grid);
+  const efc = document.createElement('canvas');
+  efc.className = 'pipe-canvas'; efc.id = `efc${li}`;
+  efc.width = 60; efc.height = 60;
+  const einf = document.createElement('div');
+  einf.className = 'pipe-info'; einf.id = `efcinf${li}`;
+  einf.textContent = `Filter ${selFilter}`;
+  sect.append(efc, einf);
   col.appendChild(sect);
 
   return col;
@@ -371,11 +358,10 @@ function toggleExpand(li) {
 
   if (expanded[li] && fmCache[li]) {
     const data = fmCache[li];
-    const H = data.length, W = data[0].length;
-    for (let f = 0; f < 10; f++) {
-      const efc = document.getElementById(`efc${li}_${f}`);
-      if (efc) paintToCanvas(efc, data, H, W, f);
-    }
+    const H = data.length, W = data[0].length, C = data[0][0].length;
+    const f = Math.min(selFilter, C - 1);
+    paintToCanvas(document.getElementById(`efc${li}`), data, H, W, f);
+    document.getElementById(`efcinf${li}`).textContent = `Filter ${f}`;
   }
 }
 
@@ -511,10 +497,12 @@ function updateKernel() {
 
 function updateTopPanels() {
   convLayers.forEach((_, li) => {
+    if (!expanded[li] || !fmCache[li]) return;
     const data = fmCache[li];
-    if (!data) return;
-    const f = Math.min(selFilter, data[0][0].length - 1);
-    paintToCanvas(document.getElementById(`pc${li}`), data, data.length, data[0].length, f);
+    const H = data.length, W = data[0].length, C = data[0][0].length;
+    const f = Math.min(selFilter, C - 1);
+    paintToCanvas(document.getElementById(`efc${li}`), data, H, W, f);
+    document.getElementById(`efcinf${li}`).textContent = `Filter ${f}`;
   });
 }
 
@@ -580,14 +568,14 @@ async function runCustomForward() {
     const H = data.length, W = data[0].length, C = data[0][0].length;
     document.getElementById(`pinf${li}`).textContent = `${H}×${W} · ${C} ch`;
 
-    const f = Math.min(selFilter, C - 1);
-    paintToCanvas(document.getElementById(`pc${li}`), data, H, W, f);
+    // Main canvas: average across all filters
+    paintAvgToCanvas(document.getElementById(`pc${li}`), data, H, W, C);
 
+    // Expanded canvas: selected filter only
     if (expanded[li]) {
-      for (let fv = 0; fv < Math.min(C, 10); fv++) {
-        const efc = document.getElementById(`efc${li}_${fv}`);
-        if (efc) paintToCanvas(efc, data, H, W, fv);
-      }
+      const f = Math.min(selFilter, C - 1);
+      paintToCanvas(document.getElementById(`efc${li}`), data, H, W, f);
+      document.getElementById(`efcinf${li}`).textContent = `Filter ${f}`;
     }
 
     if (poolAfter) {
@@ -640,6 +628,35 @@ async function runCustomPrediction(x) {
 }
 
 // ── Draw helpers ──────────────────────────────────────────────────────────────
+function paintAvgToCanvas(canvas, data, H, W, C) {
+  if (!canvas) return;
+  let mn = 1e9, mx = -1e9;
+  const avg = [];
+  for (let y = 0; y < H; y++) {
+    avg.push([]);
+    for (let x = 0; x < W; x++) {
+      let s = 0;
+      for (let c = 0; c < C; c++) s += data[y][x][c];
+      const v = s / C;
+      if (v < mn) mn = v;
+      if (v > mx) mx = v;
+      avg[y].push(v);
+    }
+  }
+  const tmp = document.createElement('canvas');
+  tmp.width = W; tmp.height = H;
+  const tctx = tmp.getContext('2d');
+  const id   = tctx.createImageData(W, H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const pi = (y * W + x) * 4;
+    const v  = nrm(avg[y][x], mn, mx);
+    id.data[pi] = id.data[pi+1] = id.data[pi+2] = v;
+    id.data[pi+3] = 255;
+  }
+  tctx.putImageData(id, 0, 0);
+  canvas.getContext('2d').drawImage(tmp, 0, 0, canvas.width, canvas.height);
+}
+
 function paintToCanvas(canvas, data, H, W, f) {
   if (!canvas) return;
   let mn = 1e9, mx = -1e9;
