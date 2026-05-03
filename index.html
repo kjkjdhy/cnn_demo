@@ -15,10 +15,33 @@
     .main { padding: 0 16px 24px; display: flex; flex-direction: column; gap: 12px; }
     .card { background: white; border-radius: 10px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 
+    /* ── Top card toolbar ── */
+    .top-toolbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .rf-hint { font-size: 10px; color: #94a3b8; }
+    .play-btn {
+      font-size: 11px; padding: 5px 16px;
+      border: none; border-radius: 6px;
+      background: #3b82f6; color: white; cursor: pointer; font-weight: 600;
+      white-space: nowrap;
+    }
+    .play-btn:hover    { background: #2563eb; }
+    .play-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    /* Play highlight: blue glow on pipe-col or pred-panel */
+    .play-hl {
+      background: #eff6ff !important;
+      border-radius: 8px;
+      box-shadow: 0 0 0 2px #3b82f6, 0 0 14px rgba(59,130,246,.25);
+      transition: box-shadow .15s;
+    }
+
     /* ── Top section ── */
     .top-section { display: flex; align-items: flex-start; }
     .pipeline { flex: 1; min-width: 0; display: flex; align-items: flex-start; }
-    .pipe-col  { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+    .pipe-col  { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; border-radius: 8px; padding: 2px; }
     .pipe-label {
       font-size: 12px; font-weight: 600; color: #64748b;
       margin-bottom: 6px; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
@@ -29,6 +52,7 @@
       border-radius: 5px; image-rendering: pixelated;
       background: #f1f5f9; border: 1px solid #e2e8f0;
     }
+    .pipe-canvas.clickable { cursor: crosshair; }
     .pipe-info { font-size: 9px; color: #94a3b8; margin-top: 4px; text-align: center; }
     .expand-btn {
       margin-top: 5px; font-size: 10px; padding: 2px 10px;
@@ -45,7 +69,7 @@
     .pool-sep-txt   { font-size: 7.5px; color: #94a3b8; writing-mode: vertical-rl; padding: 3px 0; white-space: nowrap; }
     .pool-sep-line2 { width: 1px; flex: 1; min-height: 14px; background: #e2e8f0; }
     .pred-divider { width: 1px; background: #f1f5f9; flex-shrink: 0; margin: 0 14px; align-self: stretch; }
-    .pred-panel { width: 185px; flex-shrink: 0; }
+    .pred-panel { width: 185px; flex-shrink: 0; border-radius: 8px; padding: 4px 6px; }
     .ctrl-title { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 10px; }
     .pred-row   { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
     .pred-name  { font-size: 10px; color: #475569; width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
@@ -53,6 +77,15 @@
     .pred-bar-fill { height: 100%; border-radius: 999px; background: #93c5fd; transition: width .3s; }
     .pred-bar-fill.top { background: #2563eb; }
     .pred-pct { font-size: 9px; color: #64748b; width: 30px; text-align: right; flex-shrink: 0; }
+
+    /* ── RF info bar ── */
+    .rf-info {
+      font-size: 10px; color: #2563eb; background: #eff6ff;
+      border: 1px solid #bfdbfe; border-radius: 5px;
+      padding: 4px 10px; margin-bottom: 10px;
+      display: none;
+    }
+    .rf-info.visible { display: block; }
 
     /* ── Bottom 2-col ── */
     .bottom-row { display: flex; gap: 12px; align-items: flex-start; }
@@ -121,10 +154,8 @@
     .action-btn:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
     .action-btn.danger:hover { border-color: #ef4444; color: #dc2626; background: #fef2f2; }
 
-    /* All-kernels grid */
     .all-kernels { display: flex; flex-wrap: wrap; gap: 14px; }
 
-    /* Individual kernel block */
     .kern-block {
       display: flex; flex-direction: column; align-items: center; gap: 5px;
       padding: 6px; border-radius: 8px; border: 2px solid transparent;
@@ -142,38 +173,27 @@
     .kern-block.sel      .kern-block-label { color: #2563eb; }
     .kern-block.modified .kern-block-label { color: #b45309; }
 
-    /* Preset dropdown inside each kernel block */
     .kern-preset {
       font-size: 9px; padding: 2px 4px;
       border: 1px solid #e2e8f0; border-radius: 4px;
       background: white; color: #475569; cursor: pointer;
-      width: 132px; /* match kern-mini width */
-      outline: none;
+      width: 132px; outline: none;
     }
     .kern-preset:focus { border-color: #3b82f6; }
     .kern-preset.is-preset { border-color: #8b5cf6; color: #6d28d9; background: #f5f3ff; }
     .kern-preset.is-custom { border-color: #f59e0b; color: #b45309; background: #fffbeb; }
 
-    /* 3×3 mini kernel grid */
-    .kern-mini {
-      display: grid;
-      grid-template-columns: repeat(3, 42px);
-      gap: 3px;
-    }
+    .kern-mini { display: grid; grid-template-columns: repeat(3, 42px); gap: 3px; }
 
     .kern-cell {
-      width: 42px; height: 42px;
-      border-radius: 5px;
+      width: 42px; height: 42px; border-radius: 5px;
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; font-weight: 700; color: #1e293b;
       cursor: text; outline: none;
       user-select: text; -webkit-user-select: text;
       transition: box-shadow .1s;
     }
-    .kern-cell:focus {
-      box-shadow: inset 0 0 0 2px rgba(59,130,246,.7);
-      z-index: 1;
-    }
+    .kern-cell:focus { box-shadow: inset 0 0 0 2px rgba(59,130,246,.7); z-index: 1; }
 
     .dim-txt { font-size: 11px; color: #94a3b8; }
   </style>
@@ -184,18 +204,26 @@
 <div class="status-bar" id="statusBar">Loading model…</div>
 
 <div class="main">
-  <div class="card top-section">
-    <div class="pipeline" id="pipeline"></div>
-    <div class="pred-divider"></div>
-    <div class="pred-panel">
-      <div class="ctrl-title">Prediction</div>
-      <div id="predBars"><span class="dim-txt">—</span></div>
+  <div class="card">
+    <!-- Toolbar: hint + play button -->
+    <div class="top-toolbar">
+      <span class="rf-hint">Click any feature map to highlight its receptive field on the input image</span>
+      <button id="playBtn" class="play-btn" onclick="playForwardPass()">▶ Play Forward Pass</button>
+    </div>
+    <div id="rfInfo" class="rf-info"></div>
+    <!-- Pipeline -->
+    <div class="top-section">
+      <div class="pipeline" id="pipeline"></div>
+      <div class="pred-divider"></div>
+      <div class="pred-panel" id="predPanel">
+        <div class="ctrl-title">Prediction</div>
+        <div id="predBars"><span class="dim-txt">—</span></div>
+      </div>
     </div>
   </div>
 
   <div class="bottom-row">
 
-    <!-- Left: images + layer config -->
     <div class="card left-ctrl">
       <div class="ctrl-title">Upload Image</div>
       <div class="upload-row">
@@ -205,15 +233,12 @@
       </div>
       <div class="img-sec-lbl">Example Images</div>
       <div class="img-grid" id="imgGrid"></div>
-
       <div class="section-sep"></div>
-
       <div class="ctrl-title">Edit Layer</div>
       <div class="layer-tabs" id="layerTabs"></div>
       <div id="cfgRows"></div>
     </div>
 
-    <!-- Right: all kernel weights for selected layer -->
     <div class="card right-ctrl">
       <div class="k-header">
         <div class="k-layer-info" id="kLayerInfo">—</div>
@@ -258,12 +283,10 @@ const DEFAULT_PARAMS = [
 
 // ── Preset kernels ────────────────────────────────────────────────────────────
 const PRESET_KERNELS = {
-  h_edge:   [[-1,-2,-1],[ 0, 0, 0],[ 1, 2, 1]],   // horizontal edge (Sobel)
-  v_edge:   [[-1, 0, 1],[-2, 0, 2],[-1, 0, 1]],   // vertical edge (Sobel)
-  diag_edge:[[ 0, 1, 2],[-1, 0, 1],[-2,-1, 0]],   // diagonal edge
-  sharpen:  [[ 0,-1, 0],[-1, 5,-1],[ 0,-1, 0]],   // sharpen / color contrast
-  blur:     [[.11,.11,.11],[.11,.11,.11],[.11,.11,.11]], // average blur
-  emboss:   [[-2,-1, 0],[-1, 1, 1],[ 0, 1, 2]],   // emboss
+  h_edge:   [[-1,-2,-1],[ 0, 0, 0],[ 1, 2, 1]],
+  v_edge:   [[-1, 0, 1],[-2, 0, 2],[-1, 0, 1]],
+  diag_edge:[[ 0, 1, 2],[-1, 0, 1],[-2,-1, 0]],
+  sharpen:  [[ 0,-1, 0],[-1, 5,-1],[ 0,-1, 0]],
 };
 const PRESET_LIST = [
   { key:'pretrained', label:'Pretrained' },
@@ -274,20 +297,26 @@ const PRESET_LIST = [
   { key:'custom',     label:'Custom' },
 ];
 
+// ── Receptive field config (approximate, hardcoded for default params) ────────
+// RF size in input pixels for each layer; stride/offset for center mapping
+const RF_SIZES   = [3, 7, 13, 19];          // Layer 1-4
+const FM_STRIDES = [1, 1,  2,  2];          // accumulated stride from input to each layer's output
+const FM_OFFSETS = [1, 2,  4,  6];          // pixel offset from valid-padding convolutions
+
 let model        = null;
 let convLayers   = [];
 let flattenLayer = null;
 let denseLayer   = null;
 let imgTensor    = null;
+let inputImageData = null;  // snapshot of input canvas pixels for RF restore
 let fmCache      = [];
 let selLayer     = 0;
 let selFilter    = 0;
 let expanded     = [false,false,false,false];
 let layerParams  = DEFAULT_PARAMS.map(p=>({...p}));
-// Per (layer, filter): null = pretrained, or [[r0c0..],[r1c0..],[r2c0..]]
 let kernelOverrides = Array.from({length:4}, ()=>Array.from({length:10}, ()=>null));
-// Tracks which preset key is selected per (layer, filter)
 let kernelPresetSel = Array.from({length:4}, ()=>Array(10).fill('pretrained'));
+let playTimer    = null;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
@@ -318,7 +347,7 @@ async function init() {
     selectLayer(0);
     await loadImg(0);
     await run();
-    setStatus('Tiny VGG · 4 conv layers · 10 filters each · use dropdown to apply preset kernels');
+    setStatus('Tiny VGG · 4 conv layers · 10 filters each · click feature maps to see receptive field');
   } catch(e) {
     setStatus('Error: '+e.message);
     console.error(e);
@@ -332,6 +361,7 @@ function buildPipeline() {
 
   const ic = document.createElement('div');
   ic.className = 'pipe-col';
+  ic.id = 'pcolinput';
   ic.innerHTML = `<div class="pipe-label">Input</div>
     <canvas id="inputCanvas" class="pipe-canvas" width="64" height="64"></canvas>
     <div class="pipe-info">64×64 · 3 ch</div>`;
@@ -355,6 +385,7 @@ function buildPipeline() {
 function makeLayerCol(li) {
   const col = document.createElement('div');
   col.className = 'pipe-col';
+  col.id = `pcol${li}`;
 
   const lbl = document.createElement('div');
   lbl.className = 'pipe-label'+(li===selLayer?' sel':'');
@@ -362,8 +393,10 @@ function makeLayerCol(li) {
   col.appendChild(lbl);
 
   const c = document.createElement('canvas');
-  c.className = 'pipe-canvas'; c.id = `pc${li}`;
+  c.className = 'pipe-canvas clickable'; c.id = `pc${li}`;
   c.width = 60; c.height = 60;
+  c.title = `Click to see receptive field · ${LN[li]}`;
+  c.addEventListener('click', e => onFmClick(li, false, e));
   col.appendChild(c);
 
   const inf = document.createElement('div');
@@ -379,8 +412,10 @@ function makeLayerCol(li) {
   const sect = document.createElement('div');
   sect.className = 'expand-sect'; sect.id = `esect${li}`;
   const efc = document.createElement('canvas');
-  efc.className = 'pipe-canvas'; efc.id = `efc${li}`;
+  efc.className = 'pipe-canvas clickable'; efc.id = `efc${li}`;
   efc.width = 60; efc.height = 60;
+  efc.title = `Click to see receptive field · ${LN[li]}`;
+  efc.addEventListener('click', e => onFmClick(li, true, e));
   const einf = document.createElement('div');
   einf.className = 'pipe-info'; einf.id = `efcinf${li}`;
   einf.textContent = `Filter ${selFilter}`;
@@ -403,6 +438,112 @@ function toggleExpand(li) {
     paintToCanvas(document.getElementById(`efc${li}`), data, data.length, data[0].length, f);
     document.getElementById(`efcinf${li}`).textContent = `Filter ${f}`;
   }
+}
+
+// ── Receptive Field ───────────────────────────────────────────────────────────
+function onFmClick(li, isExpanded, e) {
+  if (!fmCache[li]) return;
+  const canvas = e.currentTarget;
+  const rect   = canvas.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+
+  // Repaint canvas to clear any old dot, then draw fresh
+  const data = fmCache[li];
+  const H = data.length, W = data[0].length, C = data[0][0].length;
+  if (isExpanded) {
+    paintToCanvas(canvas, data, H, W, Math.min(selFilter, C-1));
+  } else {
+    paintAvgToCanvas(canvas, data, H, W, C);
+  }
+
+  // Draw red dot at click position (canvas internal coords)
+  const ctx = canvas.getContext('2d');
+  const px  = cx / rect.width  * canvas.width;
+  const py  = cy / rect.height * canvas.height;
+  const r   = Math.max(2.5, canvas.width * 0.065);
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(px, py, r, 0, Math.PI * 2);
+  ctx.fillStyle   = 'rgba(239,68,68,0.85)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth   = 1.5;
+  ctx.stroke();
+  ctx.restore();
+
+  // Map click → feature map pixel → input center
+  const nx  = cx / rect.width;
+  const ny  = cy / rect.height;
+  const fmX = Math.round(nx * (W - 1));
+  const fmY = Math.round(ny * (H - 1));
+
+  drawInputRF(li, fmX, fmY);
+}
+
+function drawInputRF(li, fmX, fmY) {
+  const canvas = document.getElementById('inputCanvas');
+  const ctx    = canvas.getContext('2d');
+
+  // Restore clean input image first
+  if (inputImageData) ctx.putImageData(inputImageData, 0, 0);
+
+  // Center in input pixel space using stride/offset for default params
+  const inCX = fmX * FM_STRIDES[li] + FM_OFFSETS[li];
+  const inCY = fmY * FM_STRIDES[li] + FM_OFFSETS[li];
+  const half = Math.floor(RF_SIZES[li] / 2);
+  const x1   = Math.max(0, inCX - half);
+  const y1   = Math.max(0, inCY - half);
+  const x2   = Math.min(64, inCX + half + 1);
+  const y2   = Math.min(64, inCY + half + 1);
+
+  ctx.save();
+  ctx.fillStyle   = 'rgba(239,68,68,0.28)';
+  ctx.fillRect(x1, y1, x2-x1, y2-y1);
+  ctx.strokeStyle = 'rgba(239,68,68,0.95)';
+  ctx.lineWidth   = 0.8;
+  ctx.strokeRect(x1+0.5, y1+0.5, x2-x1-1, y2-y1-1);
+  ctx.restore();
+
+  // Show info bar
+  const info = document.getElementById('rfInfo');
+  info.textContent = `${LN[li]} · clicked pixel sees a ${RF_SIZES[li]}×${RF_SIZES[li]} region of the input image`;
+  info.classList.add('visible');
+}
+
+function clearRFOverlay() {
+  if (inputImageData) {
+    document.getElementById('inputCanvas').getContext('2d').putImageData(inputImageData, 0, 0);
+  }
+  document.getElementById('rfInfo').classList.remove('visible');
+}
+
+// ── Play Forward Pass ─────────────────────────────────────────────────────────
+function playForwardPass() {
+  if (playTimer) return;
+  const btn = document.getElementById('playBtn');
+  btn.disabled = true;
+  btn.textContent = '⏸ Playing…';
+
+  const ids = ['pcolinput', 'pcol0', 'pcol1', 'pcol2', 'pcol3', 'predPanel'];
+  let i = 0;
+
+  const step = () => {
+    if (i > 0) document.getElementById(ids[i-1])?.classList.remove('play-hl');
+    if (i < ids.length) {
+      document.getElementById(ids[i])?.classList.add('play-hl');
+      i++;
+      playTimer = setTimeout(step, 750);
+    } else {
+      playTimer = setTimeout(() => {
+        document.getElementById(ids[ids.length-1])?.classList.remove('play-hl');
+        btn.disabled = false;
+        btn.textContent = '▶ Play Forward Pass';
+        playTimer = null;
+      }, 750);
+    }
+  };
+  step();
 }
 
 // ── Controls ──────────────────────────────────────────────────────────────────
@@ -497,17 +638,16 @@ function resetLayerParams() {
 // ── Preset application ────────────────────────────────────────────────────────
 function applyPreset(fi, key) {
   kernelPresetSel[selLayer][fi] = key;
-  if (key === 'pretrained' || key === 'custom') {
-    // pretrained: clear override; custom: leave current override as-is
-    if (key === 'pretrained') kernelOverrides[selLayer][fi] = null;
-  } else {
+  if (key === 'pretrained') {
+    kernelOverrides[selLayer][fi] = null;
+  } else if (key !== 'custom') {
     kernelOverrides[selLayer][fi] = PRESET_KERNELS[key].map(row => [...row]);
   }
   renderAllKernels();
   run();
 }
 
-// ── Kernel display (all filters, editable) ────────────────────────────────────
+// ── Kernel display ────────────────────────────────────────────────────────────
 function getKernelValsFor(li, fi) {
   if (kernelOverrides[li][fi]) return kernelOverrides[li][fi];
   const arr = convLayers[li].getWeights()[0].arraySync();
@@ -556,30 +696,26 @@ function renderAllKernels() {
     block.className = 'kern-block'+(fi===selFilter?' sel':'')+(isOvr?' modified':'');
     block.dataset.fi = fi;
 
-    // Label row
     const label = document.createElement('div');
     label.className = 'kern-block-label';
     label.textContent = `Filter ${fi}`;
     block.appendChild(label);
 
-    // Preset dropdown
     const sel = document.createElement('select');
-    sel.className = 'kern-preset' + (presetKey==='pretrained'?'' : presetKey==='custom'?' is-custom':' is-preset');
+    sel.className = 'kern-preset'+(presetKey==='pretrained'?'':presetKey==='custom'?' is-custom':' is-preset');
     PRESET_LIST.forEach(({key, label: lbl}) => {
       const opt = document.createElement('option');
-      opt.value = key;
-      opt.textContent = lbl;
+      opt.value = key; opt.textContent = lbl;
       if (key === presetKey) opt.selected = true;
       sel.appendChild(opt);
     });
-    sel.addEventListener('mousedown', e => e.stopPropagation()); // don't select block
+    sel.addEventListener('mousedown', e => e.stopPropagation());
     sel.addEventListener('change', function(e) {
       e.stopPropagation();
       applyPreset(fi, this.value);
     });
     block.appendChild(sel);
 
-    // 3×3 grid
     const grid = document.createElement('div');
     grid.className = 'kern-mini';
 
@@ -592,19 +728,14 @@ function renderAllKernels() {
         cell.contentEditable = 'true';
         cell.spellcheck = false;
         cell.textContent = v.toFixed(2);
-        cell.dataset.fi = fi;
-        cell.dataset.r  = r;
-        cell.dataset.c  = c;
+        cell.dataset.fi = fi; cell.dataset.r = r; cell.dataset.c = c;
 
-        const capturedFi = fi;
-        const capturedV  = v;
+        const capturedFi = fi, capturedV = v;
 
         cell.addEventListener('focus', function() {
           if (selFilter !== capturedFi) {
             selFilter = capturedFi;
-            document.querySelectorAll('.kern-block').forEach((b,i) => {
-              b.classList.toggle('sel', i===capturedFi);
-            });
+            document.querySelectorAll('.kern-block').forEach((b,i) => b.classList.toggle('sel', i===capturedFi));
             updateTopPanels();
           }
           setTimeout(()=>{
@@ -614,12 +745,10 @@ function renderAllKernels() {
             s.removeAllRanges(); s.addRange(range);
           }, 0);
         });
-
         cell.addEventListener('keydown', function(e) {
           if (e.key==='Enter')  { e.preventDefault(); this.blur(); }
           if (e.key==='Escape') { this.textContent = capturedV.toFixed(2); this.blur(); }
         });
-
         cell.addEventListener('blur', function() {
           const raw = this.textContent.trim().replace('−','-').replace(',','.');
           const newVal = parseFloat(raw);
@@ -639,9 +768,7 @@ function renderAllKernels() {
       if (e.target.tagName === 'SELECT') return;
       e.preventDefault();
       selFilter = fi;
-      document.querySelectorAll('.kern-block').forEach((b,i) => {
-        b.classList.toggle('sel', i===fi);
-      });
+      document.querySelectorAll('.kern-block').forEach((b,i) => b.classList.toggle('sel', i===fi));
       updateTopPanels();
     });
 
@@ -654,21 +781,21 @@ function onKernelEdit(fi, r, c, val) {
     kernelOverrides[selLayer][fi] = getKernelValsFor(selLayer, fi).map(row=>[...row]);
   }
   kernelOverrides[selLayer][fi][r][c] = val;
-  kernelPresetSel[selLayer][fi] = 'custom'; // manual edit → mark as custom
+  kernelPresetSel[selLayer][fi] = 'custom';
   renderAllKernels();
   run();
 }
 
 function resetKernel() {
-  kernelOverrides[selLayer][selFilter] = null;
+  kernelOverrides[selLayer][selFilter]  = null;
   kernelPresetSel[selLayer][selFilter] = 'pretrained';
   renderAllKernels();
   run();
 }
 
 function resetAllKernels() {
-  kernelOverrides  = Array.from({length:4},()=>Array.from({length:10},()=>null));
-  kernelPresetSel  = Array.from({length:4},()=>Array(10).fill('pretrained'));
+  kernelOverrides = Array.from({length:4},()=>Array.from({length:10},()=>null));
+  kernelPresetSel = Array.from({length:4},()=>Array(10).fill('pretrained'));
   renderAllKernels();
   run();
 }
@@ -710,6 +837,8 @@ async function loadURL(src, revoke) {
     img.onload=()=>{
       const c=document.getElementById('inputCanvas');
       c.getContext('2d').drawImage(img,0,0,64,64);
+      // Snapshot pixels so we can restore them when drawing RF overlay
+      inputImageData = c.getContext('2d').getImageData(0,0,64,64);
       if(imgTensor) imgTensor.dispose();
       imgTensor=tf.tidy(()=>tf.browser.fromPixels(c).toFloat().div(255).expandDims(0));
       if(revoke) URL.revokeObjectURL(src);
@@ -722,6 +851,7 @@ async function loadURL(src, revoke) {
 
 // ── Run ───────────────────────────────────────────────────────────────────────
 async function run() {
+  clearRFOverlay(); // clear RF box whenever params/image change
   if (!imgTensor||!model) return;
   const finalX = await runCustomForward();
   if (finalX) { await runCustomPrediction(finalX); finalX.dispose(); }
