@@ -574,8 +574,9 @@ function renderAllKernels() {
 
     block.appendChild(grid);
 
-    // Clicking the block label or block itself selects it (not the cells)
-    label.addEventListener('mousedown', e => {
+    // Clicking anywhere on the block (except inside a cell) selects this filter
+    block.addEventListener('mousedown', e => {
+      if (e.target.classList.contains('kern-cell')) return;
       e.preventDefault();
       selFilter = fi;
       document.querySelectorAll('.kern-block').forEach((b,i) => {
