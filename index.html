@@ -589,7 +589,7 @@
 
     (async () => {
       try {
-        mobileNetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
+        mobileNetModel = await mobilenet.load({ version: 1, alpha: 1.0 });
         await extractAllFilters();
         const st = document.getElementById('modelStatus');
         if (st) { st.textContent = 'MobileNet ready ✓'; setTimeout(() => { if (st) st.textContent = ''; }, 3000); }
