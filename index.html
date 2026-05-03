@@ -9,154 +9,135 @@
     html, body { width: 100%; min-height: 100vh; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #e8ecf0; color: #1e293b; }
 
-    /* ── Header ── */
-    .page-title {
-      text-align: center;
-      padding: 18px 0 10px;
-      font-size: 22px;
-      font-weight: 700;
-      color: #1e293b;
-    }
-    .status-bar {
-      text-align: center;
-      font-size: 11px;
-      color: #94a3b8;
-      margin-bottom: 12px;
-    }
+    .page-title { text-align: center; padding: 18px 0 6px; font-size: 22px; font-weight: 700; }
+    .status-bar { text-align: center; font-size: 11px; color: #94a3b8; margin-bottom: 12px; }
 
-    /* ── Cards ── */
     .main { padding: 0 16px 24px; display: flex; flex-direction: column; gap: 12px; }
     .card { background: white; border-radius: 10px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 
     /* ── Top section ── */
     .top-section { display: flex; align-items: flex-start; gap: 0; }
 
-    /* Pipeline */
-    .pipeline {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      align-items: flex-start;
-    }
-    .pipe-col {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+    .pipeline { flex: 1; min-width: 0; display: flex; align-items: flex-start; }
+    .pipe-col  { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+
     .pipe-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #64748b;
-      margin-bottom: 6px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      white-space: nowrap;
+      font-size: 12px; font-weight: 600; color: #64748b;
+      margin-bottom: 6px; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
     }
-    .pipe-label.sel {
-      background: #eff6ff;
-      border: 1px solid #bfdbfe;
-      color: #2563eb;
-    }
+    .pipe-label.sel { background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; }
     .pipe-canvas {
-      width: 100%;
-      aspect-ratio: 1;
-      display: block;
-      border-radius: 5px;
-      image-rendering: pixelated;
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
+      width: 100%; aspect-ratio: 1; display: block;
+      border-radius: 5px; image-rendering: pixelated;
+      background: #f1f5f9; border: 1px solid #e2e8f0;
     }
-    .pipe-info { font-size: 9px; color: #94a3b8; margin-top: 5px; text-align: center; }
+    .pipe-info { font-size: 9px; color: #94a3b8; margin-top: 4px; text-align: center; }
+
+    /* Expand button */
+    .expand-btn {
+      margin-top: 5px; font-size: 10px; padding: 2px 10px;
+      border: 1px solid #e2e8f0; border-radius: 4px;
+      background: white; color: #64748b; cursor: pointer;
+      transition: all .1s; white-space: nowrap;
+    }
+    .expand-btn:hover { border-color: #94a3b8; }
+    .expand-btn.open  { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
+
+    /* Expanded filter grid */
+    .expand-sect { display: none; width: 100%; margin-top: 6px; }
+    .expand-sect.open { display: block; }
+    .expand-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+    .expand-cell { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+    .expand-cell canvas {
+      width: 100%; aspect-ratio: 1; display: block;
+      image-rendering: pixelated; border-radius: 2px; background: #f1f5f9;
+    }
+    .expand-cell span { font-size: 7px; color: #94a3b8; }
 
     .pipe-arrow { flex-shrink: 0; padding: 0 4px; padding-top: 32px; color: #cbd5e1; font-size: 18px; }
 
-    .pool-sep {
-      flex-shrink: 0;
-      width: 28px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 24px;
-    }
-    .pool-sep-line { width: 1px; height: 16px; background: #e2e8f0; }
-    .pool-sep-txt  { font-size: 7.5px; color: #94a3b8; writing-mode: vertical-rl; padding: 3px 0; white-space: nowrap; }
-    .pool-sep-line2 { width: 1px; flex: 1; min-height: 16px; background: #e2e8f0; }
+    .pool-sep { flex-shrink: 0; width: 26px; display: flex; flex-direction: column; align-items: center; padding-top: 24px; }
+    .pool-sep-line  { width: 1px; height: 14px; background: #e2e8f0; }
+    .pool-sep-txt   { font-size: 7.5px; color: #94a3b8; writing-mode: vertical-rl; padding: 3px 0; white-space: nowrap; }
+    .pool-sep-line2 { width: 1px; flex: 1; min-height: 14px; background: #e2e8f0; }
 
-    /* Prediction panel */
+    /* Prediction */
     .pred-divider { width: 1px; background: #f1f5f9; flex-shrink: 0; margin: 0 14px; align-self: stretch; }
     .pred-panel { width: 185px; flex-shrink: 0; }
-    .ctrl-title  { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 10px; }
-    .pred-row    { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
-    .pred-name   { font-size: 10px; color: #475569; width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+    .ctrl-title { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 10px; }
+    .pred-row   { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+    .pred-name  { font-size: 10px; color: #475569; width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
     .pred-bar-bg { flex: 1; height: 10px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
     .pred-bar-fill { height: 100%; border-radius: 999px; background: #93c5fd; transition: width .3s; }
     .pred-bar-fill.top { background: #2563eb; }
-    .pred-pct    { font-size: 9px; color: #64748b; width: 30px; text-align: right; flex-shrink: 0; }
+    .pred-pct { font-size: 9px; color: #64748b; width: 30px; text-align: right; flex-shrink: 0; }
 
     /* ── Bottom 3-col ── */
     .bottom-row { display: flex; gap: 12px; align-items: flex-start; }
     .ctrl-col { flex: 1; min-width: 0; }
 
-    /* Col 1: Upload + images */
-    .upload-row  { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
-    .browse-btn  {
+    /* Col 1 */
+    .upload-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+    .browse-btn {
       font-size: 11px; padding: 4px 12px;
       border: 1px solid #e2e8f0; border-radius: 5px;
       background: white; cursor: pointer; color: #475569;
-      transition: border-color .1s;
     }
     .browse-btn:hover { border-color: #94a3b8; }
     #uploadInput { display: none; }
     #uploadName  { font-size: 10px; color: #94a3b8; }
     .img-sec-lbl { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
-    .img-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 3px;
-    }
+    .img-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
     .img-btn {
       font-size: 9px; padding: 4px 2px;
       border: 1px solid #e2e8f0; border-radius: 4px;
       background: white; cursor: pointer; color: #475569;
       text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      transition: all .1s;
     }
     .img-btn:hover  { border-color: #94a3b8; }
     .img-btn.active { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
 
-    /* Col 2: Layer config */
-    .layer-tabs  { display: flex; gap: 3px; margin-bottom: 12px; }
+    /* Col 2 */
+    .layer-tabs { display: flex; gap: 3px; margin-bottom: 12px; }
     .layer-tab {
-      font-size: 11px; padding: 4px 11px;
+      font-size: 11px; padding: 4px 10px;
       border: 1px solid #e2e8f0; border-radius: 5px;
       background: white; color: #64748b; cursor: pointer;
-      transition: all .1s;
     }
     .layer-tab.active { border-color: #3b82f6; color: #2563eb; background: #eff6ff; font-weight: 600; }
     .cfg-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; }
     .cfg-k   { color: #64748b; }
     .cfg-v   { color: #1e293b; font-weight: 600; font-family: monospace; }
+    .cfg-sel {
+      font-size: 11px; padding: 3px 6px;
+      border: 1px solid #e2e8f0; border-radius: 4px;
+      background: white; color: #1e293b; cursor: pointer;
+      font-family: monospace; font-weight: 600;
+    }
+    .cfg-sel:focus { outline: none; border-color: #3b82f6; }
+    .cfg-sel.modified { border-color: #f59e0b; color: #b45309; background: #fffbeb; }
+    .reset-btn {
+      margin-top: 4px; font-size: 10px; padding: 3px 10px;
+      border: 1px solid #e2e8f0; border-radius: 4px;
+      background: white; color: #64748b; cursor: pointer;
+    }
+    .reset-btn:hover { border-color: #94a3b8; }
 
-    /* Col 3: Kernel */
-    .k-header    { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    /* Col 3 */
+    .k-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
     .k-title-txt { font-size: 12px; color: #64748b; }
-    .fnav        { display: flex; align-items: center; gap: 5px; }
+    .fnav { display: flex; align-items: center; gap: 5px; }
     .fnav-btn {
       width: 22px; height: 22px;
       border: 1px solid #e2e8f0; border-radius: 4px;
       background: white; color: #64748b; cursor: pointer; font-size: 14px;
       display: flex; align-items: center; justify-content: center;
-      transition: all .1s;
     }
     .fnav-btn:hover { border-color: #94a3b8; }
     #fLabel { font-size: 11px; font-weight: 600; color: #1e293b; min-width: 56px; text-align: center; }
     .k-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 3px;
-      margin-bottom: 10px;
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 3px; margin-bottom: 10px;
     }
     .k-cell {
       height: 40px; border-radius: 4px;
@@ -164,12 +145,11 @@
       font-size: 10px; font-weight: 700; color: white;
       text-shadow: 0 1px 2px rgba(0,0,0,.3);
     }
-    .layer-detail { font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.5; }
+    .layer-detail { font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.6; }
     .refresh-btn {
       width: 100%; padding: 7px;
       border: 1px solid #e2e8f0; border-radius: 6px;
       background: white; color: #475569; cursor: pointer; font-size: 12px; font-weight: 600;
-      transition: all .12s;
     }
     .refresh-btn:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
 
@@ -182,8 +162,6 @@
 <div class="status-bar" id="statusBar">Loading model…</div>
 
 <div class="main">
-
-  <!-- Top: pipeline + prediction -->
   <div class="card top-section">
     <div class="pipeline" id="pipeline"></div>
     <div class="pred-divider"></div>
@@ -193,10 +171,7 @@
     </div>
   </div>
 
-  <!-- Bottom: 3 columns -->
   <div class="bottom-row">
-
-    <!-- Upload + example images -->
     <div class="card ctrl-col">
       <div class="ctrl-title">Upload Image</div>
       <div class="upload-row">
@@ -208,14 +183,12 @@
       <div class="img-grid" id="imgGrid"></div>
     </div>
 
-    <!-- Layer config -->
     <div class="card ctrl-col">
       <div class="ctrl-title">Edit Layer</div>
       <div class="layer-tabs" id="layerTabs"></div>
-      <div id="cfgRows"><span class="dim-txt">—</span></div>
+      <div id="cfgRows"></div>
     </div>
 
-    <!-- Kernel display -->
     <div class="card ctrl-col">
       <div class="k-header">
         <div class="k-title-txt" id="kTitle">—</div>
@@ -229,7 +202,6 @@
       <div class="layer-detail" id="layerDetail">—</div>
       <button class="refresh-btn" id="refreshBtn">▶ Refresh</button>
     </div>
-
   </div>
 </div>
 
@@ -251,15 +223,24 @@ const IMAGES = [
   {label:'Orange',      file:'orange_1.jpeg'},
   {label:'Sport Car',   file:'car_1.jpeg'},
 ];
-const LN = ['Conv 1-1','Conv 1-2','Conv 2-1','Conv 2-2'];
+const LN = ['Layer 1','Layer 2','Layer 3','Layer 4'];
+
+// Default params from Tiny VGG: stride=1, valid padding, MaxPool after layers 2 and 4
+const DEFAULT_PARAMS = [
+  { stride: 1, padding: 'valid', poolAfter: false },
+  { stride: 1, padding: 'valid', poolAfter: true  },
+  { stride: 1, padding: 'valid', poolAfter: false },
+  { stride: 1, padding: 'valid', poolAfter: true  },
+];
 
 let model      = null;
-let intermMdls = [];
 let convLayers = [];
 let imgTensor  = null;
-let fmCache    = [];   // [li] → [H][W][C]
+let fmCache    = [];
 let selLayer   = 0;
 let selFilter  = 0;
+let expanded   = [false, false, false, false];
+let layerParams = DEFAULT_PARAMS.map(p => ({...p}));
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
@@ -267,15 +248,11 @@ async function init() {
     setStatus('Loading model…');
     model = await tf.loadLayersModel(MODEL_URL);
 
-    const reluOuts = [];
     for (let i = 1; i < model.layers.length; i++) {
       const l = model.layers[i], p = model.layers[i - 1];
-      if (l.getClassName() === 'Activation' && p.getClassName() === 'Conv2D') {
-        reluOuts.push(l.output);
+      if (l.getClassName() === 'Activation' && p.getClassName() === 'Conv2D')
         convLayers.push(p);
-      }
     }
-    intermMdls = reluOuts.map(o => tf.model({ inputs: model.inputs, outputs: o }));
 
     buildPipeline();
     buildLayerTabs();
@@ -283,88 +260,119 @@ async function init() {
 
     document.getElementById('fPrev').onclick = () => { if (selFilter > 0) { selFilter--; updateKernel(); updateTopPanels(); } };
     document.getElementById('fNext').onclick = () => { if (selFilter < 9) { selFilter++; updateKernel(); updateTopPanels(); } };
-    document.getElementById('refreshBtn').onclick = runPredict;
+    document.getElementById('refreshBtn').onclick = run;
     document.getElementById('uploadInput').addEventListener('change', async e => {
-      const f = e.target.files[0];
-      if (!f) return;
+      const f = e.target.files[0]; if (!f) return;
       document.getElementById('uploadName').textContent = f.name.slice(0, 16);
       document.querySelectorAll('.img-btn').forEach(b => b.classList.remove('active'));
-      const url = URL.createObjectURL(f);
-      await loadURL(url, true);
-      await runPredict();
+      await loadURL(URL.createObjectURL(f), true);
+      await run();
     });
 
     selectLayer(0);
     await loadImg(0);
-    await runPredict();
-    setStatus('Tiny VGG · 4 conv layers · 10 filters each · 10 classes · click an image to run');
+    await run();
+    setStatus('Tiny VGG · 4 conv layers · 10 filters each · 10 classes');
   } catch (e) {
     setStatus('Error: ' + e.message);
     console.error(e);
   }
 }
 
-// ── Build pipeline ─────────────────────────────────────────────────────────────
+// ── Pipeline ──────────────────────────────────────────────────────────────────
 function buildPipeline() {
   const pl = document.getElementById('pipeline');
   pl.innerHTML = '';
 
   // Input column
-  const ic = mkCol(null);
-  ic.querySelector('.pipe-label').textContent = 'Input';
-  const cv = ic.querySelector('canvas');
-  cv.id = 'inputCanvas'; cv.width = 64; cv.height = 64;
-  ic.querySelector('.pipe-info').textContent = '64×64 · 3 ch';
+  const ic = document.createElement('div');
+  ic.className = 'pipe-col';
+  ic.innerHTML = `
+    <div class="pipe-label">Input</div>
+    <canvas id="inputCanvas" class="pipe-canvas" width="64" height="64"></canvas>
+    <div class="pipe-info">64×64 · 3 ch</div>`;
   pl.appendChild(ic);
 
   convLayers.forEach((_, li) => {
-    pl.appendChild(mkArrow());
+    const arrow = document.createElement('div');
+    arrow.className = 'pipe-arrow'; arrow.textContent = '→';
+    pl.appendChild(arrow);
 
     if (li === 2) {
       const sep = document.createElement('div');
       sep.className = 'pool-sep';
-      const l1 = document.createElement('div'); l1.className = 'pool-sep-line';
-      const tx = document.createElement('span'); tx.className = 'pool-sep-txt'; tx.textContent = 'MaxPool ÷2';
-      const l2 = document.createElement('div'); l2.className = 'pool-sep-line2';
-      sep.append(l1, tx, l2);
+      sep.innerHTML = '<div class="pool-sep-line"></div>'
+        + '<span class="pool-sep-txt">MaxPool ÷2</span>'
+        + '<div class="pool-sep-line2"></div>';
       pl.appendChild(sep);
     }
 
-    const col = mkCol(li);
-    pl.appendChild(col);
+    pl.appendChild(makeLayerCol(li));
   });
 }
 
-function mkCol(li) {
+function makeLayerCol(li) {
   const col = document.createElement('div');
   col.className = 'pipe-col';
 
   const lbl = document.createElement('div');
-  lbl.className = 'pipe-label' + (li !== null && li === selLayer ? ' sel' : '');
-  lbl.id = li !== null ? `plbl${li}` : '';
-  lbl.textContent = li !== null ? LN[li] : '';
+  lbl.className = 'pipe-label' + (li === selLayer ? ' sel' : '');
+  lbl.id = `plbl${li}`; lbl.textContent = LN[li];
   col.appendChild(lbl);
 
   const c = document.createElement('canvas');
-  c.className = 'pipe-canvas';
-  c.id = li !== null ? `pc${li}` : '';
+  c.className = 'pipe-canvas'; c.id = `pc${li}`;
   c.width = 60; c.height = 60;
   col.appendChild(c);
 
   const inf = document.createElement('div');
-  inf.className = 'pipe-info';
-  inf.id = li !== null ? `pinf${li}` : '';
-  inf.textContent = li !== null ? '—' : '';
+  inf.className = 'pipe-info'; inf.id = `pinf${li}`; inf.textContent = '—';
   col.appendChild(inf);
+
+  // Expand button
+  const btn = document.createElement('button');
+  btn.className = 'expand-btn'; btn.id = `ebtn${li}`;
+  btn.textContent = '▼ All filters';
+  btn.onclick = () => toggleExpand(li);
+  col.appendChild(btn);
+
+  // Expand section (10 filter canvases)
+  const sect = document.createElement('div');
+  sect.className = 'expand-sect'; sect.id = `esect${li}`;
+  const grid = document.createElement('div');
+  grid.className = 'expand-grid';
+  for (let f = 0; f < 10; f++) {
+    const cell = document.createElement('div');
+    cell.className = 'expand-cell';
+    const fc = document.createElement('canvas');
+    fc.id = `efc${li}_${f}`; fc.width = 30; fc.height = 30;
+    const sp = document.createElement('span');
+    sp.textContent = 'F' + f;
+    cell.append(fc, sp);
+    grid.appendChild(cell);
+  }
+  sect.appendChild(grid);
+  col.appendChild(sect);
 
   return col;
 }
 
-function mkArrow() {
-  const d = document.createElement('div');
-  d.className = 'pipe-arrow';
-  d.textContent = '→';
-  return d;
+function toggleExpand(li) {
+  expanded[li] = !expanded[li];
+  const sect = document.getElementById(`esect${li}`);
+  const btn  = document.getElementById(`ebtn${li}`);
+  sect.classList.toggle('open', expanded[li]);
+  btn.classList.toggle('open', expanded[li]);
+  btn.textContent = expanded[li] ? '▲ Collapse' : '▼ All filters';
+
+  if (expanded[li] && fmCache[li]) {
+    const data = fmCache[li];
+    const H = data.length, W = data[0].length;
+    for (let f = 0; f < 10; f++) {
+      const efc = document.getElementById(`efc${li}_${f}`);
+      if (efc) paintToCanvas(efc, data, H, W, f);
+    }
+  }
 }
 
 // ── Controls ──────────────────────────────────────────────────────────────────
@@ -373,8 +381,7 @@ function buildLayerTabs() {
   convLayers.forEach((_, li) => {
     const t = document.createElement('button');
     t.className = 'layer-tab' + (li === 0 ? ' active' : '');
-    t.textContent = String(li + 1);
-    t.title = LN[li];
+    t.textContent = LN[li];
     t.onclick = () => selectLayer(li);
     tabs.appendChild(t);
   });
@@ -386,14 +393,13 @@ function buildImgGrid() {
     const btn = document.createElement('button');
     btn.className = 'img-btn' + (i === 0 ? ' active' : '');
     btn.textContent = img.label;
-    btn.onclick = async () => { await loadImg(i); await runPredict(); };
+    btn.onclick = async () => { await loadImg(i); await run(); };
     grid.appendChild(btn);
   });
 }
 
 function selectLayer(li) {
-  selLayer  = li;
-  selFilter = 0;
+  selLayer = li; selFilter = 0;
   document.querySelectorAll('.layer-tab').forEach((t, i) => t.classList.toggle('active', i === li));
   convLayers.forEach((_, i) => {
     const lbl = document.getElementById(`plbl${i}`);
@@ -405,41 +411,70 @@ function selectLayer(li) {
 
 function updateLayerCfg() {
   const layer  = convLayers[selLayer];
-  const cfg    = layer.getConfig();
-  const wshp   = layer.getWeights()[0].shape; // [3,3,inC,outC]
+  const wshp   = layer.getWeights()[0].shape;
   const inC    = wshp[2], outC = wshp[3];
-  const ks     = Array.isArray(cfg.kernelSize) ? cfg.kernelSize : [cfg.kernelSize, cfg.kernelSize];
-  const stride = Array.isArray(cfg.strides) ? cfg.strides[0] : (cfg.strides || 1);
-  const pad    = cfg.padding || 'valid';
-  const poolInfo = (selLayer === 1 || selLayer === 3) ? 'MaxPool 2×2 ↓' : 'None';
+  const p      = layerParams[selLayer];
+  const def    = DEFAULT_PARAMS[selLayer];
   const fmInfo = fmCache[selLayer] ? `${fmCache[selLayer].length}×${fmCache[selLayer][0].length}` : '—';
 
-  const rows = [
-    ['Channels (in)',    inC],
-    ['Channels (out)',   outC],
-    ['Layers',          convLayers.length],
-    ['Kernel Size',     `${ks[0]} × ${ks[1]}`],
-    ['Stride',          stride],
-    ['Padding',         pad],
-    ['Pooling (after)', poolInfo],
-    ['Output size',     fmInfo],
-  ];
+  const isStrideDefault  = p.stride   === def.stride;
+  const isPadDefault     = p.padding  === def.padding;
+  const isPoolDefault    = p.poolAfter === def.poolAfter;
 
-  document.getElementById('cfgRows').innerHTML = rows.map(([k, v]) =>
-    `<div class="cfg-row"><span class="cfg-k">${k}</span><span class="cfg-v">${v}</span></div>`
-  ).join('');
+  document.getElementById('cfgRows').innerHTML = `
+    <div class="cfg-row"><span class="cfg-k">Channels (in)</span>  <span class="cfg-v">${inC}</span></div>
+    <div class="cfg-row"><span class="cfg-k">Channels (out)</span> <span class="cfg-v">${outC}</span></div>
+    <div class="cfg-row"><span class="cfg-k">Layers</span>         <span class="cfg-v">${convLayers.length} Layers</span></div>
+    <div class="cfg-row"><span class="cfg-k">Kernel Size</span>    <span class="cfg-v">3 × 3</span></div>
+    <div class="cfg-row">
+      <span class="cfg-k">Stride</span>
+      <select class="cfg-sel${isStrideDefault?'':' modified'}" id="strideCtrl" onchange="onParamChange('stride',this.value)">
+        <option value="1"${p.stride===1?' selected':''}>1</option>
+        <option value="2"${p.stride===2?' selected':''}>2</option>
+        <option value="3"${p.stride===3?' selected':''}>3</option>
+      </select>
+    </div>
+    <div class="cfg-row">
+      <span class="cfg-k">Padding</span>
+      <select class="cfg-sel${isPadDefault?'':' modified'}" id="paddingCtrl" onchange="onParamChange('padding',this.value)">
+        <option value="valid"${p.padding==='valid'?' selected':''}>valid</option>
+        <option value="same"${p.padding==='same'?' selected':''}>same</option>
+      </select>
+    </div>
+    <div class="cfg-row">
+      <span class="cfg-k">Pooling (after)</span>
+      <select class="cfg-sel${isPoolDefault?'':' modified'}" id="poolCtrl" onchange="onParamChange('poolAfter',this.value)">
+        <option value="none"${!p.poolAfter?' selected':''}>None</option>
+        <option value="max"${p.poolAfter?' selected':''}>MaxPool 2×2</option>
+      </select>
+    </div>
+    <div class="cfg-row"><span class="cfg-k">Output size</span>    <span class="cfg-v">${fmInfo}</span></div>
+    <button class="reset-btn" onclick="resetLayerParams()">↺ Reset to default</button>
+  `;
+}
+
+function onParamChange(param, value) {
+  if (param === 'stride')    layerParams[selLayer].stride   = parseInt(value);
+  if (param === 'padding')   layerParams[selLayer].padding  = value;
+  if (param === 'poolAfter') layerParams[selLayer].poolAfter = (value === 'max');
+  runCustomForward();
+}
+
+function resetLayerParams() {
+  layerParams[selLayer] = { ...DEFAULT_PARAMS[selLayer] };
+  updateLayerCfg();
+  runCustomForward();
 }
 
 function updateKernel() {
-  const layer  = convLayers[selLayer];
-  const arr    = layer.getWeights()[0].arraySync(); // [3,3,inC,outC]
-  const inC    = arr[0][0].length;
-  const f      = selFilter;
+  const layer = convLayers[selLayer];
+  const arr   = layer.getWeights()[0].arraySync();
+  const inC   = arr[0][0].length;
+  const f     = selFilter;
 
   document.getElementById('fLabel').textContent = `Filter ${f}`;
-  document.getElementById('kTitle').textContent = `${LN[selLayer]}`;
+  document.getElementById('kTitle').textContent = LN[selLayer];
 
-  // Best-magnitude input channel for grayscale display
   let bestC = 0, bestM = 0;
   for (let c = 0; c < inC; c++) {
     let m = 0;
@@ -451,7 +486,7 @@ function updateKernel() {
   const vals = [];
   for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++)
     vals.push(arr[y][x][bestC][f]);
-  const mn  = Math.min(...vals), mx = Math.max(...vals);
+  const mn = Math.min(...vals), mx = Math.max(...vals);
   const mag = Math.max(Math.abs(mn), Math.abs(mx));
 
   const grid = document.getElementById('kGrid');
@@ -464,20 +499,18 @@ function updateKernel() {
     grid.appendChild(c);
   });
 
-  const cfg    = layer.getConfig();
-  const stride = Array.isArray(cfg.strides) ? cfg.strides[0] : (cfg.strides || 1);
-  const inDim  = fmCache[selLayer] ? `${fmCache[selLayer].length}×${fmCache[selLayer][0].length}` : '—';
+  const p     = layerParams[selLayer];
+  const inDim = fmCache[selLayer] ? `${fmCache[selLayer].length}×${fmCache[selLayer][0].length}` : '—';
   document.getElementById('layerDetail').textContent =
-    `${LN[selLayer]} · ${inC} in-ch · 3×3 · stride=${stride} · ${cfg.padding || 'valid'} · ${(selLayer===1||selLayer===3)?'MaxPool 2×2':'no pool'}  ·  output ${inDim}`;
+    `${LN[selLayer]} · ${inC} in-ch · 3×3 · stride=${p.stride} · ${p.padding} padding · ${p.poolAfter?'MaxPool 2×2 after':'no pool'} · output ${inDim}`;
 }
 
 function updateTopPanels() {
   convLayers.forEach((_, li) => {
     const data = fmCache[li];
     if (!data) return;
-    const H = data.length, W = data[0].length, C = data[0][0].length;
-    const f = Math.min(selFilter, C - 1);
-    paintToCanvas(document.getElementById(`pc${li}`), data, H, W, f);
+    const f = Math.min(selFilter, data[0][0].length - 1);
+    paintToCanvas(document.getElementById(`pc${li}`), data, data.length, data[0].length, f);
   });
 }
 
@@ -496,9 +529,7 @@ async function loadURL(src, revoke) {
       const c = document.getElementById('inputCanvas');
       c.getContext('2d').drawImage(img, 0, 0, 64, 64);
       if (imgTensor) imgTensor.dispose();
-      imgTensor = tf.tidy(() =>
-        tf.browser.fromPixels(c).toFloat().div(255).expandDims(0)
-      );
+      imgTensor = tf.tidy(() => tf.browser.fromPixels(c).toFloat().div(255).expandDims(0));
       if (revoke) URL.revokeObjectURL(src);
       res();
     };
@@ -507,15 +538,36 @@ async function loadURL(src, revoke) {
   });
 }
 
-// ── Inference ─────────────────────────────────────────────────────────────────
-async function runPredict() {
+// ── Run ───────────────────────────────────────────────────────────────────────
+async function run() {
   if (!imgTensor || !model) return;
+  await runCustomForward();
+  await runPrediction();
+}
+
+// Custom forward pass using current layerParams (for feature map visualization)
+async function runCustomForward() {
+  if (!imgTensor) return;
   fmCache = [];
 
-  for (let li = 0; li < intermMdls.length; li++) {
-    const out  = intermMdls[li].predict(imgTensor);
-    const data = (await out.array())[0]; // [H,W,C]
-    out.dispose();
+  let x = imgTensor;
+  let owned = false; // track whether we own x (can dispose it)
+
+  for (let li = 0; li < convLayers.length; li++) {
+    const { stride, padding, poolAfter } = layerParams[li];
+    const wts    = convLayers[li].getWeights();
+    const kernel = wts[0];
+    const bias   = wts.length > 1 ? wts[1] : null;
+
+    const newX = tf.tidy(() => {
+      let out = tf.conv2d(x, kernel, [stride, stride], padding);
+      if (bias) out = tf.add(out, bias);
+      return tf.relu(out);
+    });
+    if (owned) x.dispose();
+    x = newX; owned = true;
+
+    const data = (await x.array())[0];
     fmCache.push(data);
 
     const H = data.length, W = data[0].length, C = data[0][0].length;
@@ -523,8 +575,28 @@ async function runPredict() {
 
     const f = Math.min(selFilter, C - 1);
     paintToCanvas(document.getElementById(`pc${li}`), data, H, W, f);
-  }
 
+    if (expanded[li]) {
+      for (let fv = 0; fv < Math.min(C, 10); fv++) {
+        const efc = document.getElementById(`efc${li}_${fv}`);
+        if (efc) paintToCanvas(efc, data, H, W, fv);
+      }
+    }
+
+    if (poolAfter) {
+      const pooled = tf.maxPool(x, [2, 2], [2, 2], 'valid');
+      x.dispose(); x = pooled;
+    }
+  }
+  if (owned) x.dispose();
+
+  updateLayerCfg();
+  updateKernel();
+}
+
+// Always use the original trained model for prediction
+async function runPrediction() {
+  if (!imgTensor || !model) return;
   const pred  = model.predict(imgTensor);
   const probs = (await pred.array())[0];
   pred.dispose();
@@ -538,17 +610,15 @@ async function runPredict() {
     row.className = 'pred-row';
     row.innerHTML =
       `<span class="pred-name">${CLASS_NAMES[cls]}</span>` +
-      `<div class="pred-bar-bg"><div class="pred-bar-fill${rank === 0 ? ' top' : ''}" style="width:${Math.min(100, probs[cls] * 100)}%"></div></div>` +
+      `<div class="pred-bar-bg"><div class="pred-bar-fill${rank===0?' top':''}" style="width:${Math.min(100,probs[cls]*100)}%"></div></div>` +
       `<span class="pred-pct">${pct}%</span>`;
     bars.appendChild(row);
   });
-
-  updateLayerCfg();
-  updateKernel();
 }
 
-// ── Draw feature map for one filter to canvas ─────────────────────────────────
+// ── Draw helpers ──────────────────────────────────────────────────────────────
 function paintToCanvas(canvas, data, H, W, f) {
+  if (!canvas) return;
   let mn = 1e9, mx = -1e9;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     if (data[y][x][f] < mn) mn = data[y][x][f];
@@ -568,7 +638,6 @@ function paintToCanvas(canvas, data, H, W, f) {
   canvas.getContext('2d').drawImage(tmp, 0, 0, canvas.width, canvas.height);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 function nrm(v, mn, mx) {
   if (mx === mn) return 128;
   return Math.max(0, Math.min(255, Math.round((v - mn) / (mx - mn) * 255)));
@@ -576,18 +645,12 @@ function nrm(v, mn, mx) {
 
 function kCol(v, mag) {
   if (mag < 1e-8) return '#e2e8f0';
-  const t = v / mag; // [-1, 1]
+  const t = v / mag;
   if (t >= 0) {
-    const r = Math.round(37  + (1 - t) * 170);  // deep blue → light blue
-    const g = Math.round(99  + (1 - t) * 120);
-    const b = Math.round(235);
-    return `rgb(${r},${g},${b})`;
+    return `rgb(${Math.round(37+(1-t)*170)},${Math.round(99+(1-t)*120)},235)`;
   } else {
     const a = -t;
-    const r = Math.round(235);
-    const g = Math.round(80  + (1 - a) * 130);  // deep orange → light orange
-    const b = Math.round(50  + (1 - a) * 150);
-    return `rgb(${r},${g},${b})`;
+    return `rgb(235,${Math.round(80+(1-a)*130)},${Math.round(50+(1-a)*150)})`;
   }
 }
 
@@ -596,13 +659,6 @@ function fmtW(v) {
   if (a < 1e-4) return '0';
   if (a < 0.01) return v.toExponential(1);
   return v.toFixed(2);
-}
-
-function el(tag, cls, txt) {
-  const e = document.createElement(tag);
-  if (cls) e.className = cls;
-  if (txt) e.textContent = txt;
-  return e;
 }
 
 function setStatus(msg) { document.getElementById('statusBar').textContent = msg; }
