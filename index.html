@@ -70,10 +70,12 @@
     .efc-row { display: flex; align-items: center; gap: 2px; }
     .efc-lbl { font-size: 7px; color: #cbd5e1; width: 11px; text-align: right; flex-shrink: 0; }
     .efc-canvas {
-      flex: 1; height: 44px; display: block;
+      flex: 1; aspect-ratio: 1; min-height: 0; display: block;
       border-radius: 3px; image-rendering: pixelated;
-      background: #f1f5f9; border: 1px solid #e2e8f0;
+      background: #f1f5f9; border: 2px solid #e2e8f0;
+      cursor: pointer; transition: border-color .12s;
     }
+    .efc-canvas.sel { border-color: #3b82f6; }
 
     /* Arrow between stages */
     .pipe-arrow { flex-shrink: 0; padding: 0 8px; padding-top: 26px; color: #cbd5e1; font-size: 14px; }
@@ -398,6 +400,8 @@ function makeStageCol(stage) {
     const efc = document.createElement('canvas');
     efc.className = 'efc-canvas'; efc.id = `efc-${stage.id}-${fi}`;
     efc.width = 30; efc.height = 30;
+    const capturedFi = fi;
+    efc.addEventListener('click', e => { e.stopPropagation(); selectFilter(capturedFi); });
     row.appendChild(lbl2); row.appendChild(efc);
     sect.appendChild(row);
   }
@@ -459,10 +463,23 @@ function buildImgGrid() {
   });
 }
 
+function selectFilter(fi) {
+  selFilter = fi;
+  document.querySelectorAll('.kern-block').forEach((b, i) => b.classList.toggle('sel', i === fi));
+  updateFmHighlight();
+}
+
+function updateFmHighlight() {
+  document.querySelectorAll('.efc-canvas').forEach(c => c.classList.remove('sel'));
+  STAGES.forEach(stage => {
+    const efc = document.getElementById(`efc-${stage.id}-${selFilter}`);
+    if (efc) efc.classList.add('sel');
+  });
+}
+
 function selectLayer(li) {
   selLayer=li; selFilter=0;
   document.querySelectorAll('.layer-tab').forEach((t,i)=>t.classList.toggle('active',i===li));
-  // Update all stage labels that are associated with a layer
   STAGES.forEach(stage => {
     const lbl = document.getElementById(`plbl-${stage.id}`);
     if (!lbl) return;
@@ -619,10 +636,7 @@ function renderAllKernels() {
         const capturedFi = fi, capturedV = v;
 
         cell.addEventListener('focus', function() {
-          if (selFilter !== capturedFi) {
-            selFilter = capturedFi;
-            document.querySelectorAll('.kern-block').forEach((b,i)=>b.classList.toggle('sel',i===capturedFi));
-          }
+          if (selFilter !== capturedFi) selectFilter(capturedFi);
           setTimeout(()=>{
             const range=document.createRange(); range.selectNodeContents(this);
             const s=window.getSelection(); s.removeAllRanges(); s.addRange(range);
@@ -647,11 +661,11 @@ function renderAllKernels() {
     block.addEventListener('mousedown', e => {
       if (e.target.classList.contains('kern-cell') || e.target.tagName==='SELECT') return;
       e.preventDefault();
-      selFilter = fi;
-      document.querySelectorAll('.kern-block').forEach((b,i)=>b.classList.toggle('sel',i===fi));
+      selectFilter(fi);
     });
     container.appendChild(block);
   }
+  updateFmHighlight();
 }
 
 function onKernelEdit(fi, r, c, val) {
