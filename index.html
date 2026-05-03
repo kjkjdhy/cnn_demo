@@ -16,41 +16,71 @@
     .card { background: white; border-radius: 10px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 
     /* ── Top section ── */
-    .top-section { display: flex; align-items: flex-start; }
-    .pipeline { flex: 1; min-width: 0; display: flex; align-items: flex-start; }
-    .pipe-col  { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; border-radius: 8px; padding: 2px; }
+    .top-section { display: flex; align-items: flex-start; gap: 0; }
+    .pipeline-wrap {
+      flex: 1; min-width: 0;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+    .pipeline {
+      display: flex; align-items: flex-start;
+      min-width: max-content; /* allow natural width, scroll parent */
+    }
+
+    /* Each stage column */
+    .pipe-col {
+      display: flex; flex-direction: column; align-items: center;
+      width: 64px; flex-shrink: 0;
+      border-radius: 8px; padding: 2px;
+    }
     .pipe-col.selectable { cursor: pointer; }
     .pipe-col.selectable:hover .pipe-label { background: #f8fafc; }
     .pipe-col.selectable:hover .pipe-canvas { border-color: #94a3b8; }
+
     .pipe-label {
-      font-size: 12px; font-weight: 600; color: #64748b;
-      margin-bottom: 6px; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
-      transition: background .12s;
+      font-size: 10px; font-weight: 600; color: #64748b;
+      margin-bottom: 5px; padding: 2px 5px; border-radius: 999px;
+      white-space: nowrap; text-align: center; transition: background .12s;
     }
     .pipe-label.sel { background: #eff6ff; border: 1px solid #bfdbfe; color: #2563eb; }
+    .pipe-label.pool { color: #7c3aed; background: #f5f3ff; border: 1px solid #ddd6fe; }
+
+    /* Main canvas per stage */
     .pipe-canvas {
       width: 100%; aspect-ratio: 1; display: block;
       border-radius: 5px; image-rendering: pixelated;
       background: #f1f5f9; border: 1px solid #e2e8f0;
       transition: border-color .12s;
     }
-    .pipe-info { font-size: 9px; color: #94a3b8; margin-top: 4px; text-align: center; }
+
+    .pipe-info { font-size: 8px; color: #94a3b8; margin-top: 3px; text-align: center; white-space: nowrap; }
+
     .expand-btn {
-      margin-top: 5px; font-size: 10px; padding: 2px 10px;
+      margin-top: 4px; font-size: 9px; padding: 2px 6px;
       border: 1px solid #e2e8f0; border-radius: 4px;
       background: white; color: #64748b; cursor: pointer; white-space: nowrap;
     }
     .expand-btn:hover { border-color: #94a3b8; }
     .expand-btn.open  { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
-    .expand-sect { display: none; width: 100%; margin-top: 6px; }
-    .expand-sect.open { display: block; }
-    .pipe-arrow { flex-shrink: 0; padding: 0 4px; padding-top: 32px; color: #cbd5e1; font-size: 18px; }
-    .pool-sep { flex-shrink: 0; width: 42px; display: flex; flex-direction: column; align-items: center; padding-top: 24px; }
-    .pool-sep-line  { width: 1px; height: 14px; background: #e2e8f0; }
-    .pool-sep-txt   { font-size: 10px; color: #64748b; writing-mode: vertical-rl; padding: 4px 0; white-space: nowrap; font-weight: 600; }
-    .pool-sep-line2 { width: 1px; flex: 1; min-height: 14px; background: #e2e8f0; }
-    .pred-divider { width: 1px; background: #f1f5f9; flex-shrink: 0; margin: 0 14px; align-self: stretch; }
-    .pred-panel { width: 185px; flex-shrink: 0; border-radius: 8px; padding: 4px 6px; }
+
+    /* Expanded section: 10 filter rows stacked */
+    .expand-sect { display: none; width: 100%; margin-top: 5px; }
+    .expand-sect.open { display: flex; flex-direction: column; gap: 3px; }
+
+    .efc-row { display: flex; align-items: center; gap: 2px; }
+    .efc-lbl { font-size: 7px; color: #cbd5e1; width: 11px; text-align: right; flex-shrink: 0; }
+    .efc-canvas {
+      flex: 1; height: 34px; display: block;
+      border-radius: 3px; image-rendering: pixelated;
+      background: #f1f5f9; border: 1px solid #e2e8f0;
+    }
+
+    /* Arrow between stages */
+    .pipe-arrow { flex-shrink: 0; padding: 0 2px; padding-top: 26px; color: #cbd5e1; font-size: 14px; }
+
+    /* Prediction panel */
+    .pred-divider { width: 1px; background: #f1f5f9; flex-shrink: 0; margin: 0 12px; align-self: stretch; }
+    .pred-panel { width: 180px; flex-shrink: 0; }
     .ctrl-title { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 10px; }
     .pred-row   { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
     .pred-name  { font-size: 10px; color: #475569; width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
@@ -61,10 +91,9 @@
 
     /* ── Bottom 2-col ── */
     .bottom-row { display: flex; gap: 12px; align-items: flex-start; }
-    .left-ctrl  { flex: 0 0 310px; display: flex; flex-direction: column; gap: 0; }
+    .left-ctrl  { flex: 0 0 310px; display: flex; flex-direction: column; }
     .right-ctrl { flex: 1; min-width: 0; }
 
-    /* Left col */
     .upload-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
     .browse-btn {
       font-size: 11px; padding: 4px 12px;
@@ -87,7 +116,6 @@
 
     .section-sep { height: 1px; background: #f1f5f9; margin: 14px 0; }
 
-    /* Layer config */
     .layer-tabs { display: flex; gap: 3px; margin-bottom: 10px; flex-wrap: wrap; }
     .layer-tab {
       font-size: 10px; padding: 3px 9px;
@@ -113,7 +141,7 @@
     }
     .small-btn:hover { border-color: #94a3b8; }
 
-    /* ── Right col: all kernels ── */
+    /* ── Right col: kernels ── */
     .k-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
     .k-layer-info { font-size: 13px; font-weight: 700; color: #1e293b; }
     .k-hint { font-size: 10px; color: #94a3b8; margin-bottom: 12px; }
@@ -127,7 +155,6 @@
     .action-btn.danger:hover { border-color: #ef4444; color: #dc2626; background: #fef2f2; }
 
     .all-kernels { display: flex; flex-wrap: wrap; gap: 14px; }
-
     .kern-block {
       display: flex; flex-direction: column; align-items: center; gap: 5px;
       padding: 6px; border-radius: 8px; border: 2px solid transparent;
@@ -137,36 +164,26 @@
     .kern-block.sel      { border-color: #3b82f6; background: #f8faff; }
     .kern-block.modified { border-color: #f59e0b; }
     .kern-block.sel.modified { border-color: #f59e0b; background: #fffdf0; }
-
-    .kern-block-label {
-      font-size: 10px; font-weight: 600; color: #64748b;
-      user-select: none; -webkit-user-select: none;
-    }
+    .kern-block-label { font-size: 10px; font-weight: 600; color: #64748b; user-select: none; -webkit-user-select: none; }
     .kern-block.sel      .kern-block-label { color: #2563eb; }
     .kern-block.modified .kern-block-label { color: #b45309; }
-
     .kern-preset {
       font-size: 9px; padding: 2px 4px;
       border: 1px solid #e2e8f0; border-radius: 4px;
-      background: white; color: #475569; cursor: pointer;
-      width: 132px; outline: none;
+      background: white; color: #475569; cursor: pointer; width: 132px; outline: none;
     }
     .kern-preset:focus { border-color: #3b82f6; }
     .kern-preset.is-preset { border-color: #8b5cf6; color: #6d28d9; background: #f5f3ff; }
     .kern-preset.is-custom { border-color: #f59e0b; color: #b45309; background: #fffbeb; }
-
     .kern-mini { display: grid; grid-template-columns: repeat(3, 42px); gap: 3px; }
-
     .kern-cell {
       width: 42px; height: 42px; border-radius: 5px;
       display: flex; align-items: center; justify-content: center;
       font-size: 11px; font-weight: 700; color: #1e293b;
-      cursor: text; outline: none;
-      user-select: text; -webkit-user-select: text;
+      cursor: text; outline: none; user-select: text; -webkit-user-select: text;
       transition: box-shadow .1s;
     }
     .kern-cell:focus { box-shadow: inset 0 0 0 2px rgba(59,130,246,.7); z-index: 1; }
-
     .dim-txt { font-size: 11px; color: #94a3b8; }
   </style>
 </head>
@@ -177,7 +194,9 @@
 
 <div class="main">
   <div class="card top-section">
-    <div class="pipeline" id="pipeline"></div>
+    <div class="pipeline-wrap">
+      <div class="pipeline" id="pipeline"></div>
+    </div>
     <div class="pred-divider"></div>
     <div class="pred-panel">
       <div class="ctrl-title">Prediction</div>
@@ -186,7 +205,6 @@
   </div>
 
   <div class="bottom-row">
-
     <div class="card left-ctrl">
       <div class="ctrl-title">Upload Image</div>
       <div class="upload-row">
@@ -214,7 +232,6 @@
       <div class="k-hint">Use the dropdown to apply a preset kernel, or click any cell to manually edit · Enter to confirm · Esc to cancel</div>
       <div class="all-kernels" id="allKernelsGrid"></div>
     </div>
-
   </div>
 </div>
 
@@ -225,16 +242,11 @@ const IMG_BASE    = 'https://poloclub.github.io/cnn-explainer/assets/img/';
 const CLASS_NAMES = ['lifeboat','ladybug','pizza','bell pepper','school bus',
                      'koala','espresso','red panda','orange','sport car'];
 const IMAGES = [
-  {label:'Espresso',    file:'espresso_1.jpeg'},
-  {label:'Ladybug',     file:'bug_1.jpeg'},
-  {label:'Pizza',       file:'pizza_1.jpeg'},
-  {label:'Bell Pepper', file:'pepper_1.jpeg'},
-  {label:'School Bus',  file:'bus_1.jpeg'},
-  {label:'Koala',       file:'koala_1.jpeg'},
-  {label:'Lifeboat',    file:'boat_1.jpeg'},
-  {label:'Red Panda',   file:'panda_1.jpeg'},
-  {label:'Orange',      file:'orange_1.jpeg'},
-  {label:'Sport Car',   file:'car_1.jpeg'},
+  {label:'Espresso',  file:'espresso_1.jpeg'}, {label:'Ladybug',    file:'bug_1.jpeg'},
+  {label:'Pizza',     file:'pizza_1.jpeg'},     {label:'Bell Pepper',file:'pepper_1.jpeg'},
+  {label:'School Bus',file:'bus_1.jpeg'},       {label:'Koala',      file:'koala_1.jpeg'},
+  {label:'Lifeboat',  file:'boat_1.jpeg'},      {label:'Red Panda',  file:'panda_1.jpeg'},
+  {label:'Orange',    file:'orange_1.jpeg'},    {label:'Sport Car',  file:'car_1.jpeg'},
 ];
 const LN = ['Layer 1','Layer 2','Layer 3','Layer 4'];
 const DEFAULT_PARAMS = [
@@ -244,7 +256,19 @@ const DEFAULT_PARAMS = [
   { stride:1, padding:'valid', poolAfter:true  },
 ];
 
-// ── Preset kernels ────────────────────────────────────────────────────────────
+// Pipeline stages: Conv + ReLU per layer, plus MaxPool where applicable
+const STAGES = [
+  { id:'conv0', label:'Conv 1',    li:0,    pool:false },
+  { id:'relu0', label:'ReLU 1',    li:0,    pool:false },
+  { id:'conv1', label:'Conv 2',    li:1,    pool:false },
+  { id:'relu1', label:'ReLU 2',    li:1,    pool:false },
+  { id:'pool1', label:'MaxPool 1', li:null, pool:true  },
+  { id:'conv2', label:'Conv 3',    li:2,    pool:false },
+  { id:'relu2', label:'ReLU 3',    li:2,    pool:false },
+  { id:'conv3', label:'Conv 4',    li:3,    pool:false },
+  { id:'relu3', label:'ReLU 4',    li:3,    pool:false },
+];
+
 const PRESET_KERNELS = {
   h_edge:   [[-1,-2,-1],[ 0, 0, 0],[ 1, 2, 1]],
   v_edge:   [[-1, 0, 1],[-2, 0, 2],[-1, 0, 1]],
@@ -265,10 +289,11 @@ let convLayers   = [];
 let flattenLayer = null;
 let denseLayer   = null;
 let imgTensor    = null;
-let fmCache      = [];
+let fmCache      = [];          // fmCache[li] = relu output data for layer li (for updateLayerCfg)
+let fmStageCache = {};          // fmStageCache[stageId] = H×W×C data array
+let stageExpanded = {};         // stageExpanded[stageId] = bool
 let selLayer     = 0;
 let selFilter    = 0;
-let expanded     = [false,false,false,false];
 let layerParams  = DEFAULT_PARAMS.map(p=>({...p}));
 let kernelOverrides = Array.from({length:4}, ()=>Array.from({length:10}, ()=>null));
 let kernelPresetSel = Array.from({length:4}, ()=>Array(10).fill('pretrained'));
@@ -278,18 +303,15 @@ async function init() {
   try {
     setStatus('Loading model…');
     model = await tf.loadLayersModel(MODEL_URL);
-
     for (let i = 1; i < model.layers.length; i++) {
       const l = model.layers[i], p = model.layers[i-1];
       if (l.getClassName()==='Activation' && p.getClassName()==='Conv2D') convLayers.push(p);
       if (l.getClassName()==='Flatten') flattenLayer = l;
       if (l.getClassName()==='Dense')   denseLayer   = l;
     }
-
     buildPipeline();
     buildLayerTabs();
     buildImgGrid();
-
     document.getElementById('refreshBtn').onclick = run;
     document.getElementById('uploadInput').addEventListener('change', async e=>{
       const f=e.target.files[0]; if(!f) return;
@@ -298,11 +320,10 @@ async function init() {
       await loadURL(URL.createObjectURL(f), true);
       await run();
     });
-
     selectLayer(0);
     await loadImg(0);
     await run();
-    setStatus('Tiny VGG · 4 conv layers · 10 filters each · click a layer to edit its config');
+    setStatus('Tiny VGG · click a layer stage to edit · expand to see all 10 filters');
   } catch(e) {
     setStatus('Error: '+e.message);
     console.error(e);
@@ -314,93 +335,103 @@ function buildPipeline() {
   const pl = document.getElementById('pipeline');
   pl.innerHTML = '';
 
+  // Input column
   const ic = document.createElement('div');
   ic.className = 'pipe-col';
-  ic.id = 'pcolinput';
   ic.innerHTML = `<div class="pipe-label">Input</div>
     <canvas id="inputCanvas" class="pipe-canvas" width="64" height="64"></canvas>
-    <div class="pipe-info">64×64 · 3 ch</div>`;
+    <div class="pipe-info">64×64 · RGB</div>`;
   pl.appendChild(ic);
 
-  const makeSep = () => {
-    const s = document.createElement('div');
-    s.className = 'pool-sep';
-    s.innerHTML = '<div class="pool-sep-line"></div><span class="pool-sep-txt">MaxPool ÷2</span><div class="pool-sep-line2"></div>';
-    return s;
-  };
-
-  convLayers.forEach((_, li) => {
+  STAGES.forEach(stage => {
     const arrow = document.createElement('div');
     arrow.className = 'pipe-arrow'; arrow.textContent = '→';
     pl.appendChild(arrow);
-
-    if (li===2) pl.appendChild(makeSep()); // pool between Layer 2 → 3
-
-    pl.appendChild(makeLayerCol(li));
-
-    if (li===3) pl.appendChild(makeSep()); // pool after Layer 4
+    pl.appendChild(makeStageCol(stage));
   });
 }
 
-function makeLayerCol(li) {
+function makeStageCol(stage) {
   const col = document.createElement('div');
-  col.className = 'pipe-col selectable';
-  col.id = `pcol${li}`;
-  col.title = `Click to edit ${LN[li]}`;
-  // Clicking label or canvas selects this layer (same as layer tab)
-  col.addEventListener('click', e => {
-    if (e.target.closest('.expand-btn') || e.target.closest('.expand-sect')) return;
-    selectLayer(li);
-    // Scroll bottom panel into view so the user sees the config update
-    document.getElementById('layerTabs').scrollIntoView({behavior:'smooth', block:'nearest'});
-  });
+  col.className = 'pipe-col' + (stage.li !== null ? ' selectable' : '');
+  col.id = `pcol-${stage.id}`;
+
+  if (stage.li !== null) {
+    col.title = `Click to edit ${LN[stage.li]}`;
+    col.addEventListener('click', e => {
+      if (e.target.closest('.expand-btn') || e.target.closest('.expand-sect')) return;
+      selectLayer(stage.li);
+      document.getElementById('layerTabs').scrollIntoView({behavior:'smooth', block:'nearest'});
+    });
+  }
 
   const lbl = document.createElement('div');
-  lbl.className = 'pipe-label'+(li===selLayer?' sel':'');
-  lbl.id = `plbl${li}`; lbl.textContent = LN[li];
+  lbl.id = `plbl-${stage.id}`;
+  lbl.className = 'pipe-label' + (stage.pool ? ' pool' : (stage.li === selLayer ? ' sel' : ''));
+  lbl.textContent = stage.label;
   col.appendChild(lbl);
 
   const c = document.createElement('canvas');
-  c.className = 'pipe-canvas'; c.id = `pc${li}`;
-  c.width = 60; c.height = 60;
+  c.className = 'pipe-canvas'; c.id = `pc-${stage.id}`;
+  c.width = 48; c.height = 48;
   col.appendChild(c);
 
   const inf = document.createElement('div');
-  inf.className = 'pipe-info'; inf.id = `pinf${li}`; inf.textContent = '—';
+  inf.className = 'pipe-info'; inf.id = `pinf-${stage.id}`; inf.textContent = '—';
   col.appendChild(inf);
 
   const btn = document.createElement('button');
-  btn.className = 'expand-btn'; btn.id = `ebtn${li}`;
-  btn.textContent = '▼ Filter view';
-  btn.onclick = e => { e.stopPropagation(); toggleExpand(li); };
+  btn.className = 'expand-btn'; btn.id = `ebtn-${stage.id}`;
+  btn.textContent = '▼ Expand';
+  btn.onclick = e => { e.stopPropagation(); toggleStageExpand(stage.id); };
   col.appendChild(btn);
 
+  // Expanded: 10 filter rows
   const sect = document.createElement('div');
-  sect.className = 'expand-sect'; sect.id = `esect${li}`;
-  const efc = document.createElement('canvas');
-  efc.className = 'pipe-canvas'; efc.id = `efc${li}`;
-  efc.width = 60; efc.height = 60;
-  const einf = document.createElement('div');
-  einf.className = 'pipe-info'; einf.id = `efcinf${li}`;
-  einf.textContent = `Filter ${selFilter}`;
-  sect.append(efc, einf);
+  sect.className = 'expand-sect'; sect.id = `esect-${stage.id}`;
+  for (let fi = 0; fi < 10; fi++) {
+    const row = document.createElement('div');
+    row.className = 'efc-row';
+    const lbl2 = document.createElement('div');
+    lbl2.className = 'efc-lbl'; lbl2.textContent = fi;
+    const efc = document.createElement('canvas');
+    efc.className = 'efc-canvas'; efc.id = `efc-${stage.id}-${fi}`;
+    efc.width = 30; efc.height = 30;
+    row.appendChild(lbl2); row.appendChild(efc);
+    sect.appendChild(row);
+  }
   col.appendChild(sect);
 
   return col;
 }
 
-function toggleExpand(li) {
-  expanded[li] = !expanded[li];
-  const sect = document.getElementById(`esect${li}`);
-  const btn  = document.getElementById(`ebtn${li}`);
-  sect.classList.toggle('open', expanded[li]);
-  btn.classList.toggle('open', expanded[li]);
-  btn.textContent = expanded[li] ? '▲ Collapse' : '▼ Filter view';
-  if (expanded[li] && fmCache[li]) {
-    const data = fmCache[li];
-    const f = Math.min(selFilter, data[0][0].length-1);
-    paintToCanvas(document.getElementById(`efc${li}`), data, data.length, data[0].length, f);
-    document.getElementById(`efcinf${li}`).textContent = `Filter ${f}`;
+function toggleStageExpand(stageId) {
+  stageExpanded[stageId] = !stageExpanded[stageId];
+  const sect = document.getElementById(`esect-${stageId}`);
+  const btn  = document.getElementById(`ebtn-${stageId}`);
+  sect.classList.toggle('open', stageExpanded[stageId]);
+  btn.classList.toggle('open',  stageExpanded[stageId]);
+  btn.textContent = stageExpanded[stageId] ? '▲ Collapse' : '▼ Expand';
+  if (stageExpanded[stageId] && fmStageCache[stageId]) {
+    paintStageExpanded(stageId, fmStageCache[stageId]);
+  }
+}
+
+// ── Stage painting helpers ─────────────────────────────────────────────────────
+function paintStage(stageId, data) {
+  const c = document.getElementById(`pc-${stageId}`);
+  const H = data.length, W = data[0].length, C = data[0][0].length;
+  if (c) paintAvgToCanvas(c, data, H, W, C);
+  const inf = document.getElementById(`pinf-${stageId}`);
+  if (inf) inf.textContent = `${H}×${W}·${C}ch`;
+  if (stageExpanded[stageId]) paintStageExpanded(stageId, data);
+}
+
+function paintStageExpanded(stageId, data) {
+  const H = data.length, W = data[0].length, C = data[0][0].length;
+  for (let fi = 0; fi < C && fi < 10; fi++) {
+    const efc = document.getElementById(`efc-${stageId}-${fi}`);
+    if (efc) paintToCanvas(efc, data, H, W, fi);
   }
 }
 
@@ -430,9 +461,12 @@ function buildImgGrid() {
 function selectLayer(li) {
   selLayer=li; selFilter=0;
   document.querySelectorAll('.layer-tab').forEach((t,i)=>t.classList.toggle('active',i===li));
-  convLayers.forEach((_,i)=>{
-    const lbl=document.getElementById(`plbl${i}`);
-    if(lbl) lbl.className='pipe-label'+(i===li?' sel':'');
+  // Update all stage labels that are associated with a layer
+  STAGES.forEach(stage => {
+    const lbl = document.getElementById(`plbl-${stage.id}`);
+    if (!lbl) return;
+    if (stage.pool) { lbl.className = 'pipe-label pool'; return; }
+    lbl.className = 'pipe-label' + (stage.li === li ? ' sel' : '');
   });
   updateLayerCfg();
   renderAllKernels();
@@ -444,10 +478,8 @@ function updateLayerCfg() {
   const inC=wshp[2], outC=wshp[3];
   const p = layerParams[selLayer];
   const def = DEFAULT_PARAMS[selLayer];
-  const fmInfo = fmCache[selLayer]?`${fmCache[selLayer].length}×${fmCache[selLayer][0].length}`:'—';
-  const isStrMod = p.stride!==def.stride;
-  const isPadMod = p.padding!==def.padding;
-  const isPoolMod= p.poolAfter!==def.poolAfter;
+  const fmInfo = fmCache[selLayer] ? `${fmCache[selLayer].length}×${fmCache[selLayer][0].length}` : '—';
+  const isStrMod=p.stride!==def.stride, isPadMod=p.padding!==def.padding, isPoolMod=p.poolAfter!==def.poolAfter;
 
   document.getElementById('cfgRows').innerHTML = `
     <div class="cfg-row"><span class="cfg-k">Channels (in)</span>  <span class="cfg-v">${inC}</span></div>
@@ -475,7 +507,7 @@ function updateLayerCfg() {
         <option value="max"${p.poolAfter?' selected':''}>MaxPool 2×2</option>
       </select>
     </div>
-    <div class="cfg-row"><span class="cfg-k">Output size</span>    <span class="cfg-v">${fmInfo}</span></div>
+    <div class="cfg-row"><span class="cfg-k">ReLU output size</span><span class="cfg-v">${fmInfo}</span></div>
     <button class="small-btn" onclick="resetLayerParams()">↺ Reset to default</button>
   `;
 }
@@ -522,7 +554,6 @@ function getKernelValsFor(li, fi) {
 function renderAllKernels() {
   const container = document.getElementById('allKernelsGrid');
   container.innerHTML = '';
-
   const isAnyMod = kernelOverrides[selLayer].some(o=>o!==null);
   document.getElementById('kLayerInfo').textContent =
     `${LN[selLayer]} · 10 filters${isAnyMod?' · modified':''}`;
@@ -531,7 +562,7 @@ function renderAllKernels() {
   const inC = rawArr[0][0].length;
 
   for (let fi=0;fi<10;fi++) {
-    const isOvr    = kernelOverrides[selLayer][fi] !== null;
+    const isOvr = kernelOverrides[selLayer][fi] !== null;
     const presetKey = kernelPresetSel[selLayer][fi];
 
     let vals;
@@ -568,10 +599,7 @@ function renderAllKernels() {
       sel.appendChild(opt);
     });
     sel.addEventListener('mousedown', e => e.stopPropagation());
-    sel.addEventListener('change', function(e) {
-      e.stopPropagation();
-      applyPreset(fi, this.value);
-    });
+    sel.addEventListener('change', function(e) { e.stopPropagation(); applyPreset(fi, this.value); });
     block.appendChild(sel);
 
     const grid = document.createElement('div');
@@ -587,20 +615,16 @@ function renderAllKernels() {
         cell.spellcheck = false;
         cell.textContent = v.toFixed(2);
         cell.dataset.fi = fi; cell.dataset.r = r; cell.dataset.c = c;
-
         const capturedFi = fi, capturedV = v;
 
         cell.addEventListener('focus', function() {
           if (selFilter !== capturedFi) {
             selFilter = capturedFi;
-            document.querySelectorAll('.kern-block').forEach((b,i) => b.classList.toggle('sel', i===capturedFi));
-            updateTopPanels();
+            document.querySelectorAll('.kern-block').forEach((b,i)=>b.classList.toggle('sel',i===capturedFi));
           }
           setTimeout(()=>{
-            const range=document.createRange();
-            range.selectNodeContents(this);
-            const s=window.getSelection();
-            s.removeAllRanges(); s.addRange(range);
+            const range=document.createRange(); range.selectNodeContents(this);
+            const s=window.getSelection(); s.removeAllRanges(); s.addRange(range);
           }, 0);
         });
         cell.addEventListener('keydown', function(e) {
@@ -614,30 +638,24 @@ function renderAllKernels() {
           if (newVal.toFixed(2) === capturedV.toFixed(2)) return;
           onKernelEdit(capturedFi, parseInt(this.dataset.r), parseInt(this.dataset.c), newVal);
         });
-
         grid.appendChild(cell);
       }
     }
 
     block.appendChild(grid);
-
     block.addEventListener('mousedown', e => {
-      if (e.target.classList.contains('kern-cell')) return;
-      if (e.target.tagName === 'SELECT') return;
+      if (e.target.classList.contains('kern-cell') || e.target.tagName==='SELECT') return;
       e.preventDefault();
       selFilter = fi;
-      document.querySelectorAll('.kern-block').forEach((b,i) => b.classList.toggle('sel', i===fi));
-      updateTopPanels();
+      document.querySelectorAll('.kern-block').forEach((b,i)=>b.classList.toggle('sel',i===fi));
     });
-
     container.appendChild(block);
   }
 }
 
 function onKernelEdit(fi, r, c, val) {
-  if (!kernelOverrides[selLayer][fi]) {
+  if (!kernelOverrides[selLayer][fi])
     kernelOverrides[selLayer][fi] = getKernelValsFor(selLayer, fi).map(row=>[...row]);
-  }
   kernelOverrides[selLayer][fi][r][c] = val;
   kernelPresetSel[selLayer][fi] = 'custom';
   renderAllKernels();
@@ -645,27 +663,15 @@ function onKernelEdit(fi, r, c, val) {
 }
 
 function resetKernel() {
-  kernelOverrides[selLayer][selFilter]  = null;
+  kernelOverrides[selLayer][selFilter] = null;
   kernelPresetSel[selLayer][selFilter] = 'pretrained';
-  renderAllKernels();
-  run();
+  renderAllKernels(); run();
 }
 
 function resetAllKernels() {
   kernelOverrides = Array.from({length:4},()=>Array.from({length:10},()=>null));
   kernelPresetSel = Array.from({length:4},()=>Array(10).fill('pretrained'));
-  renderAllKernels();
-  run();
-}
-
-function updateTopPanels() {
-  convLayers.forEach((_,li)=>{
-    if(!expanded[li]||!fmCache[li]) return;
-    const data=fmCache[li];
-    const f=Math.min(selFilter,data[0][0].length-1);
-    paintToCanvas(document.getElementById(`efc${li}`),data,data.length,data[0].length,f);
-    document.getElementById(`efcinf${li}`).textContent=`Filter ${f}`;
-  });
+  renderAllKernels(); run();
 }
 
 function buildModifiedKernel(li, origKernel) {
@@ -700,8 +706,7 @@ async function loadURL(src, revoke) {
       if(revoke) URL.revokeObjectURL(src);
       res();
     };
-    img.onerror=rej;
-    img.src=src;
+    img.onerror=rej; img.src=src;
   });
 }
 
@@ -714,38 +719,49 @@ async function run() {
 
 async function runCustomForward() {
   if (!imgTensor) return null;
-  fmCache=[];
-  let x=imgTensor, owned=false;
+  fmCache = []; fmStageCache = {};
+  let x = imgTensor, owned = false;
 
-  for (let li=0;li<convLayers.length;li++) {
-    const {stride,padding,poolAfter}=layerParams[li];
-    const wts=convLayers[li].getWeights();
-    const origKernel=wts[0], bias=wts.length>1?wts[1]:null;
-    const modKernel=buildModifiedKernel(li,origKernel);
-    const useKernel=modKernel||origKernel;
+  for (let li = 0; li < convLayers.length; li++) {
+    const {stride, padding, poolAfter} = layerParams[li];
+    const wts = convLayers[li].getWeights();
+    const origKernel = wts[0], bias = wts.length > 1 ? wts[1] : null;
+    const modKernel = buildModifiedKernel(li, origKernel);
+    const useKernel = modKernel || origKernel;
 
-    const newX=tf.tidy(()=>{
-      let out=tf.conv2d(x,useKernel,[stride,stride],padding);
-      if(bias) out=tf.add(out,bias);
-      return tf.relu(out);
+    // Conv output (pre-ReLU)
+    const convOut = tf.tidy(() => {
+      let out = tf.conv2d(x, useKernel, [stride, stride], padding);
+      if (bias) out = tf.add(out, bias);
+      return out;
     });
-    if(modKernel) modKernel.dispose();
-    if(owned) x.dispose();
-    x=newX; owned=true;
+    if (modKernel) modKernel.dispose();
 
-    const data=(await x.array())[0];
-    fmCache.push(data);
-    const H=data.length,W=data[0].length,C=data[0][0].length;
-    document.getElementById(`pinf${li}`).textContent=`${H}×${W} · ${C} ch`;
-    paintAvgToCanvas(document.getElementById(`pc${li}`),data,H,W,C);
-    if(expanded[li]){
-      const f=Math.min(selFilter,C-1);
-      paintToCanvas(document.getElementById(`efc${li}`),data,H,W,f);
-      document.getElementById(`efcinf${li}`).textContent=`Filter ${f}`;
-    }
-    if(poolAfter){
-      const pooled=tf.maxPool(x,[2,2],[2,2],'valid');
-      x.dispose(); x=pooled;
+    const convData = (await convOut.array())[0];
+    fmStageCache[`conv${li}`] = convData;
+    paintStage(`conv${li}`, convData);
+
+    // ReLU output
+    const reluOut = tf.relu(convOut);
+    convOut.dispose();
+
+    const reluData = (await reluOut.array())[0];
+    fmStageCache[`relu${li}`] = reluData;
+    fmCache[li] = reluData; // for updateLayerCfg
+    paintStage(`relu${li}`, reluData);
+
+    if (owned) x.dispose();
+    x = reluOut; owned = true;
+
+    // MaxPool
+    if (poolAfter) {
+      const pooled = tf.maxPool(x, [2,2], [2,2], 'valid');
+      x.dispose(); x = pooled;
+
+      const poolData = (await x.array())[0];
+      const poolId = `pool${li}`;
+      fmStageCache[poolId] = poolData;
+      paintStage(poolId, poolData);
     }
   }
 
@@ -793,17 +809,12 @@ function paintAvgToCanvas(canvas, data, H, W, C) {
   for(let y=0;y<H;y++){
     avg.push([]);
     for(let x=0;x<W;x++){
-      let s=0;
-      for(let c=0;c<C;c++) s+=data[y][x][c];
-      const v=s/C;
-      if(v<mn)mn=v; if(v>mx)mx=v;
-      avg[y].push(v);
+      let s=0; for(let c=0;c<C;c++) s+=data[y][x][c];
+      const v=s/C; if(v<mn)mn=v; if(v>mx)mx=v; avg[y].push(v);
     }
   }
-  const tmp=document.createElement('canvas');
-  tmp.width=W;tmp.height=H;
-  const tctx=tmp.getContext('2d');
-  const id=tctx.createImageData(W,H);
+  const tmp=document.createElement('canvas'); tmp.width=W; tmp.height=H;
+  const tctx=tmp.getContext('2d'); const id=tctx.createImageData(W,H);
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){
     const pi=(y*W+x)*4, v=nrm(avg[y][x],mn,mx);
     id.data[pi]=id.data[pi+1]=id.data[pi+2]=v; id.data[pi+3]=255;
@@ -819,10 +830,8 @@ function paintToCanvas(canvas, data, H, W, f) {
     if(data[y][x][f]<mn)mn=data[y][x][f];
     if(data[y][x][f]>mx)mx=data[y][x][f];
   }
-  const tmp=document.createElement('canvas');
-  tmp.width=W;tmp.height=H;
-  const tctx=tmp.getContext('2d');
-  const id=tctx.createImageData(W,H);
+  const tmp=document.createElement('canvas'); tmp.width=W; tmp.height=H;
+  const tctx=tmp.getContext('2d'); const id=tctx.createImageData(W,H);
   for(let y=0;y<H;y++) for(let x=0;x<W;x++){
     const pi=(y*W+x)*4, v=nrm(data[y][x][f],mn,mx);
     id.data[pi]=id.data[pi+1]=id.data[pi+2]=v; id.data[pi+3]=255;
@@ -839,13 +848,8 @@ function nrm(v,mn,mx){
 function kColLight(v, mag) {
   if (mag < 1e-8 || Math.abs(v) < mag * 0.04) return '#f1f5f9';
   const t = v / mag;
-  if (t > 0) {
-    const a = 0.18 + t * 0.57;
-    return `rgba(59,130,246,${a.toFixed(2)})`;
-  } else {
-    const a = 0.18 + (-t) * 0.57;
-    return `rgba(239,68,68,${a.toFixed(2)})`;
-  }
+  if (t > 0) { const a=0.18+t*0.57; return `rgba(59,130,246,${a.toFixed(2)})`; }
+  else        { const a=0.18+(-t)*0.57; return `rgba(239,68,68,${a.toFixed(2)})`; }
 }
 
 function setStatus(msg){ document.getElementById('statusBar').textContent=msg; }
