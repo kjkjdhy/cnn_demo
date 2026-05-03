@@ -3,253 +3,242 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CNN Demo — Tiny VGG</title>
+  <title>CNN Convolution Demo</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body {
-      width: 100%;
-      min-height: 100vh;
-    }
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: #f1f5f9;
+    html, body { width: 100%; min-height: 100vh; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #e8ecf0; color: #1e293b; }
+
+    /* ── Header ── */
+    .page-title {
+      text-align: center;
+      padding: 18px 0 10px;
+      font-size: 22px;
+      font-weight: 700;
       color: #1e293b;
     }
-
-    /* Header */
-    .header {
-      background: #0f172a;
-      color: #f8fafc;
-      padding: 9px 16px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .header-title { font-size: 14px; font-weight: 700; }
-    .header-sub   { font-size: 11px; color: #94a3b8; }
-    #statusBadge  {
-      margin-left: auto;
+    .status-bar {
+      text-align: center;
       font-size: 11px;
       color: #94a3b8;
-      background: #1e293b;
-      padding: 3px 10px;
-      border-radius: 999px;
+      margin-bottom: 12px;
     }
 
-    /* App layout */
-    .app {
-      display: flex;
-      gap: 10px;
-      padding: 10px;
-      align-items: stretch;
-      width: 100%;
-    }
+    /* ── Cards ── */
+    .main { padding: 0 16px 24px; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: white; border-radius: 10px; padding: 16px 20px; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
 
-    /* Cards */
-    .card {
-      background: white;
-      border-radius: 8px;
-      padding: 10px 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,.07);
-    }
-    .card-title {
-      font-size: 10px;
-      font-weight: 700;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: .6px;
-      margin-bottom: 8px;
-    }
+    /* ── Top section ── */
+    .top-section { display: flex; align-items: flex-start; gap: 0; }
 
-    /* Left panel */
-    .left-panel {
-      width: 160px;
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    #inputCanvas {
-      display: block;
-      width: 136px;
-      height: 136px;
-      border: 1px solid #e2e8f0;
-      border-radius: 5px;
-      image-rendering: pixelated;
-      background: #e2e8f0;
-    }
-    .img-picker {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 3px;
-      margin-top: 2px;
-    }
-    .img-btn {
-      font-size: 9.5px;
-      padding: 4px 2px;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
-      background: white;
-      cursor: pointer;
-      color: #475569;
-      text-align: center;
-      transition: background .1s, border-color .1s;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .img-btn:hover  { background: #f8fafc; border-color: #94a3b8; }
-    .img-btn.active { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; font-weight: 600; }
-
-    /* Center panel */
-    .center-panel {
+    /* Pipeline */
+    .pipeline {
       flex: 1;
       min-width: 0;
       display: flex;
-      flex-direction: column;
-      gap: 5px;
+      align-items: flex-start;
     }
-    .layer-row {
-      display: flex;
-      gap: 8px;
-    }
-    .layer-group {
+    .pipe-col {
       flex: 1;
       min-width: 0;
-    }
-    .fm-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 5px;
-    }
-    .fm-cell {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 2px;
     }
-    canvas.kc {
-      width: 15px;
-      height: 15px;
-      image-rendering: pixelated;
-      image-rendering: crisp-edges;
-      flex-shrink: 0;
+    .pipe-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 6px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
     }
-    canvas.fc {
+    .pipe-label.sel {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #2563eb;
+    }
+    .pipe-canvas {
       width: 100%;
       aspect-ratio: 1;
       display: block;
-      border: 1px solid #f1f5f9;
-      border-radius: 2px;
-      background: #f8fafc;
-    }
-    .fm-label {
-      font-size: 8px;
-      color: #94a3b8;
-    }
-
-    /* MaxPool separator */
-    .pool-sep {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 2px;
-    }
-    .pool-sep-line  { flex: 1; height: 1px; background: #e2e8f0; }
-    .pool-sep-label { font-size: 10px; color: #94a3b8; white-space: nowrap; }
-
-    /* Right panel */
-    .right-panel {
-      width: 200px;
-      flex-shrink: 0;
-    }
-    .right-panel .card {
-      height: 100%;
-    }
-    .pred-row {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      margin-bottom: 7px;
-    }
-    .pred-name {
-      font-size: 10px;
-      color: #475569;
-      width: 76px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-    .pred-bar-bg {
-      flex: 1;
-      height: 12px;
+      border-radius: 5px;
+      image-rendering: pixelated;
       background: #f1f5f9;
-      border-radius: 999px;
-      overflow: hidden;
+      border: 1px solid #e2e8f0;
     }
-    .pred-bar-fill {
-      height: 100%;
-      border-radius: 999px;
-      background: #93c5fd;
-      transition: width .3s ease;
-    }
-    .pred-bar-fill.top { background: #2563eb; }
-    .pred-pct {
-      font-size: 10px;
-      color: #64748b;
-      width: 34px;
-      text-align: right;
+    .pipe-info { font-size: 9px; color: #94a3b8; margin-top: 5px; text-align: center; }
+
+    .pipe-arrow { flex-shrink: 0; padding: 0 4px; padding-top: 32px; color: #cbd5e1; font-size: 18px; }
+
+    .pool-sep {
       flex-shrink: 0;
+      width: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 24px;
     }
-    .loading-msg { font-size: 11px; color: #94a3b8; text-align: center; padding: 18px 0; }
+    .pool-sep-line { width: 1px; height: 16px; background: #e2e8f0; }
+    .pool-sep-txt  { font-size: 7.5px; color: #94a3b8; writing-mode: vertical-rl; padding: 3px 0; white-space: nowrap; }
+    .pool-sep-line2 { width: 1px; flex: 1; min-height: 16px; background: #e2e8f0; }
+
+    /* Prediction panel */
+    .pred-divider { width: 1px; background: #f1f5f9; flex-shrink: 0; margin: 0 14px; align-self: stretch; }
+    .pred-panel { width: 185px; flex-shrink: 0; }
+    .ctrl-title  { font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 10px; }
+    .pred-row    { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+    .pred-name   { font-size: 10px; color: #475569; width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0; }
+    .pred-bar-bg { flex: 1; height: 10px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+    .pred-bar-fill { height: 100%; border-radius: 999px; background: #93c5fd; transition: width .3s; }
+    .pred-bar-fill.top { background: #2563eb; }
+    .pred-pct    { font-size: 9px; color: #64748b; width: 30px; text-align: right; flex-shrink: 0; }
+
+    /* ── Bottom 3-col ── */
+    .bottom-row { display: flex; gap: 12px; align-items: flex-start; }
+    .ctrl-col { flex: 1; min-width: 0; }
+
+    /* Col 1: Upload + images */
+    .upload-row  { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+    .browse-btn  {
+      font-size: 11px; padding: 4px 12px;
+      border: 1px solid #e2e8f0; border-radius: 5px;
+      background: white; cursor: pointer; color: #475569;
+      transition: border-color .1s;
+    }
+    .browse-btn:hover { border-color: #94a3b8; }
+    #uploadInput { display: none; }
+    #uploadName  { font-size: 10px; color: #94a3b8; }
+    .img-sec-lbl { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
+    .img-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 3px;
+    }
+    .img-btn {
+      font-size: 9px; padding: 4px 2px;
+      border: 1px solid #e2e8f0; border-radius: 4px;
+      background: white; cursor: pointer; color: #475569;
+      text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      transition: all .1s;
+    }
+    .img-btn:hover  { border-color: #94a3b8; }
+    .img-btn.active { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
+
+    /* Col 2: Layer config */
+    .layer-tabs  { display: flex; gap: 3px; margin-bottom: 12px; }
+    .layer-tab {
+      font-size: 11px; padding: 4px 11px;
+      border: 1px solid #e2e8f0; border-radius: 5px;
+      background: white; color: #64748b; cursor: pointer;
+      transition: all .1s;
+    }
+    .layer-tab.active { border-color: #3b82f6; color: #2563eb; background: #eff6ff; font-weight: 600; }
+    .cfg-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 12px; }
+    .cfg-k   { color: #64748b; }
+    .cfg-v   { color: #1e293b; font-weight: 600; font-family: monospace; }
+
+    /* Col 3: Kernel */
+    .k-header    { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .k-title-txt { font-size: 12px; color: #64748b; }
+    .fnav        { display: flex; align-items: center; gap: 5px; }
+    .fnav-btn {
+      width: 22px; height: 22px;
+      border: 1px solid #e2e8f0; border-radius: 4px;
+      background: white; color: #64748b; cursor: pointer; font-size: 14px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .1s;
+    }
+    .fnav-btn:hover { border-color: #94a3b8; }
+    #fLabel { font-size: 11px; font-weight: 600; color: #1e293b; min-width: 56px; text-align: center; }
+    .k-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px;
+      margin-bottom: 10px;
+    }
+    .k-cell {
+      height: 40px; border-radius: 4px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,.3);
+    }
+    .layer-detail { font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.5; }
+    .refresh-btn {
+      width: 100%; padding: 7px;
+      border: 1px solid #e2e8f0; border-radius: 6px;
+      background: white; color: #475569; cursor: pointer; font-size: 12px; font-weight: 600;
+      transition: all .12s;
+    }
+    .refresh-btn:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
+
+    .dim-txt { font-size: 11px; color: #94a3b8; }
   </style>
 </head>
 <body>
 
-<div class="header">
-  <span class="header-title">CNN Demo</span>
-  <span class="header-sub">Tiny VGG · 4 Conv layers · 10 filters each · 10-class ImageNet</span>
-  <span id="statusBadge">Loading model…</span>
-</div>
+<div class="page-title">CNN Convolution Demo</div>
+<div class="status-bar" id="statusBar">Loading model…</div>
 
-<div class="app">
+<div class="main">
 
-  <!-- Left: input image + picker -->
-  <div class="left-panel">
-    <div class="card">
-      <div class="card-title">Input (64 × 64)</div>
-      <canvas id="inputCanvas" width="64" height="64"></canvas>
-    </div>
-    <div class="card">
-      <div class="card-title">Test Images</div>
-      <div class="img-picker" id="imgPicker"></div>
+  <!-- Top: pipeline + prediction -->
+  <div class="card top-section">
+    <div class="pipeline" id="pipeline"></div>
+    <div class="pred-divider"></div>
+    <div class="pred-panel">
+      <div class="ctrl-title">Prediction</div>
+      <div id="predBars"><span class="dim-txt">—</span></div>
     </div>
   </div>
 
-  <!-- Center: conv layer feature maps -->
-  <div class="center-panel" id="centerPanel">
-    <div class="loading-msg">Loading model…</div>
-  </div>
+  <!-- Bottom: 3 columns -->
+  <div class="bottom-row">
 
-  <!-- Right: prediction bars -->
-  <div class="right-panel">
-    <div class="card">
-      <div class="card-title">Prediction</div>
-      <div id="predBars"><div class="loading-msg">—</div></div>
+    <!-- Upload + example images -->
+    <div class="card ctrl-col">
+      <div class="ctrl-title">Upload Image</div>
+      <div class="upload-row">
+        <button class="browse-btn" onclick="document.getElementById('uploadInput').click()">Browse…</button>
+        <input type="file" id="uploadInput" accept="image/*">
+        <span id="uploadName">No file…</span>
+      </div>
+      <div class="img-sec-lbl">Example Images</div>
+      <div class="img-grid" id="imgGrid"></div>
     </div>
-  </div>
 
+    <!-- Layer config -->
+    <div class="card ctrl-col">
+      <div class="ctrl-title">Edit Layer</div>
+      <div class="layer-tabs" id="layerTabs"></div>
+      <div id="cfgRows"><span class="dim-txt">—</span></div>
+    </div>
+
+    <!-- Kernel display -->
+    <div class="card ctrl-col">
+      <div class="k-header">
+        <div class="k-title-txt" id="kTitle">—</div>
+        <div class="fnav">
+          <button class="fnav-btn" id="fPrev">‹</button>
+          <span id="fLabel">Filter 0</span>
+          <button class="fnav-btn" id="fNext">›</button>
+        </div>
+      </div>
+      <div class="k-grid" id="kGrid"></div>
+      <div class="layer-detail" id="layerDetail">—</div>
+      <button class="refresh-btn" id="refreshBtn">▶ Refresh</button>
+    </div>
+
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
 <script>
 const MODEL_URL   = 'https://poloclub.github.io/cnn-explainer/assets/data/model.json';
 const IMG_BASE    = 'https://poloclub.github.io/cnn-explainer/assets/img/';
-const CLASS_NAMES = [
-  'lifeboat','ladybug','pizza','bell pepper','school bus',
-  'koala','espresso','red panda','orange','sport car'
-];
+const CLASS_NAMES = ['lifeboat','ladybug','pizza','bell pepper','school bus',
+                     'koala','espresso','red panda','orange','sport car'];
 const IMAGES = [
   {label:'Espresso',    file:'espresso_1.jpeg'},
   {label:'Ladybug',     file:'bug_1.jpeg'},
@@ -262,12 +251,15 @@ const IMAGES = [
   {label:'Orange',      file:'orange_1.jpeg'},
   {label:'Sport Car',   file:'car_1.jpeg'},
 ];
-const LAYER_DISPLAY = ['Conv 1-1','Conv 1-2','Conv 2-1','Conv 2-2'];
+const LN = ['Conv 1-1','Conv 1-2','Conv 2-1','Conv 2-2'];
 
 let model      = null;
 let intermMdls = [];
 let convLayers = [];
 let imgTensor  = null;
+let fmCache    = [];   // [li] → [H][W][C]
+let selLayer   = 0;
+let selFilter  = 0;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
@@ -275,7 +267,6 @@ async function init() {
     setStatus('Loading model…');
     model = await tf.loadLayersModel(MODEL_URL);
 
-    // Detect Conv2D → Activation (relu) pairs
     const reluOuts = [];
     for (let i = 1; i < model.layers.length; i++) {
       const l = model.layers[i], p = model.layers[i - 1];
@@ -286,136 +277,218 @@ async function init() {
     }
     intermMdls = reluOuts.map(o => tf.model({ inputs: model.inputs, outputs: o }));
 
-    buildCenter();
-    drawKernels();
+    buildPipeline();
+    buildLayerTabs();
+    buildImgGrid();
+
+    document.getElementById('fPrev').onclick = () => { if (selFilter > 0) { selFilter--; updateKernel(); updateTopPanels(); } };
+    document.getElementById('fNext').onclick = () => { if (selFilter < 9) { selFilter++; updateKernel(); updateTopPanels(); } };
+    document.getElementById('refreshBtn').onclick = runPredict;
+    document.getElementById('uploadInput').addEventListener('change', async e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      document.getElementById('uploadName').textContent = f.name.slice(0, 16);
+      document.querySelectorAll('.img-btn').forEach(b => b.classList.remove('active'));
+      const url = URL.createObjectURL(f);
+      await loadURL(url, true);
+      await runPredict();
+    });
+
+    selectLayer(0);
     await loadImg(0);
     await runPredict();
-    setStatus('Ready — ' + convLayers.length + ' conv layers · click an image to run');
+    setStatus('Tiny VGG · 4 conv layers · 10 filters each · 10 classes · click an image to run');
   } catch (e) {
     setStatus('Error: ' + e.message);
     console.error(e);
   }
 }
 
-// ── Build center panel layout ─────────────────────────────────────────────────
-function buildCenter() {
-  const cp = document.getElementById('centerPanel');
-  cp.innerHTML = '';
+// ── Build pipeline ─────────────────────────────────────────────────────────────
+function buildPipeline() {
+  const pl = document.getElementById('pipeline');
+  pl.innerHTML = '';
 
-  const rows = [document.createElement('div'), document.createElement('div')];
-  rows.forEach(r => r.className = 'layer-row');
+  // Input column
+  const ic = mkCol(null);
+  ic.querySelector('.pipe-label').textContent = 'Input';
+  const cv = ic.querySelector('canvas');
+  cv.id = 'inputCanvas'; cv.width = 64; cv.height = 64;
+  ic.querySelector('.pipe-info').textContent = '64×64 · 3 ch';
+  pl.appendChild(ic);
 
   convLayers.forEach((_, li) => {
-    const grp = document.createElement('div');
-    grp.className = 'layer-group card';
+    pl.appendChild(mkArrow());
 
-    const title = document.createElement('div');
-    title.className = 'card-title';
-    title.textContent = LAYER_DISPLAY[li] || ('Conv ' + (li + 1));
-    grp.appendChild(title);
-
-    const grid = document.createElement('div');
-    grid.className = 'fm-grid';
-
-    for (let f = 0; f < 10; f++) {
-      const cell = document.createElement('div');
-      cell.className = 'fm-cell';
-
-      const kc = document.createElement('canvas');
-      kc.className = 'kc';
-      kc.id = `kc${li}_${f}`;
-      kc.width = 3; kc.height = 3;
-      cell.appendChild(kc);
-
-      const fc = document.createElement('canvas');
-      fc.className = 'fc';
-      fc.id = `fc${li}_${f}`;
-      fc.width = 80; fc.height = 80;
-      cell.appendChild(fc);
-
-      const lbl = document.createElement('div');
-      lbl.className = 'fm-label';
-      lbl.textContent = 'F' + f;
-      cell.appendChild(lbl);
-
-      grid.appendChild(cell);
+    if (li === 2) {
+      const sep = document.createElement('div');
+      sep.className = 'pool-sep';
+      const l1 = document.createElement('div'); l1.className = 'pool-sep-line';
+      const tx = document.createElement('span'); tx.className = 'pool-sep-txt'; tx.textContent = 'MaxPool ÷2';
+      const l2 = document.createElement('div'); l2.className = 'pool-sep-line2';
+      sep.append(l1, tx, l2);
+      pl.appendChild(sep);
     }
 
-    grp.appendChild(grid);
-    rows[li < 2 ? 0 : 1].appendChild(grp);
-  });
-
-  const sep = document.createElement('div');
-  sep.className = 'pool-sep';
-  sep.innerHTML = '<div class="pool-sep-line"></div>'
-    + '<span class="pool-sep-label">MaxPool ÷2</span>'
-    + '<div class="pool-sep-line"></div>';
-
-  cp.appendChild(rows[0]);
-  cp.appendChild(sep);
-  cp.appendChild(rows[1]);
-}
-
-// ── Draw kernel thumbnails (3×3 → 15px via CSS) ───────────────────────────────
-function drawKernels() {
-  convLayers.forEach((layer, li) => {
-    const wt  = layer.getWeights()[0]; // [3,3,inC,outC]
-    const arr = wt.arraySync();
-    const inC = arr[0][0].length;
-    const isRGB = (li === 0 && inC === 3);
-
-    for (let f = 0; f < 10; f++) {
-      const kc  = document.getElementById(`kc${li}_${f}`);
-      const ctx = kc.getContext('2d');
-      const id  = ctx.createImageData(3, 3);
-
-      if (isRGB) {
-        // First layer: show as RGB color
-        const mm = [0, 1, 2].map(c => {
-          let mn = 1e9, mx = -1e9;
-          for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
-            mn = Math.min(mn, arr[y][x][c][f]);
-            mx = Math.max(mx, arr[y][x][c][f]);
-          }
-          return { mn, mx };
-        });
-        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
-          const pi = (y * 3 + x) * 4;
-          id.data[pi]     = nrm(arr[y][x][0][f], mm[0].mn, mm[0].mx);
-          id.data[pi + 1] = nrm(arr[y][x][1][f], mm[1].mn, mm[1].mx);
-          id.data[pi + 2] = nrm(arr[y][x][2][f], mm[2].mn, mm[2].mx);
-          id.data[pi + 3] = 255;
-        }
-      } else {
-        // Deeper layers: pick highest-magnitude input channel → grayscale
-        let bestC = 0, bestM = 0;
-        for (let c = 0; c < inC; c++) {
-          let m = 0;
-          for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++)
-            m = Math.max(m, Math.abs(arr[y][x][c][f]));
-          if (m > bestM) { bestM = m; bestC = c; }
-        }
-        let mn = 1e9, mx = -1e9;
-        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
-          mn = Math.min(mn, arr[y][x][bestC][f]);
-          mx = Math.max(mx, arr[y][x][bestC][f]);
-        }
-        for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) {
-          const pi = (y * 3 + x) * 4;
-          const v  = nrm(arr[y][x][bestC][f], mn, mx);
-          id.data[pi] = id.data[pi + 1] = id.data[pi + 2] = v;
-          id.data[pi + 3] = 255;
-        }
-      }
-      ctx.putImageData(id, 0, 0);
-    }
+    const col = mkCol(li);
+    pl.appendChild(col);
   });
 }
 
-// ── Load a test image ─────────────────────────────────────────────────────────
+function mkCol(li) {
+  const col = document.createElement('div');
+  col.className = 'pipe-col';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'pipe-label' + (li !== null && li === selLayer ? ' sel' : '');
+  lbl.id = li !== null ? `plbl${li}` : '';
+  lbl.textContent = li !== null ? LN[li] : '';
+  col.appendChild(lbl);
+
+  const c = document.createElement('canvas');
+  c.className = 'pipe-canvas';
+  c.id = li !== null ? `pc${li}` : '';
+  c.width = 60; c.height = 60;
+  col.appendChild(c);
+
+  const inf = document.createElement('div');
+  inf.className = 'pipe-info';
+  inf.id = li !== null ? `pinf${li}` : '';
+  inf.textContent = li !== null ? '—' : '';
+  col.appendChild(inf);
+
+  return col;
+}
+
+function mkArrow() {
+  const d = document.createElement('div');
+  d.className = 'pipe-arrow';
+  d.textContent = '→';
+  return d;
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────────
+function buildLayerTabs() {
+  const tabs = document.getElementById('layerTabs');
+  convLayers.forEach((_, li) => {
+    const t = document.createElement('button');
+    t.className = 'layer-tab' + (li === 0 ? ' active' : '');
+    t.textContent = String(li + 1);
+    t.title = LN[li];
+    t.onclick = () => selectLayer(li);
+    tabs.appendChild(t);
+  });
+}
+
+function buildImgGrid() {
+  const grid = document.getElementById('imgGrid');
+  IMAGES.forEach((img, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'img-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = img.label;
+    btn.onclick = async () => { await loadImg(i); await runPredict(); };
+    grid.appendChild(btn);
+  });
+}
+
+function selectLayer(li) {
+  selLayer  = li;
+  selFilter = 0;
+  document.querySelectorAll('.layer-tab').forEach((t, i) => t.classList.toggle('active', i === li));
+  convLayers.forEach((_, i) => {
+    const lbl = document.getElementById(`plbl${i}`);
+    if (lbl) lbl.className = 'pipe-label' + (i === li ? ' sel' : '');
+  });
+  updateLayerCfg();
+  updateKernel();
+}
+
+function updateLayerCfg() {
+  const layer  = convLayers[selLayer];
+  const cfg    = layer.getConfig();
+  const wshp   = layer.getWeights()[0].shape; // [3,3,inC,outC]
+  const inC    = wshp[2], outC = wshp[3];
+  const ks     = Array.isArray(cfg.kernelSize) ? cfg.kernelSize : [cfg.kernelSize, cfg.kernelSize];
+  const stride = Array.isArray(cfg.strides) ? cfg.strides[0] : (cfg.strides || 1);
+  const pad    = cfg.padding || 'valid';
+  const poolInfo = (selLayer === 1 || selLayer === 3) ? 'MaxPool 2×2 ↓' : 'None';
+  const fmInfo = fmCache[selLayer] ? `${fmCache[selLayer].length}×${fmCache[selLayer][0].length}` : '—';
+
+  const rows = [
+    ['Channels (in)',    inC],
+    ['Channels (out)',   outC],
+    ['Layers',          convLayers.length],
+    ['Kernel Size',     `${ks[0]} × ${ks[1]}`],
+    ['Stride',          stride],
+    ['Padding',         pad],
+    ['Pooling (after)', poolInfo],
+    ['Output size',     fmInfo],
+  ];
+
+  document.getElementById('cfgRows').innerHTML = rows.map(([k, v]) =>
+    `<div class="cfg-row"><span class="cfg-k">${k}</span><span class="cfg-v">${v}</span></div>`
+  ).join('');
+}
+
+function updateKernel() {
+  const layer  = convLayers[selLayer];
+  const arr    = layer.getWeights()[0].arraySync(); // [3,3,inC,outC]
+  const inC    = arr[0][0].length;
+  const f      = selFilter;
+
+  document.getElementById('fLabel').textContent = `Filter ${f}`;
+  document.getElementById('kTitle').textContent = `${LN[selLayer]}`;
+
+  // Best-magnitude input channel for grayscale display
+  let bestC = 0, bestM = 0;
+  for (let c = 0; c < inC; c++) {
+    let m = 0;
+    for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++)
+      m = Math.max(m, Math.abs(arr[y][x][c][f]));
+    if (m > bestM) { bestM = m; bestC = c; }
+  }
+
+  const vals = [];
+  for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++)
+    vals.push(arr[y][x][bestC][f]);
+  const mn  = Math.min(...vals), mx = Math.max(...vals);
+  const mag = Math.max(Math.abs(mn), Math.abs(mx));
+
+  const grid = document.getElementById('kGrid');
+  grid.innerHTML = '';
+  vals.forEach(v => {
+    const c = document.createElement('div');
+    c.className = 'k-cell';
+    c.style.background = kCol(v, mag);
+    c.textContent = fmtW(v);
+    grid.appendChild(c);
+  });
+
+  const cfg    = layer.getConfig();
+  const stride = Array.isArray(cfg.strides) ? cfg.strides[0] : (cfg.strides || 1);
+  const inDim  = fmCache[selLayer] ? `${fmCache[selLayer].length}×${fmCache[selLayer][0].length}` : '—';
+  document.getElementById('layerDetail').textContent =
+    `${LN[selLayer]} · ${inC} in-ch · 3×3 · stride=${stride} · ${cfg.padding || 'valid'} · ${(selLayer===1||selLayer===3)?'MaxPool 2×2':'no pool'}  ·  output ${inDim}`;
+}
+
+function updateTopPanels() {
+  convLayers.forEach((_, li) => {
+    const data = fmCache[li];
+    if (!data) return;
+    const H = data.length, W = data[0].length, C = data[0][0].length;
+    const f = Math.min(selFilter, C - 1);
+    paintToCanvas(document.getElementById(`pc${li}`), data, H, W, f);
+  });
+}
+
+// ── Image loading ─────────────────────────────────────────────────────────────
 async function loadImg(idx) {
   document.querySelectorAll('.img-btn').forEach((b, i) => b.classList.toggle('active', i === idx));
-  const url = IMG_BASE + IMAGES[idx].file;
+  document.getElementById('uploadName').textContent = 'No file…';
+  await loadURL(IMG_BASE + IMAGES[idx].file, false);
+}
+
+async function loadURL(src, revoke) {
   await new Promise((res, rej) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -426,48 +499,32 @@ async function loadImg(idx) {
       imgTensor = tf.tidy(() =>
         tf.browser.fromPixels(c).toFloat().div(255).expandDims(0)
       );
+      if (revoke) URL.revokeObjectURL(src);
       res();
     };
     img.onerror = rej;
-    img.src = url;
+    img.src = src;
   });
 }
 
-// ── Run inference and draw feature maps ───────────────────────────────────────
+// ── Inference ─────────────────────────────────────────────────────────────────
 async function runPredict() {
   if (!imgTensor || !model) return;
+  fmCache = [];
 
   for (let li = 0; li < intermMdls.length; li++) {
-    const out  = intermMdls[li].predict(imgTensor); // [1,H,W,10]
-    const data = (await out.array())[0];            // [H,W,10]
+    const out  = intermMdls[li].predict(imgTensor);
+    const data = (await out.array())[0]; // [H,W,C]
     out.dispose();
-    const H = data.length, W = data[0].length;
+    fmCache.push(data);
 
-    for (let f = 0; f < 10; f++) {
-      let mn = 1e9, mx = -1e9;
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        if (data[y][x][f] < mn) mn = data[y][x][f];
-        if (data[y][x][f] > mx) mx = data[y][x][f];
-      }
+    const H = data.length, W = data[0].length, C = data[0][0].length;
+    document.getElementById(`pinf${li}`).textContent = `${H}×${W} · ${C} ch`;
 
-      const tmp   = document.createElement('canvas');
-      tmp.width = W; tmp.height = H;
-      const tctx  = tmp.getContext('2d');
-      const id    = tctx.createImageData(W, H);
-      for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
-        const pi = (y * W + x) * 4;
-        const v  = nrm(data[y][x][f], mn, mx);
-        id.data[pi] = id.data[pi + 1] = id.data[pi + 2] = v;
-        id.data[pi + 3] = 255;
-      }
-      tctx.putImageData(id, 0, 0);
-
-      const fc = document.getElementById(`fc${li}_${f}`);
-      fc.getContext('2d').drawImage(tmp, 0, 0, fc.width, fc.height);
-    }
+    const f = Math.min(selFilter, C - 1);
+    paintToCanvas(document.getElementById(`pc${li}`), data, H, W, f);
   }
 
-  // Final prediction probabilities
   const pred  = model.predict(imgTensor);
   const probs = (await pred.array())[0];
   pred.dispose();
@@ -485,23 +542,70 @@ async function runPredict() {
       `<span class="pred-pct">${pct}%</span>`;
     bars.appendChild(row);
   });
+
+  updateLayerCfg();
+  updateKernel();
 }
 
+// ── Draw feature map for one filter to canvas ─────────────────────────────────
+function paintToCanvas(canvas, data, H, W, f) {
+  let mn = 1e9, mx = -1e9;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    if (data[y][x][f] < mn) mn = data[y][x][f];
+    if (data[y][x][f] > mx) mx = data[y][x][f];
+  }
+  const tmp = document.createElement('canvas');
+  tmp.width = W; tmp.height = H;
+  const tctx = tmp.getContext('2d');
+  const id   = tctx.createImageData(W, H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const pi = (y * W + x) * 4;
+    const v  = nrm(data[y][x][f], mn, mx);
+    id.data[pi] = id.data[pi+1] = id.data[pi+2] = v;
+    id.data[pi+3] = 255;
+  }
+  tctx.putImageData(id, 0, 0);
+  canvas.getContext('2d').drawImage(tmp, 0, 0, canvas.width, canvas.height);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 function nrm(v, mn, mx) {
   if (mx === mn) return 128;
   return Math.max(0, Math.min(255, Math.round((v - mn) / (mx - mn) * 255)));
 }
 
-function setStatus(msg) { document.getElementById('statusBadge').textContent = msg; }
+function kCol(v, mag) {
+  if (mag < 1e-8) return '#e2e8f0';
+  const t = v / mag; // [-1, 1]
+  if (t >= 0) {
+    const r = Math.round(37  + (1 - t) * 170);  // deep blue → light blue
+    const g = Math.round(99  + (1 - t) * 120);
+    const b = Math.round(235);
+    return `rgb(${r},${g},${b})`;
+  } else {
+    const a = -t;
+    const r = Math.round(235);
+    const g = Math.round(80  + (1 - a) * 130);  // deep orange → light orange
+    const b = Math.round(50  + (1 - a) * 150);
+    return `rgb(${r},${g},${b})`;
+  }
+}
 
-// ── Build image picker buttons ────────────────────────────────────────────────
-IMAGES.forEach((img, i) => {
-  const btn = document.createElement('button');
-  btn.className = 'img-btn' + (i === 0 ? ' active' : '');
-  btn.textContent = img.label;
-  btn.onclick = async () => { await loadImg(i); await runPredict(); };
-  document.getElementById('imgPicker').appendChild(btn);
-});
+function fmtW(v) {
+  const a = Math.abs(v);
+  if (a < 1e-4) return '0';
+  if (a < 0.01) return v.toExponential(1);
+  return v.toFixed(2);
+}
+
+function el(tag, cls, txt) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt) e.textContent = txt;
+  return e;
+}
+
+function setStatus(msg) { document.getElementById('statusBar').textContent = msg; }
 
 init();
 </script>
