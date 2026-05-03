@@ -7,73 +7,106 @@
   <style>
     * { box-sizing: border-box; font-family: Arial, sans-serif; }
     body { margin: 0; padding: 24px; background: #f5f6f8; color: #222; }
-    h1 { margin-top: 0; font-size: 28px; text-align: center; }
-    h2 { font-size: 17px; margin: 0 0 14px; color: #111; }
-    .container { display: flex; flex-direction: column; gap: 16px; max-width: 1100px; margin: 0 auto; }
+    h1 { margin-top: 0; font-size: 28px; text-align: center; margin-bottom: 20px; }
+    .container { display: flex; flex-direction: column; gap: 14px; max-width: 1050px; margin: 0 auto; }
     .panel { background: white; border-radius: 14px; padding: 20px; box-shadow: 0 4px 18px rgba(0,0,0,0.08); }
 
-    /* ── Top bar ─────────────────────────────────────────────────────────── */
-    .top-bar { display: flex; align-items: flex-end; gap: 24px; margin-bottom: 18px; flex-wrap: wrap; }
-    .preset-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 6px; }
-    .preset-strip { display: flex; gap: 8px; }
-    .preset-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-    .preset-thumb {
-      width: 56px; height: 56px; object-fit: cover; border-radius: 8px;
-      border: 2px solid #e5e7eb; transition: border-color 0.15s; display: block; background: #f3f4f6;
+    /* ── Top panel ───────────────────────────────────────────────────────── */
+    .imgs-row {
+      display: flex; align-items: flex-start; gap: 10px; justify-content: center; flex-wrap: wrap;
     }
-    .preset-thumb:hover { border-color: #93c5fd; }
-    .preset-thumb.active { border-color: #1d4ed8; box-shadow: 0 0 0 2px #bfdbfe; }
-    .preset-caption { font-size: 10px; font-weight: 600; color: #555; }
-    .controls-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .play-btn { padding: 9px 22px; border-radius: 8px; background: #1d4ed8; color: white;
-      font-weight: 700; font-size: 14px; border: none; cursor: pointer; }
+    .img-wrap { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    .img-label-top {
+      font-size: 12px; font-weight: 700; color: #374151;
+      background: #eff6ff; border: 1.5px solid #bfdbfe;
+      border-radius: 6px; padding: 2px 14px; min-width: 64px; text-align: center;
+    }
+    .main-canvas { border-radius: 8px; border: 2px solid #e5e7eb; display: block; }
+    .img-label-bot { font-size: 11px; color: #9ca3af; }
+    .img-arrow { font-size: 22px; color: #d1d5db; margin-top: 36px; }
+
+    /* ── Bottom panel ────────────────────────────────────────────────────── */
+    .bottom-panel { display: flex; gap: 18px; align-items: flex-start; }
+    .col { min-width: 0; }
+    .col-presets  { width: 180px; flex-shrink: 0; }
+    .col-controls { width: 195px; flex-shrink: 0; border-left: 1px solid #f3f4f6; padding-left: 18px; }
+    .col-right    { flex: 1; border-left: 1px solid #f3f4f6; padding-left: 18px; }
+
+    .col-title { font-size: 13px; font-weight: 700; color: #111; margin-bottom: 8px; }
+
+    /* Upload row */
+    .upload-row { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; }
+    .upload-btn {
+      display: inline-block; padding: 4px 10px;
+      background: #f3f4f6; border: 1.5px solid #d1d5db;
+      border-radius: 6px; font-size: 12px; font-weight: 600;
+      cursor: pointer; color: #374151; white-space: nowrap;
+    }
+    .upload-btn:hover { background: #e5e7eb; }
+    .file-name { font-size: 11px; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Preset text buttons */
+    .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+    .preset-btn {
+      padding: 5px 4px; background: #f3f4f6; border: 1.5px solid #d1d5db;
+      border-radius: 6px; font-size: 12px; font-weight: 600; color: #374151;
+      cursor: pointer; text-align: center; white-space: nowrap;
+    }
+    .preset-btn:hover { background: #dbeafe; border-color: #93c5fd; }
+    .preset-btn.active { background: #dbeafe; border-color: #1d4ed8; color: #1d4ed8; }
+
+    /* Controls table */
+    .ctrl-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    .ctrl-table td { padding: 5px 2px; font-size: 12px; vertical-align: middle; }
+    .ctrl-table td:first-child { color: #6b7280; font-weight: 600; padding-right: 8px; white-space: nowrap; }
+    .ctrl-val { font-size: 12px; font-weight: 700; color: #374151; }
+    .ctrl-sel {
+      font-size: 12px; padding: 3px 5px; border: 1.5px solid #d1d5db;
+      border-radius: 5px; width: 100%; background: white; color: #222;
+    }
+    .ctrl-sel:focus { outline: none; border-color: #93c5fd; }
+    .play-btn {
+      width: 100%; padding: 8px 0; border-radius: 8px;
+      background: #1d4ed8; color: white; font-weight: 700;
+      font-size: 14px; border: none; cursor: pointer; margin-top: 2px;
+    }
     .play-btn:hover { background: #1e40af; }
-    .speed-row { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
 
-    /* ── Animation area ──────────────────────────────────────────────────── */
-    .anim-area { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
-    .anim-col { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .anim-col-label { font-size: 12px; font-weight: 700; color: #555; }
-    .anim-canvas { border-radius: 8px; border: 2px solid #e5e7eb; display: block; }
-    .anim-arrow { font-size: 22px; color: #d1d5db; align-self: center; margin-top: 18px; }
+    /* Right column */
+    .layer-info-text { font-size: 11px; color: #6b7280; margin-bottom: 8px; }
+    .kernel-name-badge {
+      display: inline-block; font-size: 12px; font-weight: 700; color: #1d4ed8;
+      background: #eff6ff; border: 1.5px solid #bfdbfe;
+      border-radius: 6px; padding: 2px 10px; margin-bottom: 8px;
+    }
+    .kernel-grid3x3 { display: grid; grid-template-columns: repeat(3, 44px); gap: 3px; margin-bottom: 9px; }
+    .kc {
+      width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+      font-family: Consolas, monospace; font-size: 11px; font-weight: 700;
+      border-radius: 5px; border: 1px solid rgba(0,0,0,0.06);
+    }
+    .kcp { background: #dbeafe; color: #1e40af; }
+    .kcn { background: #fee2e2; color: #991b1b; }
+    .kcz { background: #f3f4f6; color: #9ca3af; }
+    .refresh-btn {
+      padding: 5px 14px; background: #f3f4f6; border: 1.5px solid #d1d5db;
+      border-radius: 7px; font-size: 12px; font-weight: 700; color: #374151;
+      cursor: pointer; margin-bottom: 14px;
+    }
+    .refresh-btn:hover { background: #e5e7eb; }
 
-    /* ── Classification ──────────────────────────────────────────────────── */
-    .class-col { flex: 1; min-width: 190px; }
-    .class-col-label { font-size: 12px; font-weight: 700; color: #555; margin-bottom: 8px; }
-    .class-waiting { color: #9ca3af; font-size: 13px; }
-    .class-row { display: flex; align-items: center; gap: 7px; margin-bottom: 9px; }
-    .class-lbl { font-size: 13px; font-weight: 600; width: 130px; flex-shrink: 0;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222; }
-    .class-bar-bg { flex: 1; background: #f3f4f6; border-radius: 4px; height: 15px; overflow: hidden; }
-    .class-bar { height: 15px; border-radius: 4px; background: #1d4ed8; }
-    .class-pct { font-size: 13px; font-weight: 700; min-width: 38px; text-align: right; color: #374151; }
-    .model-note { font-size: 11px; color: #9ca3af; margin-top: 8px; }
-
-    /* ── Kernel weights panel ────────────────────────────────────────────── */
-    .kw-section { margin-bottom: 14px; }
-    .kw-layer-title { font-size: 12px; font-weight: 700; color: #374151; margin-bottom: 6px;
-      padding: 4px 8px; background: #f8fafc; border-radius: 6px; border-left: 3px solid #1d4ed8; }
-    .kw-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
-    .kw-filter { cursor: pointer; border: 2px solid #e5e7eb; border-radius: 6px; padding: 3px 3px 1px;
-      flex-shrink: 0; transition: border-color 0.12s; }
-    .kw-filter:hover { border-color: #93c5fd; }
-    .kw-filter.sel { border-color: #1d4ed8; background: #eff6ff; }
-    .mini-grid { display: grid; grid-template-columns: repeat(3, 18px); gap: 1px; }
-    .mini-cell { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;
-      font-family: Consolas, monospace; font-size: 6.5px; font-weight: 700; border-radius: 2px; }
-    .kp { background: #dbeafe; color: #1e40af; }
-    .kn { background: #fee2e2; color: #991b1b; }
-    .kz { background: #f3f4f6; color: #9ca3af; }
-    .kw-num { font-size: 8.5px; text-align: center; color: #9ca3af; margin-top: 2px; }
-    .kw-more { align-self: center; font-size: 11px; color: #9ca3af; flex-shrink: 0; padding-left: 4px; }
-    .kw-loading { color: #9ca3af; font-size: 13px; }
-
-    /* ── Architecture panel ──────────────────────────────────────────────── */
-    .arch-wrap { overflow-x: auto; }
-    .arch-wrap canvas { display: block; }
-    .arch-legend { display: flex; gap: 16px; margin-top: 10px; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #555; }
-    .legend-sw { width: 13px; height: 13px; border-radius: 3px; border: 1px solid #ccc; flex-shrink: 0; }
+    /* Prediction */
+    .col-divider { border: none; border-top: 1px solid #e5e7eb; margin: 12px 0; }
+    .class-waiting { color: #9ca3af; font-size: 12px; }
+    .class-row { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+    .class-lbl {
+      font-size: 12px; font-weight: 600; width: 120px; flex-shrink: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #222;
+    }
+    .class-bar-bg { flex: 1; background: #f3f4f6; border-radius: 4px; height: 13px; overflow: hidden; }
+    .class-bar { height: 13px; border-radius: 4px; }
+    .class-pct { font-size: 12px; font-weight: 700; min-width: 36px; text-align: right; color: #374151; }
+    .model-note { font-size: 11px; color: #9ca3af; margin-top: 4px; }
   </style>
 </head>
 <body>
@@ -81,58 +114,84 @@
 
   <div class="container">
 
-    <!-- ── Panel 1: Animation ─────────────────────────────────────────── -->
+    <!-- ── Top panel: three image canvases ────────────────────────────────── -->
     <div class="panel">
-      <div class="top-bar">
-        <div>
-          <div class="preset-label">Choose an Image</div>
-          <div class="preset-strip" id="presetStrip"></div>
+      <div class="imgs-row">
+        <div class="img-wrap">
+          <div class="img-label-top">Input</div>
+          <canvas id="inputCanvas" class="main-canvas" width="220" height="220"></canvas>
         </div>
-        <div class="controls-row">
-          <button class="play-btn" id="playBtn" onclick="animToggle()">▶ Play</button>
-          <div class="speed-row">Speed
-            <input type="range" id="animSpeed" min="1" max="30" value="6" style="width:80px">
-          </div>
+        <div class="img-arrow">→</div>
+        <div class="img-wrap">
+          <div class="img-label-top">Layer 1</div>
+          <canvas id="layer1Canvas" class="main-canvas" width="220" height="220"></canvas>
+          <div class="img-label-bot" id="l1InfoBot">← 1 dp →</div>
         </div>
-      </div>
-
-      <div class="anim-area">
-        <div class="anim-col">
-          <div class="anim-col-label">Input + Kernel</div>
-          <canvas id="inputCanvas" class="anim-canvas" width="220" height="220"></canvas>
-        </div>
-        <div class="anim-arrow">→</div>
-        <div class="anim-col">
-          <div class="anim-col-label">Feature Map</div>
-          <canvas id="outputCanvas" class="anim-canvas" width="220" height="220"></canvas>
-        </div>
-        <div class="anim-arrow">→</div>
-        <div class="class-col">
-          <div class="class-col-label">Classification (MobileNet)</div>
-          <div id="classResult"><div class="class-waiting">Select an image and press ▶ Play</div></div>
-          <div class="model-note" id="modelStatus">Loading MobileNet…</div>
+        <div class="img-arrow">→</div>
+        <div class="img-wrap">
+          <div class="img-label-top">Layer 2</div>
+          <canvas id="layer2Canvas" class="main-canvas" width="220" height="220"></canvas>
+          <div class="img-label-bot" id="l2InfoBot">← 1 dp →</div>
         </div>
       </div>
     </div>
 
-    <!-- ── Panel 2: Kernel Weights ────────────────────────────────────── -->
-    <div class="panel">
-      <h2>Learned Kernel Weights  <span style="font-weight:400;font-size:13px;color:#9ca3af">— click any filter to use it in the animation above</span></h2>
-      <div id="kernelWeightsPanel"><div class="kw-loading">Waiting for MobileNet to load…</div></div>
-    </div>
+    <!-- ── Bottom panel: three columns ────────────────────────────────────── -->
+    <div class="panel bottom-panel">
 
-    <!-- ── Panel 3: Architecture ──────────────────────────────────────── -->
-    <div class="panel">
-      <h2>MobileNet V2 — Model Architecture</h2>
-      <div class="arch-wrap">
-        <canvas id="archCanvas" width="900" height="230"></canvas>
+      <!-- Col 1: Upload + Example images -->
+      <div class="col col-presets">
+        <div class="col-title">Uploaded Image</div>
+        <div class="upload-row">
+          <label class="upload-btn">Browse…<input type="file" id="fileInput" accept="image/*" style="display:none"></label>
+          <span class="file-name" id="fileName">No file…</span>
+        </div>
+        <div class="col-title" style="margin-top:12px">Example Images</div>
+        <div class="preset-grid" id="presetGrid"></div>
       </div>
-      <div class="arch-legend">
-        <div class="legend-item"><div class="legend-sw" style="background:#d4d8e0"></div>Convolution</div>
-        <div class="legend-item"><div class="legend-sw" style="background:#c8e6c9"></div>Pooling</div>
-        <div class="legend-item"><div class="legend-sw" style="background:#bbdefb"></div>Fully Connected</div>
-        <div class="legend-item"><div class="legend-sw" style="background:#f3e8ff"></div>Softmax Output</div>
+
+      <!-- Col 2: Edit Layer controls -->
+      <div class="col col-controls">
+        <div class="col-title">Edit Layer</div>
+        <table class="ctrl-table">
+          <tr>
+            <td>Channels (this layer)</td>
+            <td><div class="ctrl-val" id="ctrlChannels">—</div></td>
+          </tr>
+          <tr>
+            <td>Layers</td>
+            <td><select id="layerSel" class="ctrl-sel" onchange="onLayerChange()"></select></td>
+          </tr>
+          <tr>
+            <td>Kernel Size (global)</td>
+            <td><div class="ctrl-val">3 × 3</div></td>
+          </tr>
+          <tr>
+            <td>Filter</td>
+            <td><select id="filterSel" class="ctrl-sel" onchange="onFilterChange()"></select></td>
+          </tr>
+          <tr>
+            <td>Speed</td>
+            <td><input type="range" id="animSpeed" min="1" max="30" value="6" style="width:100%"></td>
+          </tr>
+        </table>
+        <button class="play-btn" id="playBtn" onclick="animToggle()">▶ Play</button>
       </div>
+
+      <!-- Col 3: Kernel display + Prediction -->
+      <div class="col col-right">
+        <div class="layer-info-text" id="layerInfoText">—</div>
+        <div class="kernel-name-badge" id="kernelNameBadge">Filter #1</div>
+        <div id="kernelGrid3x3" class="kernel-grid3x3"></div>
+        <button class="refresh-btn" onclick="refreshAnim()">↺ Refresh</button>
+
+        <hr class="col-divider">
+
+        <div class="col-title">Prediction (MobileNet)</div>
+        <div id="classResult"><div class="class-waiting">Select an image and press ▶ Play</div></div>
+        <div class="model-note" id="modelStatus">Loading MobileNet…</div>
+      </div>
+
     </div>
 
   </div>
@@ -140,7 +199,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.21.0/dist/tf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
   <script>
-    // ── Constants ─────────────────────────────────────────────────────────────
     const ANIM_SIZE = 64;
     const DISP      = 220;
     const MAX_IMG   = 320;
@@ -154,7 +212,6 @@
       { label: 'Flower', url: 'https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=320&h=320&fit=crop' },
     ];
 
-    // ── State ─────────────────────────────────────────────────────────────────
     let animState  = 'idle';
     let animRAF    = null;
     let animPos    = 0;
@@ -164,11 +221,10 @@
     let animOutW   = 0, animOutH = 0;
     let animOutPx  = null;
 
-    let mobileNetModel  = null;
-    let allLayerData    = [];
+    let mobileNetModel = null;
+    let allLayerData   = [];
     let selLayer = 0, selFilter = 0;
 
-    // ── Utilities ─────────────────────────────────────────────────────────────
     function clamp(x) { return Math.max(0, Math.min(255, Math.round(x))); }
 
     function scaleImageTo(src, tw, th) {
@@ -181,31 +237,23 @@
       return d.getContext('2d').getImageData(0, 0, tw, th);
     }
 
-    // ── Presets ───────────────────────────────────────────────────────────────
+    // ── Presets ───────────────────────────────────────────────────────────
     function buildPresets() {
-      const strip = document.getElementById('presetStrip');
+      const grid = document.getElementById('presetGrid');
       PRESETS.forEach((p, i) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'preset-item';
-        const img = document.createElement('img');
-        img.className = 'preset-thumb';
-        img.crossOrigin = 'anonymous';
-        img.src = p.url;
-        img.alt = p.label; img.title = p.label;
-        img.onclick = () => loadPreset(i);
-        const cap = document.createElement('div');
-        cap.className = 'preset-caption'; cap.textContent = p.label;
-        wrap.appendChild(img); wrap.appendChild(cap);
-        strip.appendChild(wrap);
+        const btn = document.createElement('button');
+        btn.className = 'preset-btn';
+        btn.textContent = p.label;
+        btn.onclick = () => loadPreset(i);
+        grid.appendChild(btn);
       });
     }
 
     function loadPreset(idx) {
-      document.querySelectorAll('.preset-thumb').forEach((el, i) =>
+      document.querySelectorAll('.preset-btn').forEach((el, i) =>
         el.classList.toggle('active', i === idx));
-      if (animState === 'running') cancelAnimationFrame(animRAF);
-      animState = 'idle'; animPos = 0;
-      document.getElementById('playBtn').textContent = '▶ Play';
+      stopAnim();
+      document.getElementById('fileName').textContent = PRESETS[idx].label;
       document.getElementById('classResult').innerHTML =
         '<div class="class-waiting">Press ▶ Play to animate & classify</div>';
 
@@ -218,15 +266,44 @@
         c.width = w; c.height = h;
         c.getContext('2d').drawImage(img, 0, 0, w, h);
         animFull = c.getContext('2d').getImageData(0, 0, w, h);
-        paintStatic(animFull, false);
-        clearOutput();
+        paintInput(animFull, false);
+        clearCanvas('layer1Canvas');
+        clearCanvas('layer2Canvas');
       };
       img.onerror = () => alert('Image failed to load. Check network.');
       img.src = PRESETS[idx].url;
     }
 
-    // ── Canvas helpers ────────────────────────────────────────────────────────
-    function paintStatic(imageData, pixelated) {
+    // ── File upload ────────────────────────────────────────────────────────
+    document.getElementById('fileInput').addEventListener('change', function () {
+      if (!this.files.length) return;
+      const file = this.files[0];
+      document.getElementById('fileName').textContent = file.name;
+      document.querySelectorAll('.preset-btn').forEach(el => el.classList.remove('active'));
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const sc = Math.min(MAX_IMG / img.width, MAX_IMG / img.height, 1);
+          const w = Math.round(img.width * sc), h = Math.round(img.height * sc);
+          const c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          animFull = c.getContext('2d').getImageData(0, 0, w, h);
+          paintInput(animFull, false);
+          clearCanvas('layer1Canvas');
+          clearCanvas('layer2Canvas');
+          stopAnim();
+          document.getElementById('classResult').innerHTML =
+            '<div class="class-waiting">Press ▶ Play to animate & classify</div>';
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // ── Canvas helpers ─────────────────────────────────────────────────────
+    function paintInput(imageData, pixelated) {
       const ctx = document.getElementById('inputCanvas').getContext('2d');
       const tmp = document.createElement('canvas');
       tmp.width = imageData.width; tmp.height = imageData.height;
@@ -237,45 +314,51 @@
     }
 
     function paintWithKernel(ox, oy) {
-      paintStatic(animSmall, true);
+      paintInput(animSmall, true);
       const ctx = document.getElementById('inputCanvas').getContext('2d');
       const sc = DISP / ANIM_SIZE, p = 1, ks = animKernel.length;
       const rx = (ox - p) * sc, ry = (oy - p) * sc, rw = ks * sc;
       ctx.fillStyle = 'rgba(255,60,60,0.18)'; ctx.fillRect(rx, ry, rw, rw);
       ctx.strokeStyle = '#ff3c3c'; ctx.lineWidth = 2;
-      ctx.strokeRect(rx+1, ry+1, rw-2, rw-2);
+      ctx.strokeRect(rx + 1, ry + 1, rw - 2, rw - 2);
       ctx.fillStyle = 'rgba(255,60,60,0.55)';
-      ctx.fillRect(ox*sc, oy*sc, sc, sc);
+      ctx.fillRect(ox * sc, oy * sc, sc, sc);
     }
 
-    function clearOutput() {
-      const ctx = document.getElementById('outputCanvas').getContext('2d');
+    function clearCanvas(id) {
+      const ctx = document.getElementById(id).getContext('2d');
       ctx.fillStyle = '#1a1a2e';
       ctx.fillRect(0, 0, DISP, DISP);
     }
 
-    function paintOutput() {
+    function paintPixelsToCanvas(id, px, w, h) {
       const tmp = document.createElement('canvas');
-      tmp.width = animOutW; tmp.height = animOutH;
-      tmp.getContext('2d').putImageData(
-        new ImageData(new Uint8ClampedArray(animOutPx), animOutW, animOutH), 0, 0);
-      const ctx = document.getElementById('outputCanvas').getContext('2d');
+      tmp.width = w; tmp.height = h;
+      tmp.getContext('2d').putImageData(new ImageData(new Uint8ClampedArray(px), w, h), 0, 0);
+      const ctx = document.getElementById(id).getContext('2d');
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(tmp, 0, 0, DISP, DISP);
     }
 
-    // ── Animation ─────────────────────────────────────────────────────────────
+    // ── Animation ──────────────────────────────────────────────────────────
+    function stopAnim() {
+      if (animState === 'running') cancelAnimationFrame(animRAF);
+      animState = 'idle'; animPos = 0;
+      document.getElementById('playBtn').textContent = '▶ Play';
+    }
+
     function setupAnim() {
       if (!animFull) return false;
       animSmall = scaleImageTo(animFull, ANIM_SIZE, ANIM_SIZE);
       const pad = 1, ks = 3;
-      animOutW  = Math.floor((ANIM_SIZE + 2*pad - ks) / 1 + 1);
+      animOutW  = Math.floor((ANIM_SIZE + 2 * pad - ks) + 1);
       animOutH  = animOutW;
       animOutPx = new Uint8ClampedArray(animOutW * animOutH * 4);
       for (let i = 3; i < animOutPx.length; i += 4) animOutPx[i] = 255;
-      animPos   = 0;
-      paintStatic(animSmall, true);
-      clearOutput();
+      animPos = 0;
+      paintInput(animSmall, true);
+      clearCanvas('layer1Canvas');
+      clearCanvas('layer2Canvas');
       return true;
     }
 
@@ -319,19 +402,53 @@
       }
 
       const cx = animPos % animOutW, cy = Math.floor(animPos / animOutW);
-      if (animPos < total) paintWithKernel(cx, cy); else paintStatic(animSmall, true);
-      paintOutput();
+      if (animPos < total) paintWithKernel(cx, cy); else paintInput(animSmall, true);
+      paintPixelsToCanvas('layer1Canvas', animOutPx, animOutW, animOutH);
 
       if (animPos >= total) {
         animState = 'done';
         document.getElementById('playBtn').textContent = '↺ Replay';
+        computeLayer2();
         runClassification();
         return;
       }
       animRAF = requestAnimationFrame(animFrame);
     }
 
-    // ── Classification ────────────────────────────────────────────────────────
+    function computeLayer2() {
+      if (allLayerData.length < 2) return;
+      const nextLayer = Math.min(selLayer + 1, allLayerData.length - 1);
+      const k2 = allLayerData[nextLayer].filters[0];
+      const pad = 1, ks = 3;
+      const l2Px = new Uint8ClampedArray(animOutW * animOutH * 4);
+      for (let i = 3; i < l2Px.length; i += 4) l2Px[i] = 255;
+      for (let oy = 0; oy < animOutH; oy++) for (let ox = 0; ox < animOutW; ox++) {
+        let sum = 0;
+        for (let ky = 0; ky < ks; ky++) for (let kx = 0; kx < ks; kx++) {
+          const ix = ox + kx - pad, iy = oy + ky - pad;
+          if (ix >= 0 && ix < animOutW && iy >= 0 && iy < animOutH) {
+            sum += animOutPx[(iy * animOutW + ix) * 4] * k2[ky][kx];
+          }
+        }
+        const v = clamp(Math.abs(sum) * 2.5);
+        const b = (oy * animOutW + ox) * 4;
+        l2Px[b] = l2Px[b+1] = l2Px[b+2] = v;
+      }
+      paintPixelsToCanvas('layer2Canvas', l2Px, animOutW, animOutH);
+      const ld2 = allLayerData[nextLayer];
+      document.getElementById('l2InfoBot').textContent = `← ${ld2.nFilters} ch →`;
+    }
+
+    function refreshAnim() {
+      stopAnim();
+      if (animFull) {
+        paintInput(animFull, false);
+        clearCanvas('layer1Canvas');
+        clearCanvas('layer2Canvas');
+      }
+    }
+
+    // ── Classification ─────────────────────────────────────────────────────
     async function runClassification() {
       const el = document.getElementById('classResult');
       el.innerHTML = '<div class="class-waiting">Classifying…</div>';
@@ -352,12 +469,84 @@
             <div class="class-pct">${pct}%</div></div>`;
         }).join('');
         document.getElementById('modelStatus').textContent = '';
-      } catch(e) {
+      } catch (e) {
         el.innerHTML = `<div class="class-waiting">Failed: ${e.message}</div>`;
       }
     }
 
-    // ── Kernel weights extraction & display ───────────────────────────────────
+    // ── Kernel grid display ────────────────────────────────────────────────
+    function renderKernelGrid() {
+      const grid = document.getElementById('kernelGrid3x3');
+      grid.innerHTML = '';
+      let maxAbs = 0;
+      animKernel.forEach(r => r.forEach(v => { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); }));
+      animKernel.forEach(r => r.forEach(v => {
+        const cell = document.createElement('div');
+        const n = maxAbs > 0 ? v / maxAbs : 0;
+        cell.className = 'kc ' + (n > 0.08 ? 'kcp' : n < -0.08 ? 'kcn' : 'kcz');
+        const abs = Math.abs(v);
+        cell.textContent = abs < 0.005 ? '0'
+          : (v < 0 ? '−' : '+') + abs.toFixed(2);
+        grid.appendChild(cell);
+      }));
+    }
+
+    function updateLayerInfo() {
+      const ld = allLayerData[selLayer];
+      if (!ld) return;
+      document.getElementById('layerInfoText').textContent =
+        `Layer ${selLayer + 1} · 1 ch · 3×3 · stride=1 · p=1 · no pool`;
+      document.getElementById('kernelNameBadge').textContent = `Filter #${selFilter + 1}`;
+      document.getElementById('ctrlChannels').textContent = ld.nFilters;
+      document.getElementById('l1InfoBot').textContent = `← ${ld.nFilters} ch →`;
+      renderKernelGrid();
+    }
+
+    // ── Layer / Filter selectors ───────────────────────────────────────────
+    function populateLayerSel() {
+      const sel = document.getElementById('layerSel');
+      sel.innerHTML = '';
+      allLayerData.forEach((ld, i) => {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `Layer ${i + 1} (${ld.typeLabel})`;
+        sel.appendChild(opt);
+      });
+      populateFilterSel();
+    }
+
+    function populateFilterSel() {
+      const ld = allLayerData[selLayer];
+      if (!ld) return;
+      const sel = document.getElementById('filterSel');
+      sel.innerHTML = '';
+      const n = Math.min(ld.filters.length, 32);
+      for (let i = 0; i < n; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `Filter #${i + 1}`;
+        sel.appendChild(opt);
+      }
+      sel.value = selFilter < n ? selFilter : 0;
+    }
+
+    function onLayerChange() {
+      selLayer  = parseInt(document.getElementById('layerSel').value);
+      selFilter = 0;
+      populateFilterSel();
+      animKernel = allLayerData[selLayer].filters[0];
+      updateLayerInfo();
+      if (animState !== 'running') animState = 'idle';
+    }
+
+    function onFilterChange() {
+      selFilter  = parseInt(document.getElementById('filterSel').value);
+      animKernel = allLayerData[selLayer].filters[selFilter];
+      updateLayerInfo();
+      if (animState !== 'running') animState = 'idle';
+    }
+
+    // ── MobileNet kernel extraction ────────────────────────────────────────
     async function extractAllFilters() {
       allLayerData = [];
       for (const layer of mobileNetModel.model.layers) {
@@ -367,15 +556,13 @@
         if (shape.length !== 4 || shape[0] !== 3 || shape[1] !== 3) continue;
 
         const inC = shape[2], outC = shape[3];
-        const arr = await w[0].array();   // [3, 3, inC, outC]
+        const arr = await w[0].array();
         const filters = [];
 
         if (outC === 1) {
-          // Depthwise conv: one filter per input channel
           for (let c = 0; c < Math.min(inC, 32); c++)
             filters.push(arr.map(row => row.map(cell => cell[c][0])));
         } else {
-          // Regular conv: outC filters, average over inC for display
           for (let f = 0; f < Math.min(outC, 32); f++)
             filters.push(arr.map(row => row.map(cell => {
               let s = 0;
@@ -384,192 +571,30 @@
             })));
         }
 
-        const nTotal = outC === 1 ? inC : outC;
-        const type   = outC === 1 ? 'Depthwise Conv' : 'Conv';
-        allLayerData.push({ label: `${type}  3×3  ·  ${nTotal} filters`, nFilters: nTotal, filters });
+        const nTotal   = outC === 1 ? inC : outC;
+        const typeLabel = outC === 1 ? 'DW' : 'Conv';
+        allLayerData.push({ typeLabel, nFilters: nTotal, filters });
         if (allLayerData.length >= 4) break;
       }
 
-      if (allLayerData.length > 0) animKernel = allLayerData[0].filters[0];
-      renderKernelWeights();
-    }
-
-    function renderKernelWeights() {
-      const panel = document.getElementById('kernelWeightsPanel');
-      panel.innerHTML = '';
-
-      if (!allLayerData.length) {
-        panel.innerHTML = '<div class="kw-loading">Weights unavailable.</div>';
-        return;
+      if (allLayerData.length > 0) {
+        animKernel = allLayerData[0].filters[0];
+        populateLayerSel();
+        updateLayerInfo();
       }
-
-      allLayerData.forEach((ld, li) => {
-        const sec = document.createElement('div');
-        sec.className = 'kw-section';
-
-        const title = document.createElement('div');
-        title.className = 'kw-layer-title';
-        title.textContent = `Layer ${li + 1}  —  ${ld.label}`;
-        sec.appendChild(title);
-
-        const row = document.createElement('div');
-        row.className = 'kw-row';
-
-        ld.filters.slice(0, 16).forEach((kernel, fi) => {
-          let maxAbs = 0;
-          kernel.forEach(r => r.forEach(v => { if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v); }));
-
-          const wrap = document.createElement('div');
-          wrap.className = 'kw-filter' + (li === selLayer && fi === selFilter ? ' sel' : '');
-          wrap.dataset.layer = li; wrap.dataset.filter = fi;
-          wrap.onclick = () => selectKernel(li, fi);
-
-          const grid = document.createElement('div');
-          grid.className = 'mini-grid';
-          kernel.forEach(r => r.forEach(v => {
-            const cell = document.createElement('div');
-            const n = maxAbs > 0 ? v / maxAbs : 0;
-            cell.className = 'mini-cell ' + (n > 0.08 ? 'kp' : n < -0.08 ? 'kn' : 'kz');
-            // Show one decimal, keep sign, omit leading zero
-            const abs = Math.abs(v);
-            cell.textContent = abs < 0.005 ? '0'
-              : (v < 0 ? '-' : '+') + abs.toFixed(1).replace('0.', '.');
-            grid.appendChild(cell);
-          }));
-
-          const lbl = document.createElement('div');
-          lbl.className = 'kw-num';
-          lbl.textContent = '#' + (fi + 1);
-
-          wrap.appendChild(grid); wrap.appendChild(lbl);
-          row.appendChild(wrap);
-        });
-
-        if (ld.nFilters > 16) {
-          const more = document.createElement('div');
-          more.className = 'kw-more';
-          more.textContent = `+${ld.nFilters - 16} more`;
-          row.appendChild(more);
-        }
-
-        sec.appendChild(row);
-        panel.appendChild(sec);
-      });
     }
 
-    function selectKernel(li, fi) {
-      selLayer = li; selFilter = fi;
-      animKernel = allLayerData[li].filters[fi];
-      document.querySelectorAll('.kw-filter').forEach(el =>
-        el.classList.toggle('sel',
-          parseInt(el.dataset.layer) === li && parseInt(el.dataset.filter) === fi));
-      if (animState !== 'running') { animState = 'idle'; animPos = 0; }
-    }
-
-    // ── Architecture diagram ──────────────────────────────────────────────────
-    function hexShade(hex, pct) {
-      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-      const f = 1 + pct;
-      return `rgb(${clamp(r*f)},${clamp(g*f)},${clamp(b*f)})`;
-    }
-
-    function drawBlock(ctx, fx, fy, fw, fh, depth, color, poolColor, label, sub) {
-      const dx = depth * 0.6, dy = depth * 0.3;
-      ctx.strokeStyle = '#bbb'; ctx.lineWidth = 0.7;
-
-      // Right face
-      ctx.fillStyle = hexShade(color, -0.18);
-      ctx.beginPath();
-      ctx.moveTo(fx+fw, fy); ctx.lineTo(fx+fw+dx, fy-dy);
-      ctx.lineTo(fx+fw+dx, fy+fh-dy); ctx.lineTo(fx+fw, fy+fh);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-
-      // Top face
-      ctx.fillStyle = hexShade(color, 0.14);
-      ctx.beginPath();
-      ctx.moveTo(fx, fy); ctx.lineTo(fx+dx, fy-dy);
-      ctx.lineTo(fx+fw+dx, fy-dy); ctx.lineTo(fx+fw, fy);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-
-      // Front face
-      if (poolColor) {
-        const ph = Math.min(fh * 0.32, 28);
-        ctx.fillStyle = color;   ctx.fillRect(fx, fy, fw, fh - ph);
-        ctx.fillStyle = poolColor; ctx.fillRect(fx, fy + fh - ph, fw, ph);
-      } else {
-        ctx.fillStyle = color; ctx.fillRect(fx, fy, fw, fh);
-      }
-      ctx.strokeRect(fx, fy, fw, fh);
-
-      const cx = fx + fw/2 + dx/2;
-      ctx.textAlign = 'center';
-      ctx.fillStyle = '#333'; ctx.font = 'bold 11px Arial';
-      ctx.fillText(label, cx, fy + fh + 16);
-      if (sub) { ctx.fillStyle = '#777'; ctx.font = '10px Arial'; ctx.fillText(sub, cx, fy + fh + 28); }
-    }
-
-    function drawArrow(ctx, x1, x2, y) {
-      ctx.strokeStyle = '#bbb'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(x1, y); ctx.lineTo(x2-8, y); ctx.stroke();
-      ctx.fillStyle = '#bbb';
-      ctx.beginPath(); ctx.moveTo(x2, y); ctx.lineTo(x2-8, y-4); ctx.lineTo(x2-8, y+4); ctx.closePath(); ctx.fill();
-    }
-
-    function drawArchitecture() {
-      const canvas = document.getElementById('archCanvas');
-      const ctx    = canvas.getContext('2d');
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const baseY = 188;
-      const CONV = '#d4d8e0', POOL = '#c8e6c9', FC = '#bbdefb', OUT = '#f3e8ff';
-
-      // [fx, fw, fh, depth, poolColor, label, sub]
-      const blocks = [
-        [22,  18, 155, 12,  null, 'Input',        '224×224×3'],
-        [95,  24, 120, 40,  POOL, 'Conv + Pool',  '3×3, 32ch → 56²'],
-        [215, 28,  90, 60,  POOL, 'Conv + Pool',  '3×3, 64ch → 28²'],
-        [352, 30,  66, 78,  POOL, 'Conv + Pool',  '3×3, 128ch → 14²'],
-        [509, 28,  46, 78,  POOL, 'Conv + Pool',  '3×3, 256ch → 7²'],
-        [660, 22,  32, 46,  null, 'Dense',        'Flatten → 1024'],
-        [774, 20,  22, 32,  null, 'Softmax',      '1000 classes'],
-      ];
-
-      blocks.forEach(([fx, fw, fh, depth, pc, lbl, sub]) => {
-        const color = lbl === 'Dense' ? FC : lbl === 'Softmax' ? OUT : CONV;
-        drawBlock(ctx, fx, baseY - fh, fw, fh, depth, color, pc, lbl, sub);
-      });
-
-      // Arrows between blocks
-      for (let i = 0; i < blocks.length - 1; i++) {
-        const [fx, fw,, depth] = blocks[i], [fx2,,fh2] = blocks[i+1];
-        const ax = fx + fw + depth * 0.6 + 4;
-        drawArrow(ctx, ax, fx2 - 4, baseY - fh2 / 2);
-      }
-
-      // Pooling annotation on second block
-      const [fx2, fw2, fh2, d2] = blocks[1];
-      const ph = Math.min(fh2 * 0.32, 28);
-      const ax = fx2 + fw2 + d2 * 0.3, ay = baseY - ph / 2;
-      ctx.fillStyle = '#4caf50'; ctx.font = 'italic bold 11px Arial'; ctx.textAlign = 'left';
-      ctx.fillText('pooling', ax + 8, ay);
-      ctx.strokeStyle = '#4caf50'; ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(ax + 6, baseY - ph); ctx.lineTo(ax + 3, ay); ctx.lineTo(ax + 6, baseY);
-      ctx.stroke();
-    }
-
-    // ── Init ──────────────────────────────────────────────────────────────────
+    // ── Init ──────────────────────────────────────────────────────────────
     buildPresets();
-    drawArchitecture();
 
     (async () => {
       try {
         mobileNetModel = await mobilenet.load({ version: 2, alpha: 1.0 });
         await extractAllFilters();
         const st = document.getElementById('modelStatus');
-        if (st) { st.textContent = 'MobileNet ready ✓'; setTimeout(() => { if(st) st.textContent=''; }, 3000); }
-      } catch(e) {
+        if (st) { st.textContent = 'MobileNet ready ✓'; setTimeout(() => { if (st) st.textContent = ''; }, 3000); }
+      } catch (e) {
         document.getElementById('modelStatus').textContent = 'Model failed to load — check network';
-        document.getElementById('kernelWeightsPanel').innerHTML = '<div class="kw-loading">Model unavailable.</div>';
       }
     })();
   </script>
