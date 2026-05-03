@@ -547,40 +547,69 @@
     }
 
     // ── MobileNet kernel extraction ────────────────────────────────────────
+    async function processKernelTensor(tensor) {
+      if (allLayerData.length >= 4) return;
+      const shape = tensor.shape;
+      if (!shape || shape.length !== 4 || shape[0] !== 3 || shape[1] !== 3) return;
+      const inC = shape[2], outC = shape[3];
+      const arr = await tensor.array();
+      const filters = [];
+      if (outC === 1) {
+        for (let c = 0; c < Math.min(inC, 32); c++)
+          filters.push(arr.map(row => row.map(cell => cell[c][0])));
+      } else {
+        for (let f = 0; f < Math.min(outC, 32); f++)
+          filters.push(arr.map(row => row.map(cell => {
+            let s = 0; for (let c = 0; c < inC; c++) s += cell[c][f]; return s / inC;
+          })));
+      }
+      allLayerData.push({
+        typeLabel: outC === 1 ? 'DW' : 'Conv',
+        nFilters:  outC === 1 ? inC : outC,
+        filters
+      });
+    }
+
     async function extractAllFilters() {
       allLayerData = [];
-      for (const layer of mobileNetModel.model.layers) {
-        const w = layer.getWeights();
-        if (!w.length) continue;
-        const shape = w[0].shape;
-        if (shape.length !== 4 || shape[0] !== 3 || shape[1] !== 3) continue;
+      const model = mobileNetModel.model;
 
-        const inC = shape[2], outC = shape[3];
-        const arr = await w[0].array();
-        const filters = [];
+      // Diagnostic: show what's on the model object
+      console.log('[kernel] model constructor:', model && model.constructor && model.constructor.name);
+      console.log('[kernel] model.layers:', model && model.layers);
+      console.log('[kernel] model.weights keys (first 5):',
+        model && model.weights ? Object.keys(model.weights).slice(0, 5) : 'none');
 
-        if (outC === 1) {
-          for (let c = 0; c < Math.min(inC, 32); c++)
-            filters.push(arr.map(row => row.map(cell => cell[c][0])));
-        } else {
-          for (let f = 0; f < Math.min(outC, 32); f++)
-            filters.push(arr.map(row => row.map(cell => {
-              let s = 0;
-              for (let c = 0; c < inC; c++) s += cell[c][f];
-              return s / inC;
-            })));
+      if (!model) return;
+
+      if (model.layers && model.layers.length > 0) {
+        // LayersModel path (tf.loadLayersModel)
+        for (const layer of model.layers) {
+          const w = layer.getWeights();
+          if (w.length) await processKernelTensor(w[0]);
         }
-
-        const nTotal   = outC === 1 ? inC : outC;
-        const typeLabel = outC === 1 ? 'DW' : 'Conv';
-        allLayerData.push({ typeLabel, nFilters: nTotal, filters });
-        if (allLayerData.length >= 4) break;
+      } else {
+        // GraphModel path (tf.loadGraphModel / TFHub)
+        // Weights are in model.weights (NamedTensorMap) or model.weightMap
+        const wm = (model.weights && Object.keys(model.weights).length > 0)
+          ? model.weights
+          : (model.weightMap || {});
+        console.log('[kernel] GraphModel weight keys (first 10):', Object.keys(wm).slice(0, 10));
+        for (const tensor of Object.values(wm)) {
+          await processKernelTensor(tensor);
+        }
       }
+
+      console.log(`[kernel] extracted ${allLayerData.length} conv layer(s)`);
 
       if (allLayerData.length > 0) {
         animKernel = allLayerData[0].filters[0];
         populateLayerSel();
         updateLayerInfo();
+      } else {
+        document.getElementById('kernelNameBadge').textContent = 'weights unavailable';
+        document.getElementById('layerInfoText').textContent =
+          'Open DevTools console to see model structure';
       }
     }
 
