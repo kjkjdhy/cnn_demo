@@ -131,7 +131,7 @@
       cursor: pointer; transition: border-color .15s;
     }
     .kern-block:hover { border-color: #e2e8f0; }
-    .kern-block.sel   { border-color: #3b82f6; background: #f8faff; }
+    .kern-block.sel      { border-color: #3b82f6; background: #f8faff; }
     .kern-block.modified { border-color: #f59e0b; }
     .kern-block.sel.modified { border-color: #f59e0b; background: #fffdf0; }
 
@@ -139,8 +139,20 @@
       font-size: 10px; font-weight: 600; color: #64748b;
       user-select: none; -webkit-user-select: none;
     }
-    .kern-block.sel .kern-block-label { color: #2563eb; }
+    .kern-block.sel      .kern-block-label { color: #2563eb; }
     .kern-block.modified .kern-block-label { color: #b45309; }
+
+    /* Preset dropdown inside each kernel block */
+    .kern-preset {
+      font-size: 9px; padding: 2px 4px;
+      border: 1px solid #e2e8f0; border-radius: 4px;
+      background: white; color: #475569; cursor: pointer;
+      width: 132px; /* match kern-mini width */
+      outline: none;
+    }
+    .kern-preset:focus { border-color: #3b82f6; }
+    .kern-preset.is-preset { border-color: #8b5cf6; color: #6d28d9; background: #f5f3ff; }
+    .kern-preset.is-custom { border-color: #f59e0b; color: #b45309; background: #fffbeb; }
 
     /* 3×3 mini kernel grid */
     .kern-mini {
@@ -211,7 +223,7 @@
           <button class="action-btn danger" onclick="resetAllKernels()">↺ Reset all</button>
         </div>
       </div>
-      <div class="k-hint">Click any cell to edit · Enter to confirm · Esc to cancel · selected filter highlighted in blue</div>
+      <div class="k-hint">Use the dropdown to apply a preset kernel, or click any cell to manually edit · Enter to confirm · Esc to cancel</div>
       <div class="all-kernels" id="allKernelsGrid"></div>
     </div>
 
@@ -244,6 +256,26 @@ const DEFAULT_PARAMS = [
   { stride:1, padding:'valid', poolAfter:true  },
 ];
 
+// ── Preset kernels ────────────────────────────────────────────────────────────
+const PRESET_KERNELS = {
+  h_edge:   [[-1,-2,-1],[ 0, 0, 0],[ 1, 2, 1]],   // horizontal edge (Sobel)
+  v_edge:   [[-1, 0, 1],[-2, 0, 2],[-1, 0, 1]],   // vertical edge (Sobel)
+  diag_edge:[[ 0, 1, 2],[-1, 0, 1],[-2,-1, 0]],   // diagonal edge
+  sharpen:  [[ 0,-1, 0],[-1, 5,-1],[ 0,-1, 0]],   // sharpen / color contrast
+  blur:     [[.11,.11,.11],[.11,.11,.11],[.11,.11,.11]], // average blur
+  emboss:   [[-2,-1, 0],[-1, 1, 1],[ 0, 1, 2]],   // emboss
+};
+const PRESET_LIST = [
+  { key:'pretrained', label:'Pretrained' },
+  { key:'h_edge',     label:'H-Edge' },
+  { key:'v_edge',     label:'V-Edge' },
+  { key:'diag_edge',  label:'Diag Edge' },
+  { key:'sharpen',    label:'Sharpen' },
+  { key:'blur',       label:'Blur' },
+  { key:'emboss',     label:'Emboss' },
+  { key:'custom',     label:'Custom' },
+];
+
 let model        = null;
 let convLayers   = [];
 let flattenLayer = null;
@@ -254,8 +286,10 @@ let selLayer     = 0;
 let selFilter    = 0;
 let expanded     = [false,false,false,false];
 let layerParams  = DEFAULT_PARAMS.map(p=>({...p}));
-// Per (layer, filter): null = use model weights, or [[r0c0..r0c2],[r1c0..],[r2c0..]]
+// Per (layer, filter): null = pretrained, or [[r0c0..],[r1c0..],[r2c0..]]
 let kernelOverrides = Array.from({length:4}, ()=>Array.from({length:10}, ()=>null));
+// Tracks which preset key is selected per (layer, filter)
+let kernelPresetSel = Array.from({length:4}, ()=>Array(10).fill('pretrained'));
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
@@ -286,7 +320,7 @@ async function init() {
     selectLayer(0);
     await loadImg(0);
     await run();
-    setStatus('Tiny VGG · 4 conv layers · 10 filters each · click cells to edit kernel weights');
+    setStatus('Tiny VGG · 4 conv layers · 10 filters each · use dropdown to apply preset kernels');
   } catch(e) {
     setStatus('Error: '+e.message);
     console.error(e);
@@ -462,10 +496,23 @@ function resetLayerParams() {
   run();
 }
 
+// ── Preset application ────────────────────────────────────────────────────────
+function applyPreset(fi, key) {
+  kernelPresetSel[selLayer][fi] = key;
+  if (key === 'pretrained' || key === 'custom') {
+    // pretrained: clear override; custom: leave current override as-is
+    if (key === 'pretrained') kernelOverrides[selLayer][fi] = null;
+  } else {
+    kernelOverrides[selLayer][fi] = PRESET_KERNELS[key].map(row => [...row]);
+  }
+  renderAllKernels();
+  run();
+}
+
 // ── Kernel display (all filters, editable) ────────────────────────────────────
 function getKernelValsFor(li, fi) {
   if (kernelOverrides[li][fi]) return kernelOverrides[li][fi];
-  const arr = convLayers[li].getWeights()[0].arraySync(); // [3,3,inC,outC]
+  const arr = convLayers[li].getWeights()[0].arraySync();
   const inC = arr[0][0].length;
   let bestC=0, bestM=0;
   for (let c=0;c<inC;c++) {
@@ -484,14 +531,13 @@ function renderAllKernels() {
   document.getElementById('kLayerInfo').textContent =
     `${LN[selLayer]} · 10 filters${isAnyMod?' · modified':''}`;
 
-  // Read raw weights once for the entire layer
-  const rawArr = convLayers[selLayer].getWeights()[0].arraySync(); // [3,3,inC,outC]
+  const rawArr = convLayers[selLayer].getWeights()[0].arraySync();
   const inC = rawArr[0][0].length;
 
   for (let fi=0;fi<10;fi++) {
-    const isOvr = kernelOverrides[selLayer][fi] !== null;
+    const isOvr    = kernelOverrides[selLayer][fi] !== null;
+    const presetKey = kernelPresetSel[selLayer][fi];
 
-    // Get display values
     let vals;
     if (isOvr) {
       vals = kernelOverrides[selLayer][fi];
@@ -508,16 +554,34 @@ function renderAllKernels() {
     const allV = vals.flat();
     const mag  = Math.max(...allV.map(Math.abs));
 
-    // Kernel block container
     const block = document.createElement('div');
     block.className = 'kern-block'+(fi===selFilter?' sel':'')+(isOvr?' modified':'');
     block.dataset.fi = fi;
 
+    // Label row
     const label = document.createElement('div');
     label.className = 'kern-block-label';
-    label.textContent = `Filter ${fi}${isOvr?' ✎':''}`;
+    label.textContent = `Filter ${fi}`;
     block.appendChild(label);
 
+    // Preset dropdown
+    const sel = document.createElement('select');
+    sel.className = 'kern-preset' + (presetKey==='pretrained'?'' : presetKey==='custom'?' is-custom':' is-preset');
+    PRESET_LIST.forEach(({key, label: lbl}) => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = lbl;
+      if (key === presetKey) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('mousedown', e => e.stopPropagation()); // don't select block
+    sel.addEventListener('change', function(e) {
+      e.stopPropagation();
+      applyPreset(fi, this.value);
+    });
+    block.appendChild(sel);
+
+    // 3×3 grid
     const grid = document.createElement('div');
     grid.className = 'kern-mini';
 
@@ -538,7 +602,6 @@ function renderAllKernels() {
         const capturedV  = v;
 
         cell.addEventListener('focus', function() {
-          // Select this filter
           if (selFilter !== capturedFi) {
             selFilter = capturedFi;
             document.querySelectorAll('.kern-block').forEach((b,i) => {
@@ -549,8 +612,8 @@ function renderAllKernels() {
           setTimeout(()=>{
             const range=document.createRange();
             range.selectNodeContents(this);
-            const sel=window.getSelection();
-            sel.removeAllRanges(); sel.addRange(range);
+            const s=window.getSelection();
+            s.removeAllRanges(); s.addRange(range);
           }, 0);
         });
 
@@ -563,7 +626,6 @@ function renderAllKernels() {
           const raw = this.textContent.trim().replace('−','-').replace(',','.');
           const newVal = parseFloat(raw);
           if (isNaN(newVal)) { this.textContent = capturedV.toFixed(2); return; }
-          // compare at 2dp to avoid spurious edits from float rounding
           if (newVal.toFixed(2) === capturedV.toFixed(2)) return;
           onKernelEdit(capturedFi, parseInt(this.dataset.r), parseInt(this.dataset.c), newVal);
         });
@@ -574,9 +636,9 @@ function renderAllKernels() {
 
     block.appendChild(grid);
 
-    // Clicking anywhere on the block (except inside a cell) selects this filter
     block.addEventListener('mousedown', e => {
       if (e.target.classList.contains('kern-cell')) return;
+      if (e.target.tagName === 'SELECT') return;
       e.preventDefault();
       selFilter = fi;
       document.querySelectorAll('.kern-block').forEach((b,i) => {
@@ -594,18 +656,21 @@ function onKernelEdit(fi, r, c, val) {
     kernelOverrides[selLayer][fi] = getKernelValsFor(selLayer, fi).map(row=>[...row]);
   }
   kernelOverrides[selLayer][fi][r][c] = val;
+  kernelPresetSel[selLayer][fi] = 'custom'; // manual edit → mark as custom
   renderAllKernels();
   run();
 }
 
 function resetKernel() {
   kernelOverrides[selLayer][selFilter] = null;
+  kernelPresetSel[selLayer][selFilter] = 'pretrained';
   renderAllKernels();
   run();
 }
 
 function resetAllKernels() {
-  kernelOverrides = Array.from({length:4},()=>Array.from({length:10},()=>null));
+  kernelOverrides  = Array.from({length:4},()=>Array.from({length:10},()=>null));
+  kernelPresetSel  = Array.from({length:4},()=>Array(10).fill('pretrained'));
   renderAllKernels();
   run();
 }
@@ -620,10 +685,9 @@ function updateTopPanels() {
   });
 }
 
-// Build modified kernel tensor for layer li (caller disposes returned tensor)
 function buildModifiedKernel(li, origKernel) {
   if (!kernelOverrides[li].some(o=>o!==null)) return null;
-  const arr = origKernel.arraySync(); // [3,3,inC,outC]
+  const arr = origKernel.arraySync();
   const inC = arr[0][0].length;
   for (let fi=0;fi<10;fi++) {
     const ov = kernelOverrides[li][fi];
@@ -789,16 +853,15 @@ function nrm(v,mn,mx){
   return Math.max(0,Math.min(255,Math.round((v-mn)/(mx-mn)*255)));
 }
 
-// Light pastel colors: blue for positive, pink/red for negative, near-white for zero
 function kColLight(v, mag) {
   if (mag < 1e-8 || Math.abs(v) < mag * 0.04) return '#f1f5f9';
-  const t = v / mag; // -1 to 1
+  const t = v / mag;
   if (t > 0) {
     const a = 0.18 + t * 0.57;
-    return `rgba(59,130,246,${a.toFixed(2)})`;   // blue-500
+    return `rgba(59,130,246,${a.toFixed(2)})`;
   } else {
     const a = 0.18 + (-t) * 0.57;
-    return `rgba(239,68,68,${a.toFixed(2)})`;    // red-500
+    return `rgba(239,68,68,${a.toFixed(2)})`;
   }
 }
 
