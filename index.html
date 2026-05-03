@@ -531,7 +531,7 @@
         const n = maxAbs > 0 ? v / maxAbs : 0;
         cell.className = 'kc ' + (n > 0.08 ? 'kcp' : n < -0.08 ? 'kcn' : 'kcz');
         const abs = Math.abs(v);
-        cell.textContent = abs < 0.005 ? '0' : (v < 0 ? '−' : '+') + abs.toFixed(2);
+        cell.textContent = abs < 0.001 ? '0' : (v < 0 ? '−' : '+') + abs.toFixed(2);
         grid.appendChild(cell);
       }));
     }
@@ -549,13 +549,25 @@
         const arr = await w[0].array();
         const filters = [];
         if (outC === 1) {
+          // Depthwise conv: one filter per input channel
           for (let c = 0; c < Math.min(inC, 32); c++)
             filters.push(arr.map(row => row.map(cell => cell[c][0])));
         } else {
-          for (let f = 0; f < Math.min(outC, 32); f++)
-            filters.push(arr.map(row => row.map(cell => {
-              let s = 0; for (let c = 0; c < inC; c++) s += cell[c][f]; return s / inC;
-            })));
+          // Regular conv: for each output filter pick the input channel whose
+          // weights have the largest magnitude. Averaging over channels causes
+          // opponent-channel cancellation, producing near-zero values.
+          for (let f = 0; f < Math.min(outC, 32); f++) {
+            let bestC = 0, bestMax = 0;
+            for (let c = 0; c < inC; c++) {
+              let m = 0;
+              for (let ky = 0; ky < 3; ky++) for (let kx = 0; kx < 3; kx++) {
+                const a = Math.abs(arr[ky][kx][c][f]);
+                if (a > m) m = a;
+              }
+              if (m > bestMax) { bestMax = m; bestC = c; }
+            }
+            filters.push(arr.map(row => row.map(cell => cell[bestC][f])));
+          }
         }
         allLayerData.push({ filters });
       }
