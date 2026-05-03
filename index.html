@@ -221,8 +221,8 @@
     let animOutW   = 0, animOutH = 0;
     let animOutPx  = null;
 
-    let mobileNetModel = null;   // mobilenet 包，用于 classify()
-    let kernelModel    = null;   // Keras LayersModel，用于提取 kernel weights
+    let mobileNetModel = null;   // mobilenet package — used for classify()
+    let kernelModel    = null;   // Keras LayersModel — used for kernel weight extraction
     let allLayerData   = [];
     let selLayer = 0, selFilter = 0;
 
@@ -573,7 +573,7 @@
 
     async function extractAllFilters() {
       allLayerData = [];
-      // kernelModel 是 Keras LayersModel，conv kernels 通过 .layers 可以直接访问
+      // kernelModel is a Keras LayersModel — conv kernels accessible via layer.getWeights()
       for (const layer of kernelModel.layers) {
         if (allLayerData.length >= 4) break;
         const w = layer.getWeights();
@@ -591,12 +591,13 @@
 
     (async () => {
       try {
-        // 1. 加载 mobilenet 包（TFHub GraphModel）——只用于 classify()
+        // TFHub GraphModel — used only for classify()
         mobileNetModel = await mobilenet.load({ version: 1, alpha: 1.0 });
 
-        // 2. 加载 Keras 格式旧版模型——只用于 kernel 权重展示
-        //    TFHub GraphModel 的 conv kernel 被 frozen 进图里，无法从外部访问；
-        //    Keras LayersModel 的每一层权重都可通过 layer.getWeights() 直接读取。
+        // Keras LayersModel — used only for kernel display.
+        // TFHub GraphModel bakes conv kernels as frozen constants inside the graph,
+        // so they are not reachable via model.weights. The Keras format exposes
+        // every layer's weights through layer.getWeights().
         kernelModel = await tf.loadLayersModel(
           'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_1.0_224/model.json'
         );
