@@ -56,10 +56,10 @@
 
     /* ── Bottom 2-col ── */
     .bottom-row { display: flex; gap: 12px; align-items: flex-start; }
-    .left-ctrl  { flex: 0 0 340px; display: flex; flex-direction: column; gap: 0; }
+    .left-ctrl  { flex: 0 0 310px; display: flex; flex-direction: column; gap: 0; }
     .right-ctrl { flex: 1; min-width: 0; }
 
-    /* Left col: images + layer config */
+    /* Left col */
     .upload-row { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
     .browse-btn {
       font-size: 11px; padding: 4px 12px;
@@ -82,7 +82,7 @@
 
     .section-sep { height: 1px; background: #f1f5f9; margin: 14px 0; }
 
-    /* Layer config (inside left col) */
+    /* Layer config */
     .layer-tabs { display: flex; gap: 3px; margin-bottom: 10px; flex-wrap: wrap; }
     .layer-tab {
       font-size: 10px; padding: 3px 9px;
@@ -108,55 +108,60 @@
     }
     .small-btn:hover { border-color: #94a3b8; }
 
-    /* Right col: kernel */
-    .k-top    { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 6px; }
-    .k-layer-info { font-size: 12px; color: #64748b; }
-    .fnav     { display: flex; align-items: center; gap: 6px; }
-    .fnav-btn {
-      width: 26px; height: 26px;
-      border: 1px solid #e2e8f0; border-radius: 4px;
-      background: white; color: #64748b; cursor: pointer; font-size: 16px;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .fnav-btn:hover { border-color: #94a3b8; }
-    #fLabel { font-size: 13px; font-weight: 700; color: #1e293b; min-width: 80px; text-align: center; }
-
-    /* Kernel grid */
-    .k-grid-wrap { display: flex; justify-content: center; margin-bottom: 12px; }
-    .k-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 72px);
-      gap: 5px;
-      padding: 4px;
-      border-radius: 6px;
-      transition: box-shadow .15s;
-    }
-    .k-grid.modified { box-shadow: 0 0 0 2px #f59e0b; }
-    .k-cell {
-      width: 72px; height: 72px;
-      border-radius: 5px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 700; color: white;
-      text-shadow: 0 1px 3px rgba(0,0,0,.4);
-      cursor: text;
-      outline: none;
-      user-select: text;
-      transition: box-shadow .1s;
-      -webkit-user-select: text;
-    }
-    .k-cell:focus { box-shadow: inset 0 0 0 2px rgba(255,255,255,.7); }
-
-    .k-hint { font-size: 10px; color: #94a3b8; text-align: center; margin-bottom: 10px; }
-
-    .layer-detail { font-size: 11px; color: #64748b; margin-bottom: 12px; line-height: 1.7; }
-    .btn-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    /* ── Right col: all kernels ── */
+    .k-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+    .k-layer-info { font-size: 13px; font-weight: 700; color: #1e293b; }
+    .k-hint { font-size: 10px; color: #94a3b8; margin-bottom: 12px; }
+    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; }
     .action-btn {
-      font-size: 11px; padding: 5px 14px;
+      font-size: 11px; padding: 4px 12px;
       border: 1px solid #e2e8f0; border-radius: 5px;
       background: white; color: #475569; cursor: pointer; font-weight: 600;
     }
     .action-btn:hover { border-color: #3b82f6; color: #2563eb; background: #eff6ff; }
     .action-btn.danger:hover { border-color: #ef4444; color: #dc2626; background: #fef2f2; }
+
+    /* All-kernels grid */
+    .all-kernels { display: flex; flex-wrap: wrap; gap: 14px; }
+
+    /* Individual kernel block */
+    .kern-block {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      padding: 6px; border-radius: 8px; border: 2px solid transparent;
+      cursor: pointer; transition: border-color .15s;
+    }
+    .kern-block:hover { border-color: #e2e8f0; }
+    .kern-block.sel   { border-color: #3b82f6; background: #f8faff; }
+    .kern-block.modified { border-color: #f59e0b; }
+    .kern-block.sel.modified { border-color: #f59e0b; background: #fffdf0; }
+
+    .kern-block-label {
+      font-size: 10px; font-weight: 600; color: #64748b;
+      user-select: none; -webkit-user-select: none;
+    }
+    .kern-block.sel .kern-block-label { color: #2563eb; }
+    .kern-block.modified .kern-block-label { color: #b45309; }
+
+    /* 3×3 mini kernel grid */
+    .kern-mini {
+      display: grid;
+      grid-template-columns: repeat(3, 42px);
+      gap: 3px;
+    }
+
+    .kern-cell {
+      width: 42px; height: 42px;
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #1e293b;
+      cursor: text; outline: none;
+      user-select: text; -webkit-user-select: text;
+      transition: box-shadow .1s;
+    }
+    .kern-cell:focus {
+      box-shadow: inset 0 0 0 2px rgba(59,130,246,.7);
+      z-index: 1;
+    }
 
     .dim-txt { font-size: 11px; color: #94a3b8; }
   </style>
@@ -196,29 +201,18 @@
       <div id="cfgRows"></div>
     </div>
 
-    <!-- Right: kernel weights (full width) -->
+    <!-- Right: all kernel weights for selected layer -->
     <div class="card right-ctrl">
-      <div class="k-top">
+      <div class="k-header">
         <div class="k-layer-info" id="kLayerInfo">—</div>
-        <div class="fnav">
-          <button class="fnav-btn" id="fPrev">‹</button>
-          <span id="fLabel">Filter 0</span>
-          <button class="fnav-btn" id="fNext">›</button>
+        <div class="btn-row">
+          <button class="action-btn" id="refreshBtn">▶ Refresh</button>
+          <button class="action-btn danger" onclick="resetKernel()">↺ Reset filter</button>
+          <button class="action-btn danger" onclick="resetAllKernels()">↺ Reset all</button>
         </div>
       </div>
-
-      <div class="k-grid-wrap">
-        <div class="k-grid" id="kGrid"></div>
-      </div>
-      <div class="k-hint">Click any cell to edit · Enter to confirm · Esc to cancel</div>
-
-      <div class="layer-detail" id="layerDetail">—</div>
-
-      <div class="btn-row">
-        <button class="action-btn" id="refreshBtn">▶ Refresh</button>
-        <button class="action-btn danger" onclick="resetKernel()">↺ Reset filter</button>
-        <button class="action-btn danger" onclick="resetAllKernels()">↺ Reset all</button>
-      </div>
+      <div class="k-hint">Click any cell to edit · Enter to confirm · Esc to cancel · selected filter highlighted in blue</div>
+      <div class="all-kernels" id="allKernelsGrid"></div>
     </div>
 
   </div>
@@ -280,8 +274,6 @@ async function init() {
     buildLayerTabs();
     buildImgGrid();
 
-    document.getElementById('fPrev').onclick = () => { if(selFilter>0){selFilter--;renderKernelGrid();updateTopPanels();} };
-    document.getElementById('fNext').onclick = () => { if(selFilter<9){selFilter++;renderKernelGrid();updateTopPanels();} };
     document.getElementById('refreshBtn').onclick = run;
     document.getElementById('uploadInput').addEventListener('change', async e=>{
       const f=e.target.files[0]; if(!f) return;
@@ -412,7 +404,7 @@ function selectLayer(li) {
     if(lbl) lbl.className='pipe-label'+(i===li?' sel':'');
   });
   updateLayerCfg();
-  renderKernelGrid();
+  renderAllKernels();
 }
 
 function updateLayerCfg() {
@@ -429,7 +421,6 @@ function updateLayerCfg() {
   document.getElementById('cfgRows').innerHTML = `
     <div class="cfg-row"><span class="cfg-k">Channels (in)</span>  <span class="cfg-v">${inC}</span></div>
     <div class="cfg-row"><span class="cfg-k">Channels (out)</span> <span class="cfg-v">${outC}</span></div>
-    <div class="cfg-row"><span class="cfg-k">Layers</span>         <span class="cfg-v">${convLayers.length} Layers</span></div>
     <div class="cfg-row"><span class="cfg-k">Kernel Size</span>    <span class="cfg-v">3 × 3</span></div>
     <div class="cfg-row">
       <span class="cfg-k">Stride</span>
@@ -471,15 +462,11 @@ function resetLayerParams() {
   run();
 }
 
-// ── Kernel display (editable) ─────────────────────────────────────────────────
-function getKernelVals() {
-  // Returns 3×3 array: override if set, else model weights (best channel)
-  if (kernelOverrides[selLayer][selFilter])
-    return kernelOverrides[selLayer][selFilter];
-
-  const arr = convLayers[selLayer].getWeights()[0].arraySync();
+// ── Kernel display (all filters, editable) ────────────────────────────────────
+function getKernelValsFor(li, fi) {
+  if (kernelOverrides[li][fi]) return kernelOverrides[li][fi];
+  const arr = convLayers[li].getWeights()[0].arraySync(); // [3,3,inC,outC]
   const inC = arr[0][0].length;
-  const fi  = selFilter;
   let bestC=0, bestM=0;
   for (let c=0;c<inC;c++) {
     let m=0;
@@ -489,79 +476,135 @@ function getKernelVals() {
   return Array.from({length:3},(_,y)=>Array.from({length:3},(_,x)=>arr[y][x][bestC][fi]));
 }
 
-function renderKernelGrid() {
-  const isOvr = kernelOverrides[selLayer][selFilter]!==null;
-  const vals  = getKernelVals();
-  const allV  = vals.flat();
-  const mn=Math.min(...allV), mx=Math.max(...allV);
-  const mag=Math.max(Math.abs(mn),Math.abs(mx));
+function renderAllKernels() {
+  const container = document.getElementById('allKernelsGrid');
+  container.innerHTML = '';
 
-  document.getElementById('fLabel').textContent    = `Filter ${selFilter}${isOvr?' ✎':''}`;
-  document.getElementById('kLayerInfo').textContent = LN[selLayer]+(isOvr?' — modified':'');
+  const isAnyMod = kernelOverrides[selLayer].some(o=>o!==null);
+  document.getElementById('kLayerInfo').textContent =
+    `${LN[selLayer]} · 10 filters${isAnyMod?' · modified':''}`;
 
-  const grid = document.getElementById('kGrid');
-  grid.classList.toggle('modified', isOvr);
-  grid.innerHTML = '';
+  // Read raw weights once for the entire layer
+  const rawArr = convLayers[selLayer].getWeights()[0].arraySync(); // [3,3,inC,outC]
+  const inC = rawArr[0][0].length;
 
-  for (let r=0;r<3;r++) for (let c=0;c<3;c++) {
-    const v = vals[r][c];
-    const cell = document.createElement('div');
-    cell.className = 'k-cell';
-    cell.style.background = kCol(v, mag);
-    cell.contentEditable = 'true';
-    cell.spellcheck = false;
-    cell.textContent = v.toFixed(2);
-    cell.dataset.r = r; cell.dataset.c = c;
+  for (let fi=0;fi<10;fi++) {
+    const isOvr = kernelOverrides[selLayer][fi] !== null;
 
-    cell.addEventListener('focus', function() {
-      setTimeout(()=>{ // timeout needed for contenteditable select
-        const range=document.createRange();
-        range.selectNodeContents(this);
-        const sel=window.getSelection();
-        sel.removeAllRanges(); sel.addRange(range);
-      }, 0);
-    });
-    cell.addEventListener('keydown', function(e) {
-      if (e.key==='Enter') { e.preventDefault(); this.blur(); }
-      if (e.key==='Escape') {
-        this.textContent = v.toFixed(2);
-        this.blur();
+    // Get display values
+    let vals;
+    if (isOvr) {
+      vals = kernelOverrides[selLayer][fi];
+    } else {
+      let bestC=0, bestM=0;
+      for (let c=0;c<inC;c++) {
+        let m=0;
+        for (let y=0;y<3;y++) for (let x=0;x<3;x++) m=Math.max(m,Math.abs(rawArr[y][x][c][fi]));
+        if(m>bestM){bestM=m;bestC=c;}
       }
-    });
-    cell.addEventListener('blur', function() {
-      const raw = this.textContent.trim().replace('−','-').replace(',','.');
-      const newVal = parseFloat(raw);
-      if (isNaN(newVal)) { this.textContent = v.toFixed(2); return; }
-      if (Math.abs(newVal - v) < 1e-10) return; // no change
-      onKernelEdit(parseInt(this.dataset.r), parseInt(this.dataset.c), newVal);
-    });
-    grid.appendChild(cell);
-  }
+      vals = Array.from({length:3},(_,y)=>Array.from({length:3},(_,x)=>rawArr[y][x][bestC][fi]));
+    }
 
-  const p = layerParams[selLayer];
-  const inC = convLayers[selLayer].getWeights()[0].shape[2];
-  const inDim = fmCache[selLayer]?`${fmCache[selLayer].length}×${fmCache[selLayer][0].length}`:'—';
-  document.getElementById('layerDetail').textContent =
-    `${LN[selLayer]} · ${inC} in-ch · 3×3 · stride=${p.stride} · ${p.padding} · ${p.poolAfter?'MaxPool 2×2 after':'no pool'} · output ${inDim}`;
+    const allV = vals.flat();
+    const mag  = Math.max(...allV.map(Math.abs));
+
+    // Kernel block container
+    const block = document.createElement('div');
+    block.className = 'kern-block'+(fi===selFilter?' sel':'')+(isOvr?' modified':'');
+    block.dataset.fi = fi;
+
+    const label = document.createElement('div');
+    label.className = 'kern-block-label';
+    label.textContent = `Filter ${fi}${isOvr?' ✎':''}`;
+    block.appendChild(label);
+
+    const grid = document.createElement('div');
+    grid.className = 'kern-mini';
+
+    for (let r=0;r<3;r++) {
+      for (let c=0;c<3;c++) {
+        const v = vals[r][c];
+        const cell = document.createElement('div');
+        cell.className = 'kern-cell';
+        cell.style.background = kColLight(v, mag);
+        cell.contentEditable = 'true';
+        cell.spellcheck = false;
+        cell.textContent = v.toFixed(2);
+        cell.dataset.fi = fi;
+        cell.dataset.r  = r;
+        cell.dataset.c  = c;
+
+        const capturedFi = fi;
+        const capturedV  = v;
+
+        cell.addEventListener('focus', function() {
+          // Select this filter
+          if (selFilter !== capturedFi) {
+            selFilter = capturedFi;
+            document.querySelectorAll('.kern-block').forEach((b,i) => {
+              b.classList.toggle('sel', i===capturedFi);
+            });
+            updateTopPanels();
+          }
+          setTimeout(()=>{
+            const range=document.createRange();
+            range.selectNodeContents(this);
+            const sel=window.getSelection();
+            sel.removeAllRanges(); sel.addRange(range);
+          }, 0);
+        });
+
+        cell.addEventListener('keydown', function(e) {
+          if (e.key==='Enter')  { e.preventDefault(); this.blur(); }
+          if (e.key==='Escape') { this.textContent = capturedV.toFixed(2); this.blur(); }
+        });
+
+        cell.addEventListener('blur', function() {
+          const raw = this.textContent.trim().replace('−','-').replace(',','.');
+          const newVal = parseFloat(raw);
+          if (isNaN(newVal)) { this.textContent = capturedV.toFixed(2); return; }
+          if (Math.abs(newVal - capturedV) < 1e-10) return;
+          onKernelEdit(capturedFi, parseInt(this.dataset.r), parseInt(this.dataset.c), newVal);
+        });
+
+        grid.appendChild(cell);
+      }
+    }
+
+    block.appendChild(grid);
+
+    // Clicking the block label or block itself selects it (not the cells)
+    label.addEventListener('mousedown', e => {
+      e.preventDefault();
+      selFilter = fi;
+      document.querySelectorAll('.kern-block').forEach((b,i) => {
+        b.classList.toggle('sel', i===fi);
+      });
+      updateTopPanels();
+    });
+
+    container.appendChild(block);
+  }
 }
 
-function onKernelEdit(r, c, val) {
-  if (!kernelOverrides[selLayer][selFilter])
-    kernelOverrides[selLayer][selFilter] = getKernelVals().map(row=>[...row]);
-  kernelOverrides[selLayer][selFilter][r][c] = val;
-  renderKernelGrid();
+function onKernelEdit(fi, r, c, val) {
+  if (!kernelOverrides[selLayer][fi]) {
+    kernelOverrides[selLayer][fi] = getKernelValsFor(selLayer, fi).map(row=>[...row]);
+  }
+  kernelOverrides[selLayer][fi][r][c] = val;
+  renderAllKernels();
   run();
 }
 
 function resetKernel() {
   kernelOverrides[selLayer][selFilter] = null;
-  renderKernelGrid();
+  renderAllKernels();
   run();
 }
 
 function resetAllKernels() {
   kernelOverrides = Array.from({length:4},()=>Array.from({length:10},()=>null));
-  renderKernelGrid();
+  renderAllKernels();
   run();
 }
 
@@ -575,7 +618,7 @@ function updateTopPanels() {
   });
 }
 
-// Build modified kernel tensor if this layer has any overrides (caller disposes returned tensor)
+// Build modified kernel tensor for layer li (caller disposes returned tensor)
 function buildModifiedKernel(li, origKernel) {
   if (!kernelOverrides[li].some(o=>o!==null)) return null;
   const arr = origKernel.arraySync(); // [3,3,inC,outC]
@@ -658,7 +701,7 @@ async function runCustomForward() {
   }
 
   updateLayerCfg();
-  renderKernelGrid();
+  renderAllKernels();
   return x;
 }
 
@@ -744,12 +787,17 @@ function nrm(v,mn,mx){
   return Math.max(0,Math.min(255,Math.round((v-mn)/(mx-mn)*255)));
 }
 
-function kCol(v,mag){
-  if(mag<1e-8) return '#e2e8f0';
-  const t=v/mag;
-  if(t>=0) return `rgb(${Math.round(37+(1-t)*170)},${Math.round(99+(1-t)*120)},235)`;
-  const a=-t;
-  return `rgb(235,${Math.round(80+(1-a)*130)},${Math.round(50+(1-a)*150)})`;
+// Light pastel colors: blue for positive, pink/red for negative, near-white for zero
+function kColLight(v, mag) {
+  if (mag < 1e-8 || Math.abs(v) < mag * 0.04) return '#f1f5f9';
+  const t = v / mag; // -1 to 1
+  if (t > 0) {
+    const a = 0.18 + t * 0.57;
+    return `rgba(59,130,246,${a.toFixed(2)})`;   // blue-500
+  } else {
+    const a = 0.18 + (-t) * 0.57;
+    return `rgba(239,68,68,${a.toFixed(2)})`;    // red-500
+  }
 }
 
 function setStatus(msg){ document.getElementById('statusBar').textContent=msg; }
