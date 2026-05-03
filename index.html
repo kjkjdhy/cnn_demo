@@ -433,8 +433,8 @@ function updateLayerCfg() {
     <div class="cfg-row">
       <span class="cfg-k">Padding</span>
       <select class="cfg-sel${isPadMod?' modified':''}" id="paddingCtrl" onchange="onParamChange('padding',this.value)">
-        <option value="valid"${p.padding==='valid'?' selected':''}>valid</option>
-        <option value="same"${p.padding==='same'?' selected':''}>same</option>
+        <option value="valid"${p.padding==='valid'?' selected':''}>no padding</option>
+        <option value="same"${p.padding==='same'?' selected':''}>zero padding</option>
       </select>
     </div>
     <div class="cfg-row">
