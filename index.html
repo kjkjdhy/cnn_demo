@@ -221,7 +221,8 @@
     let animOutW   = 0, animOutH = 0;
     let animOutPx  = null;
 
-    let mobileNetModel = null;
+    let mobileNetModel = null;   // mobilenet 包，用于 classify()
+    let kernelModel    = null;   // Keras LayersModel，用于提取 kernel weights
     let allLayerData   = [];
     let selLayer = 0, selFilter = 0;
 
@@ -572,44 +573,16 @@
 
     async function extractAllFilters() {
       allLayerData = [];
-      const model = mobileNetModel.model;
-
-      // Diagnostic: show what's on the model object
-      console.log('[kernel] model constructor:', model && model.constructor && model.constructor.name);
-      console.log('[kernel] model.layers:', model && model.layers);
-      console.log('[kernel] model.weights keys (first 5):',
-        model && model.weights ? Object.keys(model.weights).slice(0, 5) : 'none');
-
-      if (!model) return;
-
-      if (model.layers && model.layers.length > 0) {
-        // LayersModel path (tf.loadLayersModel)
-        for (const layer of model.layers) {
-          const w = layer.getWeights();
-          if (w.length) await processKernelTensor(w[0]);
-        }
-      } else {
-        // GraphModel path (tf.loadGraphModel / TFHub)
-        // Weights are in model.weights (NamedTensorMap) or model.weightMap
-        const wm = (model.weights && Object.keys(model.weights).length > 0)
-          ? model.weights
-          : (model.weightMap || {});
-        console.log('[kernel] GraphModel weight keys (first 10):', Object.keys(wm).slice(0, 10));
-        for (const tensor of Object.values(wm)) {
-          await processKernelTensor(tensor);
-        }
+      // kernelModel 是 Keras LayersModel，conv kernels 通过 .layers 可以直接访问
+      for (const layer of kernelModel.layers) {
+        if (allLayerData.length >= 4) break;
+        const w = layer.getWeights();
+        if (w.length) await processKernelTensor(w[0]);
       }
-
-      console.log(`[kernel] extracted ${allLayerData.length} conv layer(s)`);
-
       if (allLayerData.length > 0) {
         animKernel = allLayerData[0].filters[0];
         populateLayerSel();
         updateLayerInfo();
-      } else {
-        document.getElementById('kernelNameBadge').textContent = 'weights unavailable';
-        document.getElementById('layerInfoText').textContent =
-          'Open DevTools console to see model structure';
       }
     }
 
@@ -618,12 +591,21 @@
 
     (async () => {
       try {
+        // 1. 加载 mobilenet 包（TFHub GraphModel）——只用于 classify()
         mobileNetModel = await mobilenet.load({ version: 1, alpha: 1.0 });
+
+        // 2. 加载 Keras 格式旧版模型——只用于 kernel 权重展示
+        //    TFHub GraphModel 的 conv kernel 被 frozen 进图里，无法从外部访问；
+        //    Keras LayersModel 的每一层权重都可通过 layer.getWeights() 直接读取。
+        kernelModel = await tf.loadLayersModel(
+          'https://storage.googleapis.com/tfjs-models/tfjs/mobilenet_v1_1.0_224/model.json'
+        );
         await extractAllFilters();
+
         const st = document.getElementById('modelStatus');
         if (st) { st.textContent = 'MobileNet ready ✓'; setTimeout(() => { if (st) st.textContent = ''; }, 3000); }
       } catch (e) {
-        console.error('[MobileNet load error]', e);
+        console.error('[load error]', e);
         document.getElementById('modelStatus').textContent = `Load failed: ${e.message || e}`;
       }
     })();
