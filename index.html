@@ -226,7 +226,7 @@
     .ex-col { display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink: 0; }
     .ex-col-lbl { font-size: 11px; font-weight: 600; color: #64748b; white-space: nowrap; }
     .ex-canvas { border-radius: 6px; image-rendering: pixelated; background: #f1f5f9; border: 1px solid #e2e8f0; cursor: crosshair; display: block; }
-    .ex-fml { flex: 1; min-width: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; max-height: calc(90vh - 110px); }
+    .ex-fml { flex: 1; min-width: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 8px 4px; max-height: calc(92vh - 110px); }
     .modal-hint { font-size: 10px; color: #94a3b8; text-align: center; flex-shrink: 0; }
     /* Conv formula */
     .fv-ch { background: #f8fafc; border-radius: 8px; padding: 7px 9px; display: flex; flex-direction: column; gap: 4px; }
@@ -1280,9 +1280,9 @@ function renderConvFormula(fml, stageId, fi, oy, ox) {
   const patch=getInputPatch(inputData,oy,ox,li);
   const inC=inputData[0][0].length;
   const chSums=[];
+  const chBlocks=[];
 
   for (let c=0;c<inC;c++) {
-    // Collect all products to normalize color
     const prods=[];
     for (let ky=0;ky<3;ky++) for (let kx=0;kx<3;kx++)
       prods.push(patch[ky][kx][c]*kernel[ky][kx][c]);
@@ -1298,8 +1298,8 @@ function renderConvFormula(fml, stageId, fi, oy, ox) {
     let pi=0;
     for (let ky=0;ky<3;ky++) {
       if (ky>0) {
-        const vop=document.createElement('div'); vop.className='fv-op';
-        vop.style.cssText='text-align:center;font-size:11px;color:#cbd5e1;';
+        const vop=document.createElement('div');
+        vop.style.cssText='text-align:center;font-size:11px;color:#cbd5e1;line-height:1.2;';
         vop.textContent='+'; block.appendChild(vop);
       }
       const rowDiv=document.createElement('div'); rowDiv.className='fv-grid-row';
@@ -1316,13 +1316,19 @@ function renderConvFormula(fml, stageId, fi, oy, ox) {
     const sumDiv=document.createElement('div'); sumDiv.className='fv-ch-sum';
     sumDiv.textContent=`= ${chSum.toFixed(4)}`;
     block.appendChild(sumDiv);
-    if (c > 0) {
+    chBlocks.push(block);
+  }
+
+  // Append channel blocks with separators between them
+  chBlocks.forEach((block, i) => {
+    if (i > 0) {
       const sep=document.createElement('div');
-      sep.style.cssText='font-size:11px;color:#cbd5e1;text-align:center;padding:2px 0;';
-      sep.textContent='＋'; fml.insertBefore(sep, block);
+      sep.style.cssText='font-size:13px;color:#cbd5e1;text-align:center;line-height:1.4;';
+      sep.textContent='＋';
+      fml.appendChild(sep);
     }
     fml.appendChild(block);
-  }
+  });
 
   const total=chSums.reduce((a,b)=>a+b,0)+bias;
   const chStr=chSums.map(s=>s.toFixed(3)).join(' + ');
