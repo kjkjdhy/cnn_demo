@@ -187,6 +187,91 @@
     }
     .kern-cell:focus { box-shadow: inset 0 0 0 2px rgba(59,130,246,.7); z-index: 1; }
     .dim-txt { font-size: 11px; color: #94a3b8; }
+
+    /* ── Flatten / Logits pipeline columns ─────────────────────── */
+    .pipe-flatten-bar {
+      width: 100%; height: 120px; border-radius: 5px; image-rendering: pixelated;
+      background: #f1f5f9; border: 1px solid #e2e8f0; display: block;
+    }
+    .pipe-logit-grid { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+    .pipe-logit-row {
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+    }
+    .pipe-logit-row:hover .pipe-logit-bar { filter: brightness(.88); }
+    .pipe-logit-name { font-size: 7px; color: #64748b; width: 32px; text-align: right; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pipe-logit-bar { height: 9px; border-radius: 3px; min-width: 2px; transition: width .3s; }
+    .pipe-logit-val  { font-size: 7px; color: #94a3b8; white-space: nowrap; }
+
+    /* ── Explain Modal ──────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,.55);
+      display: none; align-items: center; justify-content: center; z-index: 9000;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: white; border-radius: 14px; padding: 18px 22px 14px;
+      width: min(960px, 95vw); max-height: 90vh;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    }
+    .modal-hdr { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+    .modal-ttl { font-size: 15px; font-weight: 700; color: #1e293b; }
+    .modal-x {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 1px solid #e2e8f0; background: white; cursor: pointer;
+      font-size: 15px; color: #64748b; display: flex; align-items: center; justify-content: center;
+    }
+    .modal-x:hover { background: #f1f5f9; }
+    .modal-body { display: flex; gap: 14px; flex: 1; min-height: 0; overflow: hidden; align-items: flex-start; }
+    .ex-col { display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink: 0; }
+    .ex-col-lbl { font-size: 11px; font-weight: 600; color: #64748b; white-space: nowrap; }
+    .ex-canvas { border-radius: 6px; image-rendering: pixelated; background: #f1f5f9; border: 1px solid #e2e8f0; cursor: crosshair; display: block; }
+    .ex-fml { flex: 1; min-width: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 2px; max-height: calc(90vh - 110px); }
+    .modal-hint { font-size: 10px; color: #94a3b8; text-align: center; flex-shrink: 0; }
+    /* Conv formula */
+    .fv-ch { background: #f8fafc; border-radius: 8px; padding: 7px 9px; display: flex; flex-direction: column; gap: 4px; }
+    .fv-ch-lbl { font-size: 9px; color: #94a3b8; font-weight: 600; letter-spacing: .02em; }
+    .fv-grid-row { display: flex; align-items: center; gap: 3px; }
+    .fv-op { font-size: 13px; color: #cbd5e1; line-height: 1; flex-shrink: 0; }
+    .fv-pair {
+      width: 48px; height: 48px; border-radius: 5px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+      border: 1px solid rgba(0,0,0,.06); flex-shrink: 0;
+    }
+    .fv-top { font-size: 10px; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    .fv-bot { font-size: 8px; color: #475569; line-height: 1.2; }
+    .fv-ch-sum { font-size: 10px; font-weight: 600; color: #374151; margin-top: 2px; }
+    .fv-total { padding: 8px 12px; background: #eff6ff; border-radius: 8px; border: 1px solid #bfdbfe; font-size: 12px; color: #1e40af; font-weight: 600; line-height: 1.7; flex-shrink: 0; }
+    /* ReLU formula */
+    .fv-relu { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 16px; flex: 1; }
+    .fv-relu-fn { font-size: 13px; color: #64748b; font-family: monospace; background: #f8fafc; padding: 4px 12px; border-radius: 6px; }
+    .fv-relu-eq { display: flex; align-items: center; gap: 14px; }
+    .fv-val-pill { padding: 8px 18px; border-radius: 8px; font-size: 20px; font-weight: 700; }
+    .fv-relu-arrow { font-size: 24px; color: #94a3b8; }
+    /* Pool formula */
+    .fv-pool { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 16px; flex: 1; }
+    .fv-pool-lbl { font-size: 13px; color: #64748b; font-weight: 600; }
+    .fv-pool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .fv-pool-cell { width: 64px; height: 64px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #1e293b; border: 2px solid transparent; }
+    .fv-pool-cell.is-max { border-color: #3b82f6; }
+    .fv-pool-res { font-size: 16px; font-weight: 700; color: #1e40af; }
+    /* Softmax modal */
+    .sfx-eq { font-size: 11px; color: #475569; line-height: 2; padding: 10px 12px; background: #f8fafc; border-radius: 8px; }
+    .sfx-term { display: inline-flex; flex-direction: column; align-items: center; padding: 2px 5px; border-radius: 5px; cursor: pointer; transition: background .12s; vertical-align: middle; }
+    .sfx-term:hover, .sfx-term.hl { background: #fef9c3; }
+    .sfx-term .sfx-exp { font-size: 9px; color: #94a3b8; }
+    .sfx-term .sfx-num { font-size: 11px; font-weight: 700; }
+    .sfx-result { font-size: 18px; font-weight: 700; color: #1e40af; text-align: center; padding: 10px; }
+    .sfx-class-grid { display: flex; flex-direction: column; gap: 5px; }
+    .sfx-class-row { display: flex; align-items: center; gap: 8px; padding: 4px 8px; border-radius: 6px; cursor: pointer; transition: background .12s; }
+    .sfx-class-row:hover, .sfx-class-row.hl { background: #fef9c3; }
+    .sfx-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .sfx-cls-name { font-size: 11px; color: #374151; width: 80px; flex-shrink: 0; }
+    .sfx-logit-val { font-size: 11px; font-weight: 600; color: #1e293b; width: 48px; }
+    .sfx-prob-bar-bg { flex: 1; height: 8px; background: #f1f5f9; border-radius: 999px; overflow: hidden; }
+    .sfx-prob-fill { height: 100%; border-radius: 999px; background: #93c5fd; }
+    .sfx-prob-fill.top { background: #2563eb; }
+    .sfx-prob-val { font-size: 11px; color: #64748b; width: 38px; text-align: right; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -237,6 +322,29 @@
   </div>
 </div>
 
+<!-- Explain modal (conv/relu/pool) -->
+<div class="modal-overlay" id="explainModal" onclick="if(event.target===this)closeExplain()">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-ttl" id="explainTitle"></div>
+      <button class="modal-x" onclick="closeExplain()">✕</button>
+    </div>
+    <div class="modal-body" id="explainBody"></div>
+    <div class="modal-hint">Hover over either heatmap to move the kernel position</div>
+  </div>
+</div>
+<!-- Softmax modal -->
+<div class="modal-overlay" id="softmaxModal" onclick="if(event.target===this)closeSoftmax()">
+  <div class="modal-box" style="width:min(620px,95vw)">
+    <div class="modal-hdr">
+      <div class="modal-ttl">Softmax — how probabilities are computed</div>
+      <button class="modal-x" onclick="closeSoftmax()">✕</button>
+    </div>
+    <div class="modal-body" id="softmaxBody" style="flex-direction:column;gap:12px;overflow-y:auto"></div>
+    <div class="modal-hint">Hover a class row to highlight its term in the formula</div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
 <script>
 const MODEL_URL   = 'https://poloclub.github.io/cnn-explainer/assets/data/model.json';
@@ -267,10 +375,14 @@ const STAGES = [
   { id:'pool1', label:'MaxPool 1', li:null, pool:true  },
   { id:'conv2', label:'Conv 3',    li:2,    pool:false },
   { id:'relu2', label:'ReLU 3',    li:2,    pool:false },
-  { id:'conv3', label:'Conv 4',    li:3,    pool:false },
-  { id:'relu3', label:'ReLU 4',    li:3,    pool:false },
-  { id:'pool3', label:'MaxPool 2', li:null, pool:true  },
+  { id:'conv3',   label:'Conv 4',    li:3,    pool:false, flatten:false, logits:false },
+  { id:'relu3',   label:'ReLU 4',   li:3,    pool:false, flatten:false, logits:false },
+  { id:'pool3',   label:'MaxPool 2',li:null, pool:true,  flatten:false, logits:false },
+  { id:'flatten', label:'Flatten',  li:null, pool:false, flatten:true,  logits:false },
+  { id:'logits',  label:'Logits',   li:null, pool:false, flatten:false, logits:true  },
 ];
+// Back-fill earlier stages with flatten/logits=false
+STAGES.slice(0,-2).forEach(s=>{ if(s.flatten===undefined){s.flatten=false;s.logits=false;} });
 
 const PRESET_KERNELS = {
   h_edge:   [[-1,-2,-1],[ 0, 0, 0],[ 1, 2, 1]],
@@ -292,14 +404,19 @@ let convLayers   = [];
 let flattenLayer = null;
 let denseLayer   = null;
 let imgTensor    = null;
-let fmCache      = [];          // fmCache[li] = relu output data for layer li (for updateLayerCfg)
-let fmStageCache = {};          // fmStageCache[stageId] = H×W×C data array
-let stageExpanded = {};         // stageExpanded[stageId] = bool
+let fmCache      = [];
+let fmStageCache = {};
+let stageExpanded = {};
 let selLayer     = 0;
 let selFilter    = 0;
 let layerParams  = DEFAULT_PARAMS.map(p=>({...p}));
 let kernelOverrides = Array.from({length:4}, ()=>Array.from({length:10}, ()=>null));
 let kernelPresetSel = Array.from({length:4}, ()=>Array(10).fill('pretrained'));
+let rawImgData   = null;
+let logitData    = null;  // pre-softmax logits [10]
+let probData     = null;  // softmax probs [10]
+let explainCur   = { stageId:null, fi:null, oy:0, ox:0 };
+const CLASS_COLORS = ['#6366f1','#ec4899','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ef4444','#14b8a6','#f97316','#84cc16'];
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
@@ -355,6 +472,50 @@ function buildPipeline() {
 }
 
 function makeStageCol(stage) {
+  // ── Flatten column ──────────────────────────────────────────
+  if (stage.flatten) {
+    const col = document.createElement('div');
+    col.className = 'pipe-col'; col.id = 'pcol-flatten';
+    col.innerHTML = `<div class="pipe-label" style="background:#f0fdf4;border:1px solid #bbf7d0;color:#166534">Flatten</div>`;
+    const bar = document.createElement('canvas');
+    bar.className = 'pipe-flatten-bar'; bar.id = 'pc-flatten';
+    bar.width = 10; bar.height = 169; // 10 wide × 169 tall ≈ 1690
+    col.appendChild(bar);
+    const inf = document.createElement('div');
+    inf.className = 'pipe-info'; inf.id = 'pinf-flatten'; inf.textContent = '1690';
+    col.appendChild(inf);
+    return col;
+  }
+
+  // ── Logits column ───────────────────────────────────────────
+  if (stage.logits) {
+    const col = document.createElement('div');
+    col.className = 'pipe-col selectable'; col.id = 'pcol-logits';
+    col.innerHTML = `<div class="pipe-label" style="background:#fff7ed;border:1px solid #fed7aa;color:#9a3412">Logits</div>`;
+    const grid = document.createElement('div');
+    grid.className = 'pipe-logit-grid'; grid.id = 'logitGrid';
+    CLASS_NAMES.forEach((name, ci) => {
+      const row = document.createElement('div');
+      row.className = 'pipe-logit-row';
+      row.innerHTML = `<span class="pipe-logit-name">${name}</span>
+        <div class="pipe-logit-bar" id="lb-${ci}" style="background:${CLASS_COLORS[ci]};width:0"></div>
+        <span class="pipe-logit-val" id="lv-${ci}"></span>`;
+      row.addEventListener('click', () => openSoftmax(ci));
+      grid.appendChild(row);
+    });
+    col.appendChild(grid);
+    const inf = document.createElement('div');
+    inf.className = 'pipe-info'; inf.textContent = '10 classes';
+    col.appendChild(inf);
+    const sfxBtn = document.createElement('button');
+    sfxBtn.className = 'expand-btn'; sfxBtn.textContent = '∑ Softmax';
+    sfxBtn.style.marginTop = '4px';
+    sfxBtn.onclick = () => openSoftmax(null);
+    col.appendChild(sfxBtn);
+    return col;
+  }
+
+  // ── Normal conv/relu/pool column ────────────────────────────
   const col = document.createElement('div');
   col.className = 'pipe-col' + (stage.li !== null ? ' selectable' : '');
   col.id = `pcol-${stage.id}`;
@@ -389,7 +550,6 @@ function makeStageCol(stage) {
   btn.onclick = e => { e.stopPropagation(); toggleStageExpand(stage.id); };
   col.appendChild(btn);
 
-  // Expanded: 10 filter rows
   const sect = document.createElement('div');
   sect.className = 'expand-sect'; sect.id = `esect-${stage.id}`;
   for (let fi = 0; fi < 10; fi++) {
@@ -400,8 +560,12 @@ function makeStageCol(stage) {
     const efc = document.createElement('canvas');
     efc.className = 'efc-canvas'; efc.id = `efc-${stage.id}-${fi}`;
     efc.width = 30; efc.height = 30;
-    const capturedFi = fi;
-    efc.addEventListener('click', e => { e.stopPropagation(); selectFilter(capturedFi); });
+    const capturedFi = fi, capturedStageId = stage.id;
+    efc.addEventListener('click', e => {
+      e.stopPropagation();
+      selectFilter(capturedFi);
+      openExplain(capturedStageId, capturedFi);
+    });
     row.appendChild(lbl2); row.appendChild(efc);
     sect.appendChild(row);
   }
@@ -735,6 +899,7 @@ async function run() {
 async function runCustomForward() {
   if (!imgTensor) return null;
   fmCache = []; fmStageCache = {};
+  rawImgData = (await imgTensor.array())[0];
   let x = imgTensor, owned = false;
 
   for (let li = 0; li < convLayers.length; li++) {
@@ -790,17 +955,30 @@ async function runCustomPrediction(x) {
   const bars=document.getElementById('predBars');
   try {
     const flat=flattenLayer.apply(x);
+    // Paint flatten bar
+    paintFlattenBar(await flat.array()[0]);
+    // Compute logits (no softmax) for display
+    const dw = denseLayer.getWeights();
+    const logitsTensor = tf.tidy(() => {
+      let z = tf.matMul(flat, dw[0]);
+      if (dw.length > 1) z = tf.add(z, dw[1]);
+      return z;
+    });
+    logitData = (await logitsTensor.array())[0];
+    logitsTensor.dispose();
+    // Softmax
     const pred=denseLayer.apply(flat);
-    const probs=(await pred.array())[0];
+    probData=(await pred.array())[0];
     flat.dispose(); pred.dispose();
-    const order=[...Array(10).keys()].sort((a,b)=>probs[b]-probs[a]);
+    paintLogitBars();
+    const order=[...Array(10).keys()].sort((a,b)=>probData[b]-probData[a]);
     bars.innerHTML='';
     order.forEach((cls,rank)=>{
-      const pct=(probs[cls]*100).toFixed(1);
+      const pct=(probData[cls]*100).toFixed(1);
       const row=document.createElement('div');
       row.className='pred-row';
       row.innerHTML=`<span class="pred-name">${CLASS_NAMES[cls]}</span>`
-        +`<div class="pred-bar-bg"><div class="pred-bar-fill${rank===0?' top':''}" style="width:${Math.min(100,probs[cls]*100)}%"></div></div>`
+        +`<div class="pred-bar-bg"><div class="pred-bar-fill${rank===0?' top':''}" style="width:${Math.min(100,probData[cls]*100)}%"></div></div>`
         +`<span class="pred-pct">${pct}%</span>`;
       bars.appendChild(row);
     });
@@ -868,6 +1046,405 @@ function kColLight(v, mag) {
 }
 
 function setStatus(msg){ document.getElementById('statusBar').textContent=msg; }
+
+// ── Flatten / Logit painters ──────────────────────────────────────────────────
+function paintFlattenBar(flatArr) {
+  const c = document.getElementById('pc-flatten');
+  if (!c) return;
+  const N = flatArr.length; // 1690
+  const W = c.width, H = c.height; // 10 × 169
+  let mn=1e9, mx=-1e9;
+  flatArr.forEach(v=>{ if(v<mn)mn=v; if(v>mx)mx=v; });
+  const tmp=document.createElement('canvas'); tmp.width=W; tmp.height=H;
+  const ctx=tmp.getContext('2d'); const id=ctx.createImageData(W,H);
+  for (let i=0; i<N && i<W*H; i++) {
+    const x=i%W, y=Math.floor(i/W);
+    const pi=(y*W+x)*4, v=nrm(flatArr[i],mn,mx);
+    id.data[pi]=id.data[pi+1]=id.data[pi+2]=v; id.data[pi+3]=255;
+  }
+  ctx.putImageData(id,0,0);
+  c.getContext('2d').drawImage(tmp,0,0,c.width,c.height);
+}
+
+function paintLogitBars() {
+  if (!logitData) return;
+  const mn=Math.min(...logitData), mx=Math.max(...logitData);
+  const range=mx-mn||1;
+  const maxBarW=60;
+  logitData.forEach((v,ci)=>{
+    const bar=document.getElementById(`lb-${ci}`);
+    const val=document.getElementById(`lv-${ci}`);
+    if (bar) bar.style.width = Math.max(2,Math.round((v-mn)/range*maxBarW))+'px';
+    if (val) val.textContent = v.toFixed(2);
+  });
+}
+
+// ── Explain modal helpers ─────────────────────────────────────────────────────
+function getInputToStage(stageId) {
+  if (stageId==='conv0') return rawImgData;
+  if (stageId.startsWith('relu')) return fmStageCache[`conv${stageId.slice(4)}`];
+  if (stageId.startsWith('conv')) {
+    const li=parseInt(stageId.slice(4));
+    if (li===0) return rawImgData;
+    return layerParams[li-1].poolAfter ? fmStageCache[`pool${li-1}`] : fmStageCache[`relu${li-1}`];
+  }
+  if (stageId.startsWith('pool')) return fmStageCache[`relu${stageId.slice(4)}`];
+  return null;
+}
+
+function getKernelAllChannels(li, fi) {
+  const arr=convLayers[li].getWeights()[0].arraySync();
+  const inC=arr[0][0].length;
+  const ov=kernelOverrides[li][fi];
+  return Array.from({length:3},(_,y)=>Array.from({length:3},(_,x)=>
+    Array.from({length:inC},(_,c)=>ov?ov[y][x]:arr[y][x][c][fi])
+  ));
+}
+
+function getInputPatch(inputData, oy, ox, li) {
+  const stride=layerParams[li].stride, pad=layerParams[li].padding==='same'?1:0;
+  const Hin=inputData.length, Win=inputData[0].length, inC=inputData[0][0].length;
+  return Array.from({length:3},(_,ky)=>Array.from({length:3},(_,kx)=>{
+    const iy=oy*stride+ky-pad, ix=ox*stride+kx-pad;
+    return (iy<0||iy>=Hin||ix<0||ix>=Win) ? Array(inC).fill(0) :
+      Array.from({length:inC},(_,c)=>inputData[iy][ix][c]);
+  }));
+}
+
+function fvColor(v, mag) {
+  if (mag<1e-8||Math.abs(v)<mag*0.04) return '#f1f5f9';
+  const t=v/mag;
+  if (t>0) return `rgba(59,130,246,${(0.12+t*0.55).toFixed(2)})`;
+  return `rgba(239,68,68,${(0.12+(-t)*0.55).toFixed(2)})`;
+}
+
+function paintRGBCanvas(canvas, data, H, W) {
+  const tmp=document.createElement('canvas'); tmp.width=W; tmp.height=H;
+  const ctx=tmp.getContext('2d'); const id=ctx.createImageData(W,H);
+  for (let y=0;y<H;y++) for (let x=0;x<W;x++) {
+    const pi=(y*W+x)*4;
+    id.data[pi]  =Math.round(data[y][x][0]*255);
+    id.data[pi+1]=Math.round(data[y][x][1]*255);
+    id.data[pi+2]=Math.round(data[y][x][2]*255);
+    id.data[pi+3]=255;
+  }
+  ctx.putImageData(id,0,0);
+  canvas.getContext('2d').drawImage(tmp,0,0,canvas.width,canvas.height);
+}
+
+// ── Explain modal ─────────────────────────────────────────────────────────────
+function openExplain(stageId, fi) {
+  const stage=STAGES.find(s=>s.id===stageId);
+  if (!stage) return;
+  const inputData=getInputToStage(stageId);
+  const outputData=fmStageCache[stageId];
+  if (!inputData||!outputData) return;
+
+  const Hin=inputData.length,Win=inputData[0].length,inC=inputData[0][0].length;
+  const Hout=outputData.length,Wout=outputData[0].length;
+
+  explainCur={stageId,fi,oy:Math.floor(Hout/2),ox:Math.floor(Wout/2)};
+
+  // Title
+  let title=stage.label;
+  if (!stage.pool) title+=` — Filter ${fi}`;
+  document.getElementById('explainTitle').textContent=title;
+
+  const body=document.getElementById('explainBody');
+  body.innerHTML='';
+
+  const CS=200; // display size px
+
+  // Left canvas
+  const leftCol=document.createElement('div'); leftCol.className='ex-col';
+  const leftLbl=document.createElement('div'); leftLbl.className='ex-col-lbl';
+  leftLbl.textContent=`Input (${Hin}×${Win})`;
+  const inC2=inC;
+  const inCvs=document.createElement('canvas'); inCvs.className='ex-canvas';
+  inCvs.id='exInCvs'; inCvs.width=Win; inCvs.height=Hin;
+  inCvs.style.width=inCvs.style.height=CS+'px';
+  leftCol.appendChild(leftLbl); leftCol.appendChild(inCvs);
+
+  // Formula col
+  const fmlCol=document.createElement('div'); fmlCol.className='ex-fml'; fmlCol.id='exFml';
+
+  // Right canvas
+  const rightCol=document.createElement('div'); rightCol.className='ex-col';
+  const rightLbl=document.createElement('div'); rightLbl.className='ex-col-lbl';
+  rightLbl.textContent=`Output (${Hout}×${Wout})`;
+  const outCvs=document.createElement('canvas'); outCvs.className='ex-canvas';
+  outCvs.id='exOutCvs'; outCvs.width=Wout; outCvs.height=Hout;
+  outCvs.style.width=outCvs.style.height=CS+'px';
+  rightCol.appendChild(rightLbl); rightCol.appendChild(outCvs);
+
+  body.appendChild(leftCol); body.appendChild(fmlCol); body.appendChild(rightCol);
+
+  // Hover on output canvas
+  outCvs.addEventListener('mousemove', e=>{
+    const r=outCvs.getBoundingClientRect();
+    explainCur.oy=Math.max(0,Math.min(Hout-1,Math.floor((e.clientY-r.top)/r.height*Hout)));
+    explainCur.ox=Math.max(0,Math.min(Wout-1,Math.floor((e.clientX-r.left)/r.width*Wout)));
+    updateExplainView();
+  });
+  // Hover on input canvas
+  inCvs.addEventListener('mousemove', e=>{
+    const r=inCvs.getBoundingClientRect();
+    const iy=Math.floor((e.clientY-r.top)/r.height*Hin);
+    const ix=Math.floor((e.clientX-r.left)/r.width*Win);
+    if (stageId.startsWith('conv')) {
+      const li=parseInt(stageId.slice(4)), s=layerParams[li].stride;
+      explainCur.oy=Math.max(0,Math.min(Hout-1,Math.floor((iy-1)/s)));
+      explainCur.ox=Math.max(0,Math.min(Wout-1,Math.floor((ix-1)/s)));
+    } else if (stageId.startsWith('pool')) {
+      explainCur.oy=Math.max(0,Math.min(Hout-1,Math.floor(iy/2)));
+      explainCur.ox=Math.max(0,Math.min(Wout-1,Math.floor(ix/2)));
+    } else {
+      explainCur.oy=Math.max(0,Math.min(Hout-1,iy));
+      explainCur.ox=Math.max(0,Math.min(Wout-1,ix));
+    }
+    updateExplainView();
+  });
+
+  document.getElementById('explainModal').classList.add('open');
+  updateExplainView();
+}
+
+function closeExplain() {
+  document.getElementById('explainModal').classList.remove('open');
+}
+
+function updateExplainView() {
+  const {stageId,fi,oy,ox}=explainCur;
+  const stage=STAGES.find(s=>s.id===stageId);
+  const inputData=getInputToStage(stageId);
+  const outputData=fmStageCache[stageId];
+  if (!inputData||!outputData) return;
+  const Hin=inputData.length,Win=inputData[0].length,inC=inputData[0][0].length;
+  const Hout=outputData.length,Wout=outputData[0].length;
+
+  // Paint input canvas + receptive field box
+  const inCvs=document.getElementById('exInCvs');
+  if (inCvs) {
+    if (inC===3) paintRGBCanvas(inCvs,inputData,Hin,Win);
+    else paintAvgToCanvas(inCvs,inputData,Hin,Win,inC);
+    const ctx=inCvs.getContext('2d');
+    ctx.save(); ctx.strokeStyle='#f59e0b'; ctx.lineWidth=0.5;
+    if (stageId.startsWith('conv')) {
+      const li=parseInt(stageId.slice(4)),s=layerParams[li].stride;
+      const pad=layerParams[li].padding==='same'?1:0;
+      ctx.strokeRect(ox*s-pad+.25,oy*s-pad+.25,3,3);
+    } else if (stageId.startsWith('pool')) {
+      ctx.strokeRect(ox*2+.25,oy*2+.25,2,2);
+    } else {
+      ctx.strokeRect(ox+.25,oy+.25,1,1);
+    }
+    ctx.restore();
+  }
+
+  // Paint output canvas + crosshair dot
+  const outCvs=document.getElementById('exOutCvs');
+  if (outCvs) {
+    if (stage.pool) paintAvgToCanvas(outCvs,outputData,Hout,Wout,outputData[0][0].length);
+    else paintToCanvas(outCvs,outputData,Hout,Wout,fi);
+    const ctx=outCvs.getContext('2d');
+    ctx.save(); ctx.strokeStyle='#f59e0b'; ctx.lineWidth=0.5;
+    ctx.strokeRect(ox+.25,oy+.25,1,1);
+    ctx.restore();
+  }
+
+  // Update formula
+  const fml=document.getElementById('exFml');
+  if (!fml) return;
+  fml.innerHTML='';
+
+  if (stageId.startsWith('conv')) renderConvFormula(fml,stageId,fi,oy,ox);
+  else if (stageId.startsWith('relu')) renderReluFormula(fml,stageId,fi,oy,ox);
+  else if (stageId.startsWith('pool')) renderPoolFormula(fml,stageId,oy,ox);
+}
+
+function renderConvFormula(fml, stageId, fi, oy, ox) {
+  const li=parseInt(stageId.slice(4));
+  const inputData=getInputToStage(stageId);
+  const kernel=getKernelAllChannels(li,fi);
+  const biasArr=convLayers[li].getWeights();
+  const bias=biasArr.length>1?biasArr[1].arraySync()[fi]:0;
+  const patch=getInputPatch(inputData,oy,ox,li);
+  const inC=inputData[0][0].length;
+  const chSums=[];
+
+  for (let c=0;c<inC;c++) {
+    // Collect all products to normalize color
+    const prods=[];
+    for (let ky=0;ky<3;ky++) for (let kx=0;kx<3;kx++)
+      prods.push(patch[ky][kx][c]*kernel[ky][kx][c]);
+    const mag=Math.max(...prods.map(Math.abs),1e-8);
+    let chSum=0; prods.forEach(p=>chSum+=p);
+    chSums.push(chSum);
+
+    const block=document.createElement('div'); block.className='fv-ch';
+    const chl=document.createElement('div'); chl.className='fv-ch-lbl';
+    chl.textContent=inC===3?['Red channel','Green channel','Blue channel'][c]:`Channel ${c}`;
+    block.appendChild(chl);
+
+    let pi=0;
+    for (let ky=0;ky<3;ky++) {
+      if (ky>0) {
+        const vop=document.createElement('div'); vop.className='fv-op';
+        vop.style.cssText='text-align:center;font-size:11px;color:#cbd5e1;';
+        vop.textContent='+'; block.appendChild(vop);
+      }
+      const rowDiv=document.createElement('div'); rowDiv.className='fv-grid-row';
+      for (let kx=0;kx<3;kx++) {
+        if (kx>0) { const op=document.createElement('span'); op.className='fv-op'; op.textContent='+'; rowDiv.appendChild(op); }
+        const v=patch[ky][kx][c], w=kernel[ky][kx][c], prod=prods[pi++];
+        const pair=document.createElement('div'); pair.className='fv-pair';
+        pair.style.background=fvColor(prod,mag);
+        pair.innerHTML=`<span class="fv-top">${v.toFixed(2)}</span><span class="fv-bot">×${w.toFixed(2)}</span>`;
+        rowDiv.appendChild(pair);
+      }
+      block.appendChild(rowDiv);
+    }
+    const sumDiv=document.createElement('div'); sumDiv.className='fv-ch-sum';
+    sumDiv.textContent=`= ${chSum.toFixed(4)}`;
+    block.appendChild(sumDiv);
+    fml.appendChild(block);
+  }
+
+  const total=chSums.reduce((a,b)=>a+b,0)+bias;
+  const totalDiv=document.createElement('div'); totalDiv.className='fv-total';
+  const chStr=chSums.map(s=>s.toFixed(3)).join(' + ');
+  totalDiv.innerHTML=`Σ channels: ${chStr}<br>+ bias: ${bias.toFixed(3)}<br><strong>Output = ${total.toFixed(4)}</strong>`;
+  fml.appendChild(totalDiv);
+}
+
+function renderReluFormula(fml, stageId, fi, oy, ox) {
+  const li=parseInt(stageId.slice(4));
+  const inVal=fmStageCache[`conv${li}`]?.[oy]?.[ox]?.[fi]??0;
+  const outVal=Math.max(0,inVal);
+  const box=document.createElement('div'); box.className='fv-relu';
+  box.innerHTML=`<div class="fv-relu-fn">f(x) = max(0, x)</div>
+    <div class="fv-relu-eq">
+      <div class="fv-val-pill" style="background:${inVal>=0?'rgba(59,130,246,.15)':'rgba(239,68,68,.15)'}">
+        x = ${inVal.toFixed(4)}
+      </div>
+      <div class="fv-relu-arrow">→</div>
+      <div class="fv-val-pill" style="background:${outVal>0?'rgba(59,130,246,.15)':'#f1f5f9'}">
+        max(0, x) = ${outVal.toFixed(4)}
+      </div>
+    </div>
+    <div style="font-size:11px;color:#94a3b8">${inVal<0?'Negative → clamped to 0':'Positive → passed through'}</div>`;
+  fml.appendChild(box);
+}
+
+function renderPoolFormula(fml, stageId, oy, ox) {
+  const li=parseInt(stageId.slice(4));
+  const inputData=fmStageCache[`relu${li}`];
+  if (!inputData) return;
+  const C=inputData[0][0].length;
+  const fi=explainCur.fi??0;
+  const cells=[[oy*2,ox*2],[oy*2,ox*2+1],[oy*2+1,ox*2],[oy*2+1,ox*2+1]];
+  const vals=cells.map(([y,x])=>(y<inputData.length&&x<inputData[0].length)?inputData[y][x][fi]:0);
+  const maxV=Math.max(...vals);
+  const mn=Math.min(...vals), mx=maxV, range=mx-mn||1;
+
+  const box=document.createElement('div'); box.className='fv-pool';
+  const lbl=document.createElement('div'); lbl.className='fv-pool-lbl';
+  lbl.textContent=`Max Pooling 2×2 — Filter ${fi}`;
+  box.appendChild(lbl);
+
+  const grid=document.createElement('div'); grid.className='fv-pool-grid';
+  vals.forEach((v,i)=>{
+    const t=(v-mn)/range;
+    const cell=document.createElement('div'); cell.className='fv-pool-cell'+(v===maxV?' is-max':'');
+    cell.style.background=`rgba(59,130,246,${(0.08+t*0.5).toFixed(2)})`;
+    cell.textContent=v.toFixed(3);
+    grid.appendChild(cell);
+  });
+  box.appendChild(grid);
+
+  const res=document.createElement('div'); res.className='fv-pool-res';
+  res.textContent=`max = ${maxV.toFixed(4)}`;
+  box.appendChild(res);
+  fml.appendChild(box);
+}
+
+// ── Softmax modal ─────────────────────────────────────────────────────────────
+function openSoftmax(highlightCi) {
+  if (!logitData||!probData) return;
+  const body=document.getElementById('softmaxBody');
+  body.innerHTML='';
+
+  // Formula section
+  const expVals=logitData.map(z=>Math.exp(z));
+  const sumExp=expVals.reduce((a,b)=>a+b,0);
+
+  const fmlDiv=document.createElement('div'); fmlDiv.className='sfx-eq';
+  const hiCi=highlightCi??[...Array(10).keys()].sort((a,b)=>probData[b]-probData[a])[0];
+
+  function rebuildFormula(hl) {
+    fmlDiv.innerHTML=`<strong>softmax(z<sub>${hl}</sub>)</strong> = `;
+    // numerator
+    const num=document.createElement('span'); num.className='sfx-term'+(hl===hl?' hl':'');
+    num.innerHTML=`<span class="sfx-exp">exp(z<sub>${hl}</sub>)</span><span class="sfx-num">${expVals[hl].toFixed(3)}</span>`;
+    fmlDiv.appendChild(num);
+    fmlDiv.appendChild(document.createTextNode(' / ( '));
+    CLASS_NAMES.forEach((_, ci)=>{
+      if (ci>0) fmlDiv.appendChild(document.createTextNode(' + '));
+      const term=document.createElement('span');
+      term.className='sfx-term'+(ci===hl?' hl':'');
+      term.id=`sfxt-${ci}`;
+      term.innerHTML=`<span class="sfx-exp">exp(z<sub>${ci}</sub>)</span><span class="sfx-num">${expVals[ci].toFixed(3)}</span>`;
+      term.addEventListener('mouseenter',()=>{
+        document.querySelectorAll('.sfx-term').forEach(t=>t.classList.remove('hl'));
+        document.querySelectorAll('.sfx-class-row').forEach(r=>r.classList.remove('hl'));
+        term.classList.add('hl');
+        const row=document.getElementById(`sfxr-${ci}`); if(row)row.classList.add('hl');
+      });
+      fmlDiv.appendChild(term);
+    });
+    fmlDiv.appendChild(document.createTextNode(' )'));
+    const resDiv=document.createElement('div'); resDiv.className='sfx-result';
+    resDiv.textContent=`= ${(expVals[hl]/sumExp).toFixed(4)}  (${(probData[hl]*100).toFixed(1)}%)`;
+    fmlDiv.appendChild(resDiv);
+  }
+  rebuildFormula(hiCi);
+  body.appendChild(fmlDiv);
+
+  // Class rows
+  const order=[...Array(10).keys()].sort((a,b)=>probData[b]-probData[a]);
+  const grid=document.createElement('div'); grid.className='sfx-class-grid';
+  order.forEach((ci,rank)=>{
+    const row=document.createElement('div');
+    row.className='sfx-class-row'+(ci===hiCi?' hl':'');
+    row.id=`sfxr-${ci}`;
+    const dot=document.createElement('div'); dot.className='sfx-dot';
+    dot.style.background=CLASS_COLORS[ci];
+    const maxLogit=Math.max(...logitData), minLogit=Math.min(...logitData);
+    const barW=Math.round((logitData[ci]-minLogit)/(maxLogit-minLogit)*100);
+    row.innerHTML='';
+    row.appendChild(dot);
+    row.insertAdjacentHTML('beforeend',
+      `<span class="sfx-cls-name">${CLASS_NAMES[ci]}</span>`+
+      `<span class="sfx-logit-val">z=${logitData[ci].toFixed(2)}</span>`+
+      `<div class="sfx-prob-bar-bg"><div class="sfx-prob-fill${rank===0?' top':''}" style="width:${Math.min(100,probData[ci]*100)}%"></div></div>`+
+      `<span class="sfx-prob-val">${(probData[ci]*100).toFixed(1)}%</span>`
+    );
+    row.addEventListener('mouseenter',()=>{
+      document.querySelectorAll('.sfx-class-row').forEach(r=>r.classList.remove('hl'));
+      document.querySelectorAll('.sfx-term').forEach(t=>t.classList.remove('hl'));
+      row.classList.add('hl');
+      rebuildFormula(ci);
+      const term=document.getElementById(`sfxt-${ci}`); if(term)term.classList.add('hl');
+    });
+    grid.appendChild(row);
+  });
+  body.appendChild(grid);
+  document.getElementById('softmaxModal').classList.add('open');
+}
+
+function closeSoftmax() {
+  document.getElementById('softmaxModal').classList.remove('open');
+}
 
 init();
 </script>
