@@ -363,10 +363,10 @@ const IMAGES = [
 ];
 const LN = ['Layer 1','Layer 2','Layer 3','Layer 4'];
 const DEFAULT_PARAMS = [
-  { stride:1, padding:'valid', poolAfter:false },
-  { stride:1, padding:'valid', poolAfter:true  },
-  { stride:1, padding:'valid', poolAfter:false },
-  { stride:1, padding:'valid', poolAfter:true  },
+  { stride:1, padding:0, poolAfter:false },
+  { stride:1, padding:0, poolAfter:true  },
+  { stride:1, padding:0, poolAfter:false },
+  { stride:1, padding:0, poolAfter:true  },
 ];
 
 // Pipeline stages: Conv + ReLU per layer, plus MaxPool where applicable
@@ -682,8 +682,10 @@ function updateLayerCfg() {
     <div class="cfg-row">
       <span class="cfg-k">Padding</span>
       <select class="cfg-sel${isPadMod?' modified':''}" id="paddingCtrl" onchange="onParamChange('padding',this.value)">
-        <option value="valid"${p.padding==='valid'?' selected':''}>no padding</option>
-        <option value="same"${p.padding==='same'?' selected':''}>zero padding</option>
+        <option value="0"${p.padding===0?' selected':''}>No padding</option>
+        <option value="1"${p.padding===1?' selected':''}>Pad 1</option>
+        <option value="2"${p.padding===2?' selected':''}>Pad 2</option>
+        <option value="3"${p.padding===3?' selected':''}>Pad 3</option>
       </select>
     </div>
     <div class="cfg-row">
@@ -700,7 +702,7 @@ function updateLayerCfg() {
 
 function onParamChange(param, value) {
   if (param==='stride')    layerParams[selLayer].stride   = parseInt(value);
-  if (param==='padding')   layerParams[selLayer].padding  = value;
+  if (param==='padding')   layerParams[selLayer].padding  = parseInt(value);
   if (param==='poolAfter') layerParams[selLayer].poolAfter= (value==='max');
   run();
 }
@@ -1003,11 +1005,11 @@ async function runCustomForward() {
 async function runCustomPrediction(x) {
   if(!flattenLayer||!denseLayer) return;
   const bars=document.getElementById('predBars');
+  let useGAP = false;
+  let flat = null;
   try {
-    const flat=flattenLayer.apply(x);
-    // Paint flatten bar
-    paintFlattenBar((await flat.array())[0]);
-    // Compute logits (no softmax activation)
+    flat = flattenLayer.apply(x);
+    // Try dense — fails if flattened size ≠ 1690
     const dw = denseLayer.getWeights();
     const logitsTensor = tf.tidy(() => {
       let z = tf.matMul(flat, dw[0]);
@@ -1016,32 +1018,41 @@ async function runCustomPrediction(x) {
     });
     logitData = (await logitsTensor.array())[0];
     logitsTensor.dispose();
-    // Softmax probabilities
-    const pred=denseLayer.apply(flat);
-    probData=(await pred.array())[0];
-    pred.dispose(); flat.dispose();
-    paintLogitBars();
-    const order=[...Array(10).keys()].sort((a,b)=>probData[b]-probData[a]);
-    bars.innerHTML='';
-    order.forEach((cls,rank)=>{
-      const pct=(probData[cls]*100).toFixed(1);
-      const row=document.createElement('div');
-      row.className='pred-row';
-      row.innerHTML=`<span class="pred-name">${CLASS_NAMES[cls]}</span>`
-        +`<div class="pred-bar-bg"><div class="pred-bar-fill${rank===0?' top':''}" style="width:${Math.min(100,probData[cls]*100)}%"></div></div>`
-        +`<span class="pred-pct">${pct}%</span>`;
-      bars.appendChild(row);
-    });
+    paintFlattenBar((await flat.array())[0]);
+    const pred = denseLayer.apply(flat);
+    probData = (await pred.array())[0];
+    pred.dispose(); flat.dispose(); flat = null;
   } catch(_) {
-    const actual=x.shape.slice(1).reduce((a,b)=>a*b,1);
-    bars.innerHTML=`<div style="font-size:10px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px;line-height:1.7">
-      ⚠ <strong>Architecture mismatch</strong><br>
-      Classifier expects <strong>1,690</strong> inputs<br>
-      (13×13×10 with default params)<br>
-      Current output: <strong>${actual}</strong><br>
-      <span style="color:#92400e">Reset stride &amp; padding to defaults.</span>
-    </div>`;
+    // Spatial dims changed → Dense layer input mismatch.
+    // Fall back to Global Average Pooling over the last feature map.
+    if (flat) { flat.dispose(); flat = null; }
+    useGAP = true;
+    const gapArr = await tf.tidy(() => tf.mean(x.squeeze([0]), [0, 1])).array();
+    logitData = Array.from(gapArr);
+    const maxG = Math.max(...logitData);
+    const exps = logitData.map(v => Math.exp(v - maxG));
+    const sum  = exps.reduce((a, b) => a + b, 0);
+    probData = exps.map(v => v / sum);
   }
+  paintLogitBars();
+  const order=[...Array(10).keys()].sort((a,b)=>probData[b]-probData[a]);
+  bars.innerHTML='';
+  if (useGAP) {
+    const note=document.createElement('div');
+    note.style.cssText='font-size:9px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:5px;padding:5px 7px;margin-bottom:6px;line-height:1.5';
+    note.innerHTML='⚠ <strong>GAP approximation</strong> — spatial size changed<br>'
+      +'<span style="color:#92400e">Dense layer needs 13×13×10=1,690 inputs; using channel-mean as scores instead.</span>';
+    bars.appendChild(note);
+  }
+  order.forEach((cls,rank)=>{
+    const pct=(probData[cls]*100).toFixed(1);
+    const row=document.createElement('div');
+    row.className='pred-row';
+    row.innerHTML=`<span class="pred-name">${CLASS_NAMES[cls]}</span>`
+      +`<div class="pred-bar-bg"><div class="pred-bar-fill${rank===0?' top':''}" style="width:${Math.min(100,probData[cls]*100)}%"></div></div>`
+      +`<span class="pred-pct">${pct}%</span>`;
+    bars.appendChild(row);
+  });
 }
 
 // ── Draw ──────────────────────────────────────────────────────────────────────
@@ -1100,7 +1111,7 @@ function setStatus(msg){ document.getElementById('statusBar').textContent=msg; }
 // ── Flatten / Logit painters ──────────────────────────────────────────────────
 function paintFlattenBar(flatArr) {
   const c = document.getElementById('pc-flatten');
-  if (!c) return;
+  if (!c || !flatArr) return;
   const N = flatArr.length; // 1690
   const W = c.width, H = c.height; // 10 × 169
   let mn=1e9, mx=-1e9;
@@ -1152,7 +1163,7 @@ function getKernelAllChannels(li, fi) {
 }
 
 function getInputPatch(inputData, oy, ox, li) {
-  const stride=layerParams[li].stride, pad=layerParams[li].padding==='same'?1:0;
+  const stride=layerParams[li].stride, pad=layerParams[li].padding;
   const Hin=inputData.length, Win=inputData[0].length, inC=inputData[0][0].length;
   return Array.from({length:3},(_,ky)=>Array.from({length:3},(_,kx)=>{
     const iy=oy*stride+ky-pad, ix=ox*stride+kx-pad;
@@ -1287,7 +1298,7 @@ function updateExplainView() {
     ctx.save(); ctx.strokeStyle='#f59e0b'; ctx.lineWidth=0.5;
     if (stageId.startsWith('conv')) {
       const li=parseInt(stageId.slice(4)),s=layerParams[li].stride;
-      const pad=layerParams[li].padding==='same'?1:0;
+      const pad=layerParams[li].padding;
       ctx.strokeRect(ox*s-pad+.25,oy*s-pad+.25,3,3);
     } else if (stageId.startsWith('pool')) {
       ctx.strokeRect(ox*2+.25,oy*2+.25,2,2);
