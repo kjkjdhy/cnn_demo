@@ -286,7 +286,10 @@
     </div>
     <div class="pred-divider"></div>
     <div class="pred-panel">
-      <div class="ctrl-title">Prediction</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="ctrl-title" style="margin-bottom:0">Prediction</div>
+        <button class="small-btn" style="margin-top:0;font-size:9px;padding:2px 7px" onclick="openSoftmax(null)">∑ Softmax</button>
+      </div>
       <div id="predBars"><span class="dim-txt">—</span></div>
     </div>
   </div>
@@ -956,8 +959,8 @@ async function runCustomPrediction(x) {
   try {
     const flat=flattenLayer.apply(x);
     // Paint flatten bar
-    paintFlattenBar(await flat.array()[0]);
-    // Compute logits (no softmax) for display
+    paintFlattenBar((await flat.array())[0]);
+    // Compute logits (no softmax activation)
     const dw = denseLayer.getWeights();
     const logitsTensor = tf.tidy(() => {
       let z = tf.matMul(flat, dw[0]);
@@ -966,10 +969,10 @@ async function runCustomPrediction(x) {
     });
     logitData = (await logitsTensor.array())[0];
     logitsTensor.dispose();
-    // Softmax
+    // Softmax probabilities
     const pred=denseLayer.apply(flat);
     probData=(await pred.array())[0];
-    flat.dispose(); pred.dispose();
+    pred.dispose(); flat.dispose();
     paintLogitBars();
     const order=[...Array(10).keys()].sort((a,b)=>probData[b]-probData[a]);
     bars.innerHTML='';
