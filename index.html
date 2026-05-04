@@ -78,7 +78,7 @@
     .efc-canvas.sel { border-color: #3b82f6; }
 
     /* Arrow between stages */
-    .pipe-arrow { flex-shrink: 0; padding: 0 8px; padding-top: 26px; color: #cbd5e1; font-size: 14px; }
+    .pipe-arrow { flex-shrink: 0; padding: 0 4px; padding-top: 26px; color: #cbd5e1; font-size: 14px; }
 
     /* Prediction panel */
     .pred-divider { width: 1px; background: #f1f5f9; flex-shrink: 0; margin: 0 12px; align-self: stretch; }
@@ -106,7 +106,7 @@
     #uploadInput { display: none; }
     #uploadName  { font-size: 10px; color: #94a3b8; }
     .img-sec-lbl { font-size: 11px; font-weight: 600; color: #64748b; margin-bottom: 6px; }
-    .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .img-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
     .img-btn {
       font-size: 10px; padding: 5px 4px;
       border: 1px solid #e2e8f0; border-radius: 4px;
@@ -381,11 +381,12 @@ const STAGES = [
   { id:'conv3',   label:'Conv 4',    li:3,    pool:false, flatten:false, logits:false },
   { id:'relu3',   label:'ReLU 4',   li:3,    pool:false, flatten:false, logits:false },
   { id:'pool3',   label:'MaxPool 2',li:null, pool:true,  flatten:false, logits:false },
-  { id:'flatten', label:'Flatten',  li:null, pool:false, flatten:true,  logits:false },
-  { id:'logits',  label:'Logits',   li:null, pool:false, flatten:false, logits:true  },
+  { id:'flatten', label:'Flatten',  li:null, pool:false, flatten:true,  logits:false, fc:false },
+  { id:'fc',      label:'FC',       li:null, pool:false, flatten:false, logits:false, fc:true  },
+  { id:'logits',  label:'Logits',   li:null, pool:false, flatten:false, logits:true,  fc:false },
 ];
-// Back-fill earlier stages with flatten/logits=false
-STAGES.slice(0,-2).forEach(s=>{ if(s.flatten===undefined){s.flatten=false;s.logits=false;} });
+// Back-fill earlier stages
+STAGES.slice(0,-3).forEach(s=>{ if(s.flatten===undefined){s.flatten=false;s.logits=false;s.fc=false;} });
 
 const PRESET_KERNELS = {
   h_edge:   [[-1,-2,-1],[ 0, 0, 0],[ 1, 2, 1]],
@@ -436,6 +437,7 @@ async function init() {
     buildPipeline();
     buildLayerTabs();
     buildImgGrid();
+    paintFCWeights();
     document.getElementById('refreshBtn').onclick = run;
     document.getElementById('uploadInput').addEventListener('change', async e=>{
       const f=e.target.files[0]; if(!f) return;
@@ -476,6 +478,21 @@ function buildPipeline() {
 }
 
 function makeStageCol(stage) {
+  // ── FC column ───────────────────────────────────────────────
+  if (stage.fc) {
+    const col = document.createElement('div');
+    col.className = 'pipe-col'; col.id = 'pcol-fc';
+    col.innerHTML = `<div class="pipe-label" style="background:#faf5ff;border:1px solid #e9d5ff;color:#7c3aed">FC</div>`;
+    const cvs = document.createElement('canvas');
+    cvs.id = 'pc-fc'; cvs.width = 10; cvs.height = 169;
+    cvs.style.cssText = 'width:100%;height:120px;image-rendering:pixelated;border:1px solid #e2e8f0;border-radius:4px;background:#f1f5f9;display:block';
+    col.appendChild(cvs);
+    const inf = document.createElement('div');
+    inf.className = 'pipe-info'; inf.textContent = '1690→10';
+    col.appendChild(inf);
+    return col;
+  }
+
   // ── Flatten column ──────────────────────────────────────────
   if (stage.flatten) {
     const col = document.createElement('div');
@@ -1125,6 +1142,35 @@ function paintFlattenBar(flatArr) {
   }
   ctx.putImageData(id,0,0);
   c.getContext('2d').drawImage(tmp,0,0,c.width,c.height);
+}
+
+function paintFCWeights() {
+  const c = document.getElementById('pc-fc');
+  if (!c || !denseLayer) return;
+  const W = denseLayer.getWeights()[0].arraySync(); // [1690, 10]
+  const rows = W.length, cols = 10, H = 169;
+  let mag = 0;
+  for (let i=0;i<rows;i++) for (let j=0;j<cols;j++) mag=Math.max(mag,Math.abs(W[i][j]));
+  if (!mag) return;
+  const id = c.getContext('2d').createImageData(cols, H);
+  const group = rows/H;
+  for (let y=0;y<H;y++) {
+    for (let x=0;x<cols;x++) {
+      let sum=0, cnt=0;
+      const i0=Math.floor(y*group), i1=Math.floor((y+1)*group);
+      for (let i=i0;i<i1&&i<rows;i++){sum+=W[i][x];cnt++;}
+      const v=cnt?sum/cnt:0, t=v/mag;
+      const pi=(y*cols+x)*4;
+      if (t>0) {
+        id.data[pi]=59;id.data[pi+1]=130;id.data[pi+2]=246;
+        id.data[pi+3]=Math.round(60+t*195);
+      } else {
+        id.data[pi]=239;id.data[pi+1]=68;id.data[pi+2]=68;
+        id.data[pi+3]=Math.round(60+(-t)*195);
+      }
+    }
+  }
+  c.getContext('2d').putImageData(id,0,0);
 }
 
 function paintLogitBars() {
