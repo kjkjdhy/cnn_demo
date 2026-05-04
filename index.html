@@ -209,8 +209,8 @@
     }
     .modal-overlay.open { display: flex; }
     .modal-box {
-      background: white; border-radius: 14px; padding: 18px 22px 14px;
-      width: min(960px, 95vw); max-height: 90vh;
+      background: white; border-radius: 14px; padding: 18px 24px 14px;
+      width: min(1160px, 96vw); max-height: 92vh;
       display: flex; flex-direction: column; gap: 10px;
       box-shadow: 0 20px 60px rgba(0,0,0,.3);
     }
@@ -1156,22 +1156,23 @@ function openExplain(stageId, fi) {
   const body=document.getElementById('explainBody');
   body.innerHTML='';
 
-  const CS=200; // display size px
+  const CS=240; // display size px
 
-  // Left canvas
+  // Left canvas (input + total summary below)
   const leftCol=document.createElement('div'); leftCol.className='ex-col';
   const leftLbl=document.createElement('div'); leftLbl.className='ex-col-lbl';
   leftLbl.textContent=`Input (${Hin}×${Win})`;
-  const inC2=inC;
   const inCvs=document.createElement('canvas'); inCvs.className='ex-canvas';
   inCvs.id='exInCvs'; inCvs.width=Win; inCvs.height=Hin;
   inCvs.style.width=inCvs.style.height=CS+'px';
-  leftCol.appendChild(leftLbl); leftCol.appendChild(inCvs);
+  const totalBox=document.createElement('div');
+  totalBox.id='exTotal'; totalBox.style.cssText='margin-top:8px;width:'+CS+'px';
+  leftCol.appendChild(leftLbl); leftCol.appendChild(inCvs); leftCol.appendChild(totalBox);
 
-  // Formula col
+  // Formula col (channel blocks only)
   const fmlCol=document.createElement('div'); fmlCol.className='ex-fml'; fmlCol.id='exFml';
 
-  // Right canvas
+  // Right canvas (output)
   const rightCol=document.createElement('div'); rightCol.className='ex-col';
   const rightLbl=document.createElement('div'); rightLbl.className='ex-col-lbl';
   rightLbl.textContent=`Output (${Hout}×${Wout})`;
@@ -1260,9 +1261,14 @@ function updateExplainView() {
   if (!fml) return;
   fml.innerHTML='';
 
-  if (stageId.startsWith('conv')) renderConvFormula(fml,stageId,fi,oy,ox);
-  else if (stageId.startsWith('relu')) renderReluFormula(fml,stageId,fi,oy,ox);
-  else if (stageId.startsWith('pool')) renderPoolFormula(fml,stageId,oy,ox);
+  const totalEl=document.getElementById('exTotal');
+  if (stageId.startsWith('conv')) {
+    renderConvFormula(fml,stageId,fi,oy,ox);
+  } else {
+    if (totalEl) { totalEl.className=''; totalEl.innerHTML=''; }
+    if (stageId.startsWith('relu')) renderReluFormula(fml,stageId,fi,oy,ox);
+    else if (stageId.startsWith('pool')) renderPoolFormula(fml,stageId,oy,ox);
+  }
 }
 
 function renderConvFormula(fml, stageId, fi, oy, ox) {
@@ -1310,14 +1316,21 @@ function renderConvFormula(fml, stageId, fi, oy, ox) {
     const sumDiv=document.createElement('div'); sumDiv.className='fv-ch-sum';
     sumDiv.textContent=`= ${chSum.toFixed(4)}`;
     block.appendChild(sumDiv);
+    if (c > 0) {
+      const sep=document.createElement('div');
+      sep.style.cssText='font-size:11px;color:#cbd5e1;text-align:center;padding:2px 0;';
+      sep.textContent='＋'; fml.insertBefore(sep, block);
+    }
     fml.appendChild(block);
   }
 
   const total=chSums.reduce((a,b)=>a+b,0)+bias;
-  const totalDiv=document.createElement('div'); totalDiv.className='fv-total';
   const chStr=chSums.map(s=>s.toFixed(3)).join(' + ');
-  totalDiv.innerHTML=`Σ channels: ${chStr}<br>+ bias: ${bias.toFixed(3)}<br><strong>Output = ${total.toFixed(4)}</strong>`;
-  fml.appendChild(totalDiv);
+  const totalEl=document.getElementById('exTotal');
+  if (totalEl) {
+    totalEl.className='fv-total';
+    totalEl.innerHTML=`Σ channels: ${chStr}<br>+ bias: ${bias.toFixed(3)}<br><strong>Output = ${total.toFixed(4)}</strong>`;
+  }
 }
 
 function renderReluFormula(fml, stageId, fi, oy, ox) {
