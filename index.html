@@ -363,10 +363,10 @@ const IMAGES = [
 ];
 const LN = ['Layer 1','Layer 2','Layer 3','Layer 4'];
 const DEFAULT_PARAMS = [
-  { stride:1, padding:0, poolAfter:false },
-  { stride:1, padding:0, poolAfter:true  },
-  { stride:1, padding:0, poolAfter:false },
-  { stride:1, padding:0, poolAfter:true  },
+  { stride:1, padding:0, poolSize:0 },
+  { stride:1, padding:0, poolSize:2 },
+  { stride:1, padding:0, poolSize:0 },
+  { stride:1, padding:0, poolSize:2 },
 ];
 
 // Pipeline stages: Conv + ReLU per layer, plus MaxPool where applicable
@@ -682,7 +682,7 @@ function updateLayerCfg() {
   const p = layerParams[selLayer];
   const def = DEFAULT_PARAMS[selLayer];
   const fmInfo = fmCache[selLayer] ? `${fmCache[selLayer].length}×${fmCache[selLayer][0].length}` : '—';
-  const isStrMod=p.stride!==def.stride, isPadMod=p.padding!==def.padding, isPoolMod=p.poolAfter!==def.poolAfter;
+  const isStrMod=p.stride!==def.stride, isPadMod=p.padding!==def.padding, isPoolMod=p.poolSize!==def.poolSize;
 
   document.getElementById('cfgRows').innerHTML = `
     <div class="cfg-row"><span class="cfg-k">Channels (in)</span>  <span class="cfg-v">${inC}</span></div>
@@ -707,9 +707,11 @@ function updateLayerCfg() {
     </div>
     <div class="cfg-row">
       <span class="cfg-k">Pooling (after)</span>
-      <select class="cfg-sel${isPoolMod?' modified':''}" id="poolCtrl" onchange="onParamChange('poolAfter',this.value)">
-        <option value="none"${!p.poolAfter?' selected':''}>None</option>
-        <option value="max"${p.poolAfter?' selected':''}>MaxPool 2×2</option>
+      <select class="cfg-sel${isPoolMod?' modified':''}" id="poolCtrl" onchange="onParamChange('poolSize',this.value)">
+        <option value="0"${p.poolSize===0?' selected':''}>None</option>
+        <option value="2"${p.poolSize===2?' selected':''}>MaxPool 2×2</option>
+        <option value="3"${p.poolSize===3?' selected':''}>MaxPool 3×3</option>
+        <option value="4"${p.poolSize===4?' selected':''}>MaxPool 4×4</option>
       </select>
     </div>
     <div class="cfg-row"><span class="cfg-k">ReLU output size</span><span class="cfg-v">${fmInfo}</span></div>
@@ -720,7 +722,7 @@ function updateLayerCfg() {
 function onParamChange(param, value) {
   if (param==='stride')    layerParams[selLayer].stride   = parseInt(value);
   if (param==='padding')   layerParams[selLayer].padding  = parseInt(value);
-  if (param==='poolAfter') layerParams[selLayer].poolAfter= (value==='max');
+  if (param==='poolSize')  layerParams[selLayer].poolSize = parseInt(value);
   run();
 }
 
@@ -972,7 +974,7 @@ async function runCustomForward() {
   let x = imgTensor, owned = false;
 
   for (let li = 0; li < convLayers.length; li++) {
-    const {stride, padding, poolAfter} = layerParams[li];
+    const {stride, padding, poolSize} = layerParams[li];
     const wts = convLayers[li].getWeights();
     const origKernel = wts[0], bias = wts.length > 1 ? wts[1] : null;
     const modKernel = buildModifiedKernel(li, origKernel);
@@ -1003,8 +1005,8 @@ async function runCustomForward() {
     x = reluOut; owned = true;
 
     // MaxPool
-    if (poolAfter) {
-      const pooled = tf.maxPool(x, [2,2], [2,2], 'valid');
+    if (poolSize > 0) {
+      const pooled = tf.maxPool(x, [poolSize,poolSize], [poolSize,poolSize], 'valid');
       x.dispose(); x = pooled;
 
       const poolData = (await x.array())[0];
@@ -1022,11 +1024,9 @@ async function runCustomForward() {
 async function runCustomPrediction(x) {
   if(!flattenLayer||!denseLayer) return;
   const bars=document.getElementById('predBars');
-  let useGAP = false;
-  let flat = null;
   try {
-    flat = flattenLayer.apply(x);
-    // Try dense — fails if flattened size ≠ 1690
+    const flat=flattenLayer.apply(x);
+    paintFlattenBar((await flat.array())[0]);
     const dw = denseLayer.getWeights();
     const logitsTensor = tf.tidy(() => {
       let z = tf.matMul(flat, dw[0]);
@@ -1035,41 +1035,31 @@ async function runCustomPrediction(x) {
     });
     logitData = (await logitsTensor.array())[0];
     logitsTensor.dispose();
-    paintFlattenBar((await flat.array())[0]);
-    const pred = denseLayer.apply(flat);
-    probData = (await pred.array())[0];
-    pred.dispose(); flat.dispose(); flat = null;
+    const pred=denseLayer.apply(flat);
+    probData=(await pred.array())[0];
+    pred.dispose(); flat.dispose();
+    paintLogitBars();
+    const order=[...Array(10).keys()].sort((a,b)=>probData[b]-probData[a]);
+    bars.innerHTML='';
+    order.forEach((cls,rank)=>{
+      const pct=(probData[cls]*100).toFixed(1);
+      const row=document.createElement('div');
+      row.className='pred-row';
+      row.innerHTML=`<span class="pred-name">${CLASS_NAMES[cls]}</span>`
+        +`<div class="pred-bar-bg"><div class="pred-bar-fill${rank===0?' top':''}" style="width:${Math.min(100,probData[cls]*100)}%"></div></div>`
+        +`<span class="pred-pct">${pct}%</span>`;
+      bars.appendChild(row);
+    });
   } catch(_) {
-    // Spatial dims changed → Dense layer input mismatch.
-    // Fall back to Global Average Pooling over the last feature map.
-    if (flat) { flat.dispose(); flat = null; }
-    useGAP = true;
-    const gapArr = await tf.tidy(() => tf.mean(x.squeeze([0]), [0, 1])).array();
-    logitData = Array.from(gapArr);
-    const maxG = Math.max(...logitData);
-    const exps = logitData.map(v => Math.exp(v - maxG));
-    const sum  = exps.reduce((a, b) => a + b, 0);
-    probData = exps.map(v => v / sum);
+    const actual=x.shape.slice(1).reduce((a,b)=>a*b,1);
+    bars.innerHTML=`<div style="font-size:10px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px;line-height:1.7">
+      ⚠ <strong>Architecture mismatch</strong><br>
+      FC layer expects <strong>1,690</strong> inputs<br>
+      (13×13×10 with default params)<br>
+      Current flatten size: <strong>${actual}</strong><br>
+      <span style="color:#92400e">Reset stride, padding &amp; pool to defaults.</span>
+    </div>`;
   }
-  paintLogitBars();
-  const order=[...Array(10).keys()].sort((a,b)=>probData[b]-probData[a]);
-  bars.innerHTML='';
-  if (useGAP) {
-    const note=document.createElement('div');
-    note.style.cssText='font-size:9px;color:#b45309;background:#fffbeb;border:1px solid #fcd34d;border-radius:5px;padding:5px 7px;margin-bottom:6px;line-height:1.5';
-    note.innerHTML='⚠ <strong>GAP approximation</strong> — spatial size changed<br>'
-      +'<span style="color:#92400e">Dense layer needs 13×13×10=1,690 inputs; using channel-mean as scores instead.</span>';
-    bars.appendChild(note);
-  }
-  order.forEach((cls,rank)=>{
-    const pct=(probData[cls]*100).toFixed(1);
-    const row=document.createElement('div');
-    row.className='pred-row';
-    row.innerHTML=`<span class="pred-name">${CLASS_NAMES[cls]}</span>`
-      +`<div class="pred-bar-bg"><div class="pred-bar-fill${rank===0?' top':''}" style="width:${Math.min(100,probData[cls]*100)}%"></div></div>`
-      +`<span class="pred-pct">${pct}%</span>`;
-    bars.appendChild(row);
-  });
 }
 
 // ── Draw ──────────────────────────────────────────────────────────────────────
@@ -1193,7 +1183,7 @@ function getInputToStage(stageId) {
   if (stageId.startsWith('conv')) {
     const li=parseInt(stageId.slice(4));
     if (li===0) return rawImgData;
-    return layerParams[li-1].poolAfter ? fmStageCache[`pool${li-1}`] : fmStageCache[`relu${li-1}`];
+    return layerParams[li-1].poolSize > 0 ? fmStageCache[`pool${li-1}`] : fmStageCache[`relu${li-1}`];
   }
   if (stageId.startsWith('pool')) return fmStageCache[`relu${stageId.slice(4)}`];
   return null;
