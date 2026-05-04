@@ -723,17 +723,23 @@ function applyPreset(fi, key) {
 }
 
 // ── Kernel display ────────────────────────────────────────────────────────────
-function getKernelValsFor(li, fi) {
+function getKernelValsFor(li, fi, channel=null) {
   if (kernelOverrides[li][fi]) return kernelOverrides[li][fi];
   const arr = convLayers[li].getWeights()[0].arraySync();
   const inC = arr[0][0].length;
-  let bestC=0, bestM=0;
-  for (let c=0;c<inC;c++) {
-    let m=0;
-    for (let y=0;y<3;y++) for (let x=0;x<3;x++) m=Math.max(m,Math.abs(arr[y][x][c][fi]));
-    if(m>bestM){bestM=m;bestC=c;}
+  let useC;
+  if (channel !== null) {
+    useC = Math.min(channel, inC-1);
+  } else {
+    let bestC=0, bestM=0;
+    for (let c=0;c<inC;c++) {
+      let m=0;
+      for (let y=0;y<3;y++) for (let x=0;x<3;x++) m=Math.max(m,Math.abs(arr[y][x][c][fi]));
+      if(m>bestM){bestM=m;bestC=c;}
+    }
+    useC=bestC;
   }
-  return Array.from({length:3},(_,y)=>Array.from({length:3},(_,x)=>arr[y][x][bestC][fi]));
+  return Array.from({length:3},(_,y)=>Array.from({length:3},(_,x)=>arr[y][x][useC][fi]));
 }
 
 function renderAllKernels() {
@@ -1479,14 +1485,47 @@ function closeSoftmax() {
 
 // ── Modal kernel editor ───────────────────────────────────────────────────────
 function buildModalKernelEditor(li, fi) {
+  const inC = convLayers[li].getWeights()[0].shape[2];
+  let viewCh = 0; // which input channel we're inspecting
+
   const wrap = document.createElement('div');
   wrap.id = 'exKernelWrap';
   wrap.style.cssText = 'margin-top:14px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;';
 
+  // Title row with channel navigator
+  const titleRow = document.createElement('div');
+  titleRow.style.cssText = 'display:flex;align-items:center;gap:6px;flex-wrap:wrap;';
   const lbl = document.createElement('div');
-  lbl.className = 'ex-col-lbl';
-  lbl.textContent = `Edit Kernel · Filter ${fi}`;
-  wrap.appendChild(lbl);
+  lbl.className = 'ex-col-lbl'; lbl.textContent = `Kernel · Filter ${fi}`;
+  titleRow.appendChild(lbl);
+
+  // Channel selector (only for pretrained multi-channel; hidden when override active)
+  const chRow = document.createElement('div');
+  chRow.id = 'exChRow';
+  chRow.style.cssText = 'display:flex;align-items:center;gap:3px;';
+  const chLbl = document.createElement('span');
+  chLbl.style.cssText = 'font-size:9px;color:#94a3b8;';
+  chLbl.textContent = 'Ch:';
+  chRow.appendChild(chLbl);
+  const chPrev = document.createElement('button');
+  chPrev.textContent = '‹'; chPrev.style.cssText = 'font-size:11px;border:1px solid #e2e8f0;border-radius:3px;background:white;cursor:pointer;padding:0 4px;line-height:1.4;';
+  const chNum = document.createElement('span');
+  chNum.id = 'exChNum'; chNum.style.cssText = 'font-size:10px;font-weight:600;color:#374151;min-width:14px;text-align:center;';
+  chNum.textContent = '0';
+  const chNext = document.createElement('button');
+  chNext.textContent = '›'; chNext.style.cssText = chPrev.style.cssText;
+  chPrev.onclick = () => { viewCh = (viewCh - 1 + inC) % inC; chNum.textContent = viewCh; refreshGrid(); };
+  chNext.onclick = () => { viewCh = (viewCh + 1) % inC; chNum.textContent = viewCh; refreshGrid(); };
+  chRow.appendChild(chPrev); chRow.appendChild(chNum); chRow.appendChild(chNext);
+  titleRow.appendChild(chRow);
+  wrap.appendChild(titleRow);
+
+  // Note about edit scope
+  const note = document.createElement('div');
+  note.id = 'exKernelNote';
+  note.style.cssText = 'font-size:9px;color:#94a3b8;line-height:1.4;';
+  note.textContent = 'Pretrained: weights differ per channel. Edit sets all channels.';
+  wrap.appendChild(note);
 
   // Preset dropdown
   const presetKey = kernelPresetSel[li][fi];
@@ -1502,20 +1541,13 @@ function buildModalKernelEditor(li, fi) {
   wrap.appendChild(sel);
 
   // 3×3 grid
-  const vals = getKernelValsFor(li, fi);
-  const mag  = Math.max(...vals.flat().map(Math.abs));
   const grid = document.createElement('div');
   grid.className = 'kern-mini'; grid.id = 'exKernelGrid';
-
   for (let r=0;r<3;r++) for (let c2=0;c2<3;c2++) {
-    const v = vals[r][c2];
     const cell = document.createElement('div');
     cell.className = 'kern-cell';
-    cell.style.background = kColLight(v, mag);
     cell.contentEditable = 'true'; cell.spellcheck = false;
-    cell.textContent = v.toFixed(2);
     cell.dataset.r = r; cell.dataset.c = c2;
-    const capturedV = v;
     cell.addEventListener('focus', function() {
       setTimeout(()=>{
         const range=document.createRange(); range.selectNodeContents(this);
@@ -1524,11 +1556,12 @@ function buildModalKernelEditor(li, fi) {
     });
     cell.addEventListener('keydown', function(e) {
       if (e.key==='Enter')  { e.preventDefault(); this.blur(); }
-      if (e.key==='Escape') { this.textContent=capturedV.toFixed(2); this.blur(); }
+      if (e.key==='Escape') { this.blur(); }
     });
     cell.addEventListener('blur', function() {
       const raw=this.textContent.trim().replace('−','-').replace(',','.');
       const newVal=parseFloat(raw);
+      const capturedV=parseFloat(this.dataset.orig||'0');
       if (isNaN(newVal)) { this.textContent=capturedV.toFixed(2); return; }
       if (newVal.toFixed(2)===capturedV.toFixed(2)) return;
       onModalKernelEdit(li, fi, parseInt(this.dataset.r), parseInt(this.dataset.c), newVal);
@@ -1536,7 +1569,45 @@ function buildModalKernelEditor(li, fi) {
     grid.appendChild(cell);
   }
   wrap.appendChild(grid);
+
+  function refreshGrid() {
+    const hasOvr = !!kernelOverrides[li][fi];
+    const vals = getKernelValsFor(li, fi, hasOvr ? null : viewCh);
+    const mag = Math.max(...vals.flat().map(Math.abs));
+    // hide channel nav when override is active (all channels identical)
+    chRow.style.display = hasOvr ? 'none' : 'flex';
+    note.textContent = hasOvr
+      ? 'Override active: same weights applied to all channels.'
+      : 'Pretrained: weights differ per channel. Edit sets all channels.';
+    const cells = grid.querySelectorAll('.kern-cell');
+    let i=0;
+    for (let r=0;r<3;r++) for (let c2=0;c2<3;c2++,i++) {
+      const v=vals[r][c2];
+      cells[i].textContent=v.toFixed(2);
+      cells[i].style.background=kColLight(v,mag);
+      cells[i].dataset.orig=v;
+    }
+  }
+  refreshGrid();
+  // expose for refreshModalKernel
+  wrap._refresh = refreshGrid;
   return wrap;
+}
+
+function refreshModalKernel() {
+  if (!document.getElementById('explainModal').classList.contains('open')) return;
+  const wrap = document.getElementById('exKernelWrap');
+  if (wrap && wrap._refresh) wrap._refresh();
+  // also sync preset dropdown
+  const {stageId, fi} = explainCur;
+  if (!stageId) return;
+  const li = (stageId.startsWith('conv')||stageId.startsWith('relu')) ? parseInt(stageId.slice(4)) : null;
+  if (li===null) return;
+  const sel = document.getElementById('exKernelPreset');
+  if (!sel) return;
+  const pk = kernelPresetSel[li][fi];
+  sel.value = pk;
+  sel.className = 'kern-preset'+(pk==='pretrained'?'':pk==='custom'?' is-custom':' is-preset');
 }
 
 function refreshModalKernel() {
