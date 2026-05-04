@@ -897,6 +897,10 @@ async function run() {
   if (!imgTensor||!model) return;
   const finalX = await runCustomForward();
   if (finalX) { await runCustomPrediction(finalX); finalX.dispose(); }
+  if (document.getElementById('explainModal').classList.contains('open')) {
+    updateExplainView();
+    refreshModalKernel();
+  }
 }
 
 async function runCustomForward() {
@@ -1180,6 +1184,11 @@ function openExplain(stageId, fi) {
   outCvs.id='exOutCvs'; outCvs.width=Wout; outCvs.height=Hout;
   outCvs.style.width=outCvs.style.height=CS+'px';
   rightCol.appendChild(rightLbl); rightCol.appendChild(outCvs);
+
+  // Kernel editor below output canvas (conv/relu only)
+  const modalLi = stageId.startsWith('conv') || stageId.startsWith('relu')
+    ? parseInt(stageId.slice(4)) : null;
+  if (modalLi !== null) rightCol.appendChild(buildModalKernelEditor(modalLi, fi));
 
   body.appendChild(leftCol); body.appendChild(fmlCol); body.appendChild(rightCol);
 
@@ -1466,6 +1475,108 @@ function openSoftmax(highlightCi) {
 
 function closeSoftmax() {
   document.getElementById('softmaxModal').classList.remove('open');
+}
+
+// ── Modal kernel editor ───────────────────────────────────────────────────────
+function buildModalKernelEditor(li, fi) {
+  const wrap = document.createElement('div');
+  wrap.id = 'exKernelWrap';
+  wrap.style.cssText = 'margin-top:14px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;width:100%;';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'ex-col-lbl';
+  lbl.textContent = `Edit Kernel · Filter ${fi}`;
+  wrap.appendChild(lbl);
+
+  // Preset dropdown
+  const presetKey = kernelPresetSel[li][fi];
+  const sel = document.createElement('select');
+  sel.id = 'exKernelPreset';
+  sel.className = 'kern-preset'+(presetKey==='pretrained'?'':presetKey==='custom'?' is-custom':' is-preset');
+  PRESET_LIST.forEach(({key, label:lb2}) => {
+    const opt=document.createElement('option'); opt.value=key; opt.textContent=lb2;
+    if (key===presetKey) opt.selected=true;
+    sel.appendChild(opt);
+  });
+  sel.addEventListener('change', function() { applyModalPreset(li, fi, this.value); });
+  wrap.appendChild(sel);
+
+  // 3×3 grid
+  const vals = getKernelValsFor(li, fi);
+  const mag  = Math.max(...vals.flat().map(Math.abs));
+  const grid = document.createElement('div');
+  grid.className = 'kern-mini'; grid.id = 'exKernelGrid';
+
+  for (let r=0;r<3;r++) for (let c2=0;c2<3;c2++) {
+    const v = vals[r][c2];
+    const cell = document.createElement('div');
+    cell.className = 'kern-cell';
+    cell.style.background = kColLight(v, mag);
+    cell.contentEditable = 'true'; cell.spellcheck = false;
+    cell.textContent = v.toFixed(2);
+    cell.dataset.r = r; cell.dataset.c = c2;
+    const capturedV = v;
+    cell.addEventListener('focus', function() {
+      setTimeout(()=>{
+        const range=document.createRange(); range.selectNodeContents(this);
+        const s=window.getSelection(); s.removeAllRanges(); s.addRange(range);
+      }, 0);
+    });
+    cell.addEventListener('keydown', function(e) {
+      if (e.key==='Enter')  { e.preventDefault(); this.blur(); }
+      if (e.key==='Escape') { this.textContent=capturedV.toFixed(2); this.blur(); }
+    });
+    cell.addEventListener('blur', function() {
+      const raw=this.textContent.trim().replace('−','-').replace(',','.');
+      const newVal=parseFloat(raw);
+      if (isNaN(newVal)) { this.textContent=capturedV.toFixed(2); return; }
+      if (newVal.toFixed(2)===capturedV.toFixed(2)) return;
+      onModalKernelEdit(li, fi, parseInt(this.dataset.r), parseInt(this.dataset.c), newVal);
+    });
+    grid.appendChild(cell);
+  }
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function refreshModalKernel() {
+  if (!document.getElementById('explainModal').classList.contains('open')) return;
+  const {stageId, fi} = explainCur;
+  if (!stageId) return;
+  const li = (stageId.startsWith('conv')||stageId.startsWith('relu'))
+    ? parseInt(stageId.slice(4)) : null;
+  if (li===null) return;
+  const grid=document.getElementById('exKernelGrid');
+  const sel=document.getElementById('exKernelPreset');
+  if (!grid||!sel) return;
+  const vals=getKernelValsFor(li, fi);
+  const mag=Math.max(...vals.flat().map(Math.abs));
+  const pk=kernelPresetSel[li][fi];
+  sel.value=pk;
+  sel.className='kern-preset'+(pk==='pretrained'?'':pk==='custom'?' is-custom':' is-preset');
+  const cells=grid.querySelectorAll('.kern-cell');
+  let i=0;
+  for (let r=0;r<3;r++) for (let c2=0;c2<3;c2++,i++) {
+    cells[i].textContent=vals[r][c2].toFixed(2);
+    cells[i].style.background=kColLight(vals[r][c2],mag);
+  }
+}
+
+function onModalKernelEdit(li, fi, r, c, newVal) {
+  if (!kernelOverrides[li][fi])
+    kernelOverrides[li][fi]=getKernelValsFor(li,fi).map(row=>[...row]);
+  kernelOverrides[li][fi][r][c]=newVal;
+  kernelPresetSel[li][fi]='custom';
+  renderAllKernels();
+  run();
+}
+
+function applyModalPreset(li, fi, key) {
+  kernelPresetSel[li][fi]=key;
+  if (key==='pretrained') kernelOverrides[li][fi]=null;
+  else if (key!=='custom') kernelOverrides[li][fi]=PRESET_KERNELS[key].map(r=>[...r]);
+  renderAllKernels();
+  run();
 }
 
 init();
