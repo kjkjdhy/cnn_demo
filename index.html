@@ -415,6 +415,7 @@ let selFilter    = 0;
 let layerParams  = DEFAULT_PARAMS.map(p=>({...p}));
 let kernelOverrides = Array.from({length:4}, ()=>Array.from({length:10}, ()=>null));
 let kernelPresetSel = Array.from({length:4}, ()=>Array(10).fill('pretrained'));
+let kernelViewCh    = Array.from({length:4}, ()=>Array(10).fill(0));
 let rawImgData   = null;
 let logitData    = null;  // pre-softmax logits [10]
 let probData     = null;  // softmax probs [10]
@@ -755,18 +756,13 @@ function renderAllKernels() {
   for (let fi=0;fi<10;fi++) {
     const isOvr = kernelOverrides[selLayer][fi] !== null;
     const presetKey = kernelPresetSel[selLayer][fi];
+    const viewCh = Math.min(kernelViewCh[selLayer][fi], inC-1);
 
     let vals;
     if (isOvr) {
       vals = kernelOverrides[selLayer][fi];
     } else {
-      let bestC=0, bestM=0;
-      for (let c=0;c<inC;c++) {
-        let m=0;
-        for (let y=0;y<3;y++) for (let x=0;x<3;x++) m=Math.max(m,Math.abs(rawArr[y][x][c][fi]));
-        if(m>bestM){bestM=m;bestC=c;}
-      }
-      vals = Array.from({length:3},(_,y)=>Array.from({length:3},(_,x)=>rawArr[y][x][bestC][fi]));
+      vals = Array.from({length:3},(_,y)=>Array.from({length:3},(_,x)=>rawArr[y][x][viewCh][fi]));
     }
 
     const allV = vals.flat();
@@ -776,10 +772,51 @@ function renderAllKernels() {
     block.className = 'kern-block'+(fi===selFilter?' sel':'')+(isOvr?' modified':'');
     block.dataset.fi = fi;
 
+    // Header row: label + (if not overridden and inC>1) channel nav
+    const headerRow = document.createElement('div');
+    headerRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:2px;width:100%';
+
     const label = document.createElement('div');
     label.className = 'kern-block-label';
     label.textContent = `Filter ${fi}`;
-    block.appendChild(label);
+    headerRow.appendChild(label);
+
+    if (!isOvr && inC > 1) {
+      const nav = document.createElement('div');
+      nav.style.cssText = 'display:flex;align-items:center;gap:1px;font-size:9px;color:#64748b;user-select:none;-webkit-user-select:none';
+
+      const btnPrev = document.createElement('button');
+      btnPrev.textContent = '‹';
+      btnPrev.style.cssText = 'border:none;background:none;padding:0 2px;cursor:pointer;font-size:10px;line-height:1;color:#64748b';
+      const chLabel = document.createElement('span');
+      chLabel.textContent = `Ch${viewCh}`;
+      chLabel.style.cssText = 'min-width:24px;text-align:center';
+      const btnNext = document.createElement('button');
+      btnNext.textContent = '›';
+      btnNext.style.cssText = 'border:none;background:none;padding:0 2px;cursor:pointer;font-size:10px;line-height:1;color:#64748b';
+
+      const capturedFiNav = fi;
+      btnPrev.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault();
+        kernelViewCh[selLayer][capturedFiNav] = (kernelViewCh[selLayer][capturedFiNav] - 1 + inC) % inC;
+        renderAllKernels();
+      });
+      btnNext.addEventListener('mousedown', e => { e.stopPropagation(); e.preventDefault();
+        kernelViewCh[selLayer][capturedFiNav] = (kernelViewCh[selLayer][capturedFiNav] + 1) % inC;
+        renderAllKernels();
+      });
+
+      nav.appendChild(btnPrev);
+      nav.appendChild(chLabel);
+      nav.appendChild(btnNext);
+      headerRow.appendChild(nav);
+    } else if (isOvr) {
+      const ovNote = document.createElement('span');
+      ovNote.style.cssText = 'font-size:9px;color:#b45309';
+      ovNote.textContent = 'all ch';
+      headerRow.appendChild(ovNote);
+    }
+
+    block.appendChild(headerRow);
 
     const sel = document.createElement('select');
     sel.className = 'kern-preset'+(presetKey==='pretrained'?'':presetKey==='custom'?' is-custom':' is-preset');
@@ -832,7 +869,7 @@ function renderAllKernels() {
 
     block.appendChild(grid);
     block.addEventListener('mousedown', e => {
-      if (e.target.classList.contains('kern-cell') || e.target.tagName==='SELECT') return;
+      if (e.target.classList.contains('kern-cell') || e.target.tagName==='SELECT' || e.target.tagName==='BUTTON') return;
       e.preventDefault();
       selectFilter(fi);
     });
