@@ -1602,6 +1602,12 @@ function buildModalKernelEditor(li, fi) {
   chNext.onclick = () => { viewCh = (viewCh + 1) % inC; chNum.textContent = viewCh; refreshGrid(); };
   chRow.appendChild(chPrev); chRow.appendChild(chNum); chRow.appendChild(chNext);
   titleRow.appendChild(chRow);
+
+  // "all ch" label shown when a non-pretrained override is active
+  const allChLbl = document.createElement('span');
+  allChLbl.style.cssText = 'font-size:9px;color:#b45309;display:none;';
+  allChLbl.textContent = 'all ch';
+  titleRow.appendChild(allChLbl);
   wrap.appendChild(titleRow);
 
   // Note about edit scope
@@ -1660,6 +1666,7 @@ function buildModalKernelEditor(li, fi) {
     const mag = Math.max(...vals.flat().map(Math.abs));
     // hide channel nav when override is active (all channels identical)
     chRow.style.display = hasOvr ? 'none' : 'flex';
+    allChLbl.style.display = hasOvr ? 'inline' : 'none';
     note.textContent = hasOvr
       ? 'Override active: same weights applied to all channels.'
       : 'Pretrained: weights differ per channel. Edit sets all channels.';
