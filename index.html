@@ -1701,29 +1701,6 @@ function refreshModalKernel() {
   sel.className = 'kern-preset'+(pk==='pretrained'?'':pk==='custom'?' is-custom':' is-preset');
 }
 
-function refreshModalKernel() {
-  if (!document.getElementById('explainModal').classList.contains('open')) return;
-  const {stageId, fi} = explainCur;
-  if (!stageId) return;
-  const li = (stageId.startsWith('conv')||stageId.startsWith('relu'))
-    ? parseInt(stageId.slice(4)) : null;
-  if (li===null) return;
-  const grid=document.getElementById('exKernelGrid');
-  const sel=document.getElementById('exKernelPreset');
-  if (!grid||!sel) return;
-  const vals=getKernelValsFor(li, fi);
-  const mag=Math.max(...vals.flat().map(Math.abs));
-  const pk=kernelPresetSel[li][fi];
-  sel.value=pk;
-  sel.className='kern-preset'+(pk==='pretrained'?'':pk==='custom'?' is-custom':' is-preset');
-  const cells=grid.querySelectorAll('.kern-cell');
-  let i=0;
-  for (let r=0;r<3;r++) for (let c2=0;c2<3;c2++,i++) {
-    cells[i].textContent=vals[r][c2].toFixed(2);
-    cells[i].style.background=kColLight(vals[r][c2],mag);
-  }
-}
-
 function onModalKernelEdit(li, fi, r, c, newVal) {
   if (!kernelOverrides[li][fi])
     kernelOverrides[li][fi]=getKernelValsFor(li,fi).map(row=>[...row]);
@@ -1739,6 +1716,7 @@ function applyModalPreset(li, fi, key) {
   else if (key!=='custom') kernelOverrides[li][fi]=PRESET_KERNELS[key].map(r=>[...r]);
   renderAllKernels();
   run();
+  refreshModalKernel();
 }
 
 init();
